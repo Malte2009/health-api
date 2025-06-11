@@ -17,6 +17,7 @@ model User {
   id         String        @id @default(uuid())
   email      String        @unique
   name       String
+  gender     String
   password   String
   birthYear  Int
   createdAt  DateTime      @default(now())
@@ -29,7 +30,7 @@ model User {
 model TrainingLog {
   id        String         @id @default(uuid())
   userId    String
-  date      DateTime
+  date      String
   score     Float?
   notes     String?
   caloriesBurned Float?
@@ -75,9 +76,13 @@ model BodyLog {
   userId     String
   date       DateTime
   weight     Float
+  height     Float
   fatMass    Float?
+  fatPercentage Float?
   muscleMass Float?
   waterMass   Float?
+  BMI        Float?
+  BMR        Float?
 
   user       User          @relation(fields: [userId], references: [id])
 }

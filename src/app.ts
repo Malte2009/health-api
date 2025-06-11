@@ -5,6 +5,7 @@ import trainingRoutes from "./routes/training.routes";
 import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/exercise.routes";
 import setRoutes from "./routes/set.routes";
+import bodyRoutes from "./routes/body.routes";
 
 dotenv.config();
 
@@ -17,5 +18,6 @@ app.use('/api/users', userRoutes);
 app.use("/api/training", trainingRoutes);
 app.use("/api/exercise", exerciseRoutes)
 app.use("/api/set", setRoutes)
+app.use("/api/body", bodyRoutes)
 
 export default app;

@@ -10,7 +10,9 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     if (!req.body) return res.status(400).send('Bad Request');
 
 
-    const { email, name, password, birthYear } = req.body;
+    const { email, name, password, birthYear, gender } = req.body;
+
+    if (!email || !name || !password || !birthYear || !gender) return res.status(400).send('Bad Request');
 
     try {
         const existingUser = await prisma.user.findUnique({
@@ -31,7 +33,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        await prisma.user.create({data: { email, name, password: hashedPassword, birthYear }});
+        await prisma.user.create({data: { email, name, password: hashedPassword, birthYear, gender }});
     } catch (error) {
         return res.status(500).send('Internal Server Error');
     }
