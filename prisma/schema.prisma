@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String        @id @default(uuid())
+  email      String        @unique
+  name       String
+  password   String
+  birthYear  Int
+  createdAt  DateTime      @default(now())
+
+  trainings  TrainingLog[]
+  nutrition  NutritionLog[]
+  bodyLogs   BodyLog[]
+}
+
+model TrainingLog {
+  id        String         @id @default(uuid())
+  userId    String
+  date      DateTime
+  score     Float?
+  notes     String?
+  caloriesBurned Float?
+  durationMinutes Int?
+  avgHeartRate    Int?
+
+  user      User           @relation(fields: [userId], references: [id])
+  exercises ExerciseLog[]
+}
+
+model ExerciseLog {
+  id         String        @id @default(uuid())
+  trainingId String
+  name       String
+
+  sets       SetLog[]
+  training   TrainingLog   @relation(fields: [trainingId], references: [id])
+}
+
+model SetLog {
+  id           String      @id @default(uuid())
+  exerciseId   String
+  reps         Int
+  weight       Float
+  exercise     ExerciseLog @relation(fields: [exerciseId], references: [id])
+}
+
+model NutritionLog {
+  id        String         @id @default(uuid())
+  userId    String
+  date      DateTime
+  mealType  String
+  kcal      Int
+  protein   Int
+  carbs     Int
+  fat       Int
+
+  user      User           @relation(fields: [userId], references: [id])
+}
+
+model BodyLog {
+  id         String        @id @default(uuid())
+  userId     String
+  date       DateTime
+  weight     Float
+  fatMass    Float?
+  muscleMass Float?
+  waterMass   Float?
+
+  user       User          @relation(fields: [userId], references: [id])
+}
