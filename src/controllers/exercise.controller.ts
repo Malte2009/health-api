@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma/client';
+import {getCurrentDate, getCurrentTime} from "../utility/date";
 
 export const createExercise = async (req: Request, res: Response): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
@@ -8,7 +9,11 @@ export const createExercise = async (req: Request, res: Response): Promise<any> 
 
     if (!userId) return res.status(401).send('Token missing');
 
-    const { name, trainingId } = req.body;
+    let { name, trainingId, date, time } = req.body;
+
+    if (!date || typeof date != "string") date = getCurrentDate()
+
+    if (!time || typeof time != "string") time = getCurrentTime()
 
     if (!name || !trainingId) return res.status(400).send("Bad Request");
 
@@ -20,7 +25,9 @@ export const createExercise = async (req: Request, res: Response): Promise<any> 
         const exercise = await prisma.exerciseLog.create({
             data: {
                 trainingId,
-                name
+                name,
+                date,
+                time
             }
         });
         return res.status(201).json(exercise);

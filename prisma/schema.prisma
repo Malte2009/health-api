@@ -31,6 +31,8 @@ model TrainingLog {
   id        String         @id @default(uuid())
   userId    String
   date      String
+  time      String?
+  type      String
   score     Float?
   notes     String?
   caloriesBurned Float?
@@ -45,6 +47,8 @@ model ExerciseLog {
   id         String        @id @default(uuid())
   trainingId String
   name       String
+  date       String?
+  time       String?
 
   sets       SetLog[]
   training   TrainingLog   @relation(fields: [trainingId], references: [id])
@@ -53,8 +57,11 @@ model ExerciseLog {
 model SetLog {
   id           String      @id @default(uuid())
   exerciseId   String
+  date         String?
+  time         String?
   reps         Int
   weight       Float
+
   exercise     ExerciseLog @relation(fields: [exerciseId], references: [id])
 }
 

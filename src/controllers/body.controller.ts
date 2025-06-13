@@ -8,7 +8,9 @@ export const getCaloriesBurnedOnDay = async (req: Request, res: Response): Promi
 
     if (!userId) return res.status(400).send("Bad Request");
 
-    const date = req.query.date ?? getCurrentDate();
+    const date: string = req.query.date?.toString() ?? getCurrentDate();
+
+    console.log(date);
 
     try {
         const BMR = await prisma.bodyLog.findFirst({
