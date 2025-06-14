@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import {getCurrentDate, getCurrentTime} from "../utility/date";
 
-export const createExercise = async (req: Request, res: Response): Promise<any> => {
+export const createExercise = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId: string = (req as any).userId;
@@ -25,6 +25,7 @@ export const createExercise = async (req: Request, res: Response): Promise<any> 
         const exercise = await prisma.exerciseLog.create({
             data: {
                 trainingId,
+                userId,
                 name,
                 date,
                 time
@@ -32,6 +33,6 @@ export const createExercise = async (req: Request, res: Response): Promise<any> 
         });
         return res.status(201).json(exercise);
     } catch (error) {
-        return res.status(500).send("Internal Server Error");
+        next(error);
     }
 }

@@ -1,23 +1,56 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+
 import userRoutes from './routes/user.routes';
 import trainingRoutes from "./routes/training.routes";
 import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/exercise.routes";
 import setRoutes from "./routes/set.routes";
 import bodyRoutes from "./routes/body.routes";
+import { requestLogger } from './middleware/logger.middleware';
+import { sanitizeInput } from './middleware/inputSanitizer.middleware';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 
 dotenv.config();
 
 const app = express();
 
-app.use(cookieParser());
-app.use(express.json());
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // Limit each IP to 100 requests per windowMs
+});
 
-app.use('/api/users', userRoutes);
+const authLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 5, // Limit each IP to 5 requests per windowMs
+});
+
+app.use(cookieParser());
+app.use(express.json( { limit: '10mb' }));
+app.use(helmet())
+
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true
+}));
+
+if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined in .env file');
+
+app.use("/api", limiter);
+app.use("/api", requestLogger)
+app.use("/api", sanitizeInput);
+
+app.use('/api/users', authLimiter, userRoutes);
 app.use("/api/training", trainingRoutes);
 app.use("/api/exercise", exerciseRoutes)
 app.use("/api/set", setRoutes)
 app.use("/api/body", bodyRoutes)
+
+app.use(notFoundHandler);
+
+app.use(errorHandler);
 
 export default app;

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export const registerUser = async (req: Request, res: Response): Promise<any> => {
+export const registerUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send('Bad Request');
 
 
@@ -19,9 +19,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
             where: {email},
         });
 
-        if (existingUser) {
-            res.status(400).json({error: 'E-Mail already in use'});
-        }
+        if (existingUser) return res.status(400).send("Registration failed: Please check your credentials");
     } catch (error) {
         return res.status(500).send('Internal Server Error');
     }
@@ -35,13 +33,13 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     try {
         await prisma.user.create({data: { email, name, password: hashedPassword, birthYear, gender }});
     } catch (error) {
-        return res.status(500).send('Internal Server Error');
+        next(error);
     }
 
     return res.status(201).send('User registered successfully');
 };
 
-export const loginUser = async (req: Request, res: Response): Promise<any> => {
+export const loginUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send('Bad Request');
 
     const { email, password } = req.body;
@@ -59,10 +57,15 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {expiresIn : '7d'});
 
-        res.cookie('token', token, { httpOnly: true });
+        res.cookie('token', token, { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
 
         return res.status(200).send(token);
     } catch (error) {
-        return res.status(500).send('Internal Server Error');
+        next(error);
     }
 }

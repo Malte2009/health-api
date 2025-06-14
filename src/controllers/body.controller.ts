@@ -1,16 +1,16 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import {getAge, getGender} from "../utility/userData";
 import {getCurrentDate} from "../utility/date";
 
-export const getCaloriesBurnedOnDay = async (req: Request, res: Response): Promise<any> => {
+export const getCaloriesBurnedOnDay = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     const userId: string = (req as any).userId;
 
     if (!userId) return res.status(400).send("Bad Request");
 
     const date: string = req.query.date?.toString() ?? getCurrentDate();
 
-    console.log(date);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
 
     try {
         const BMR = await prisma.bodyLog.findFirst({
@@ -37,12 +37,11 @@ export const getCaloriesBurnedOnDay = async (req: Request, res: Response): Promi
             return res.status(200).send(BMR.BMR);
         }
     } catch (error) {
-        console.error("Error fetching calories burned:", error);
-        return res.status(500).send("Internal Server Error");
+        next(error);
     }
 }
 
-export const createBodyLog = async (req: Request, res: Response): Promise<any> => {
+export const createBodyLog = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId: string = (req as any).userId;
@@ -88,7 +87,6 @@ export const createBodyLog = async (req: Request, res: Response): Promise<any> =
         });
         return res.status(201).json(bodyLog);
     } catch (error) {
-        console.error("Error creating body log:", error);
-        return res.status(500).send("Internal Server Error");
+        next(error);
     }
 }

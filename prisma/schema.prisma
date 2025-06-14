@@ -45,6 +45,7 @@ model TrainingLog {
 
 model ExerciseLog {
   id         String        @id @default(uuid())
+  userId     String
   trainingId String
   name       String
   date       String?
