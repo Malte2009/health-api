@@ -23,6 +23,8 @@ model User {
   createdAt  DateTime      @default(now())
 
   trainings  TrainingLog[]
+  exercises  ExerciseLog[]
+  sets       SetLog[]
   nutrition  NutritionLog[]
   bodyLogs   BodyLog[]
 }
@@ -31,7 +33,7 @@ model TrainingLog {
   id        String         @id @default(uuid())
   userId    String
   date      String
-  time      String?
+  time      String
   type      String
   score     Float?
   notes     String?
@@ -48,21 +50,24 @@ model ExerciseLog {
   userId     String
   trainingId String
   name       String
-  date       String?
-  time       String?
+  date       String
+  time       String
 
   sets       SetLog[]
+  user       User          @relation(fields: [userId], references: [id])
   training   TrainingLog   @relation(fields: [trainingId], references: [id])
 }
 
 model SetLog {
   id           String      @id @default(uuid())
   exerciseId   String
-  date         String?
-  time         String?
+  userId       String
+  date         String
+  time         String
   reps         Int
   weight       Float
 
+  user         User        @relation(fields: [userId], references: [id])
   exercise     ExerciseLog @relation(fields: [exerciseId], references: [id])
 }
 

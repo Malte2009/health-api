@@ -15,6 +15,6 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     };
     
     req.body = sanitize(req.body);
-    req.query = sanitize(req.query);
+    Object.assign(req.query, sanitize(req.query));
     next();
 };

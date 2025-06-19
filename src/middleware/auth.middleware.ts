@@ -16,6 +16,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
         token = req.cookies.token; // Use cookie if available
     }
 
+
     if (!token) return res.status(401).send('Authentication required');
 
     try {

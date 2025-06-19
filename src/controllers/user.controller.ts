@@ -49,13 +49,13 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     try {
         const user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user) return res.status(400).send('Invalid credentials');
+        if (!user) return res.status(401).send('Unauthorized');
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
-        if (!isPasswordValid) return res.status(400).send('Invalid credentials');
+        if (!isPasswordValid) return res.status(401).send('Unauthorized');
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {expiresIn : '7d'});
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {expiresIn : '1d'});
 
         res.cookie('token', token, { 
             httpOnly: true,
@@ -67,5 +67,23 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         return res.status(200).send(token);
     } catch (error) {
         next(error);
+    }
+}
+
+export const isAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    const token = req.cookies.token;
+
+    if (!token) return res.status(401).send('Unauthorized');
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+
+        const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+
+        if (!user) return res.status(401).send('Unauthorized');
+
+        return res.status(200).send(token);
+    } catch (error) {
+        return res.status(401).send('Unauthorized');
     }
 }

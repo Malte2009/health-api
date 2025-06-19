@@ -13,6 +13,7 @@ import bodyRoutes from "./routes/body.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput } from './middleware/inputSanitizer.middleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
+import { isAuthenticated } from './controllers/user.controller';
 
 dotenv.config();
 
@@ -26,6 +27,11 @@ const limiter = rateLimit({
 const authLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
 	max: 5, // Limit each IP to 5 requests per windowMs
+});
+
+const isAuthenticatedLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // Limit each IP to 10 requests per windowMs
 });
 
 app.use(cookieParser());
@@ -43,6 +49,7 @@ app.use("/api", limiter);
 app.use("/api", requestLogger)
 app.use("/api", sanitizeInput);
 
+app.use("/api/users/isAuthenticated", isAuthenticatedLimiter, isAuthenticated);
 app.use('/api/users', authLimiter, userRoutes);
 app.use("/api/training", trainingRoutes);
 app.use("/api/exercise", exerciseRoutes)

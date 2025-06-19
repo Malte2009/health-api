@@ -59,7 +59,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
                 notes: req.body?.notes,
                 avgHeartRate,
                 durationMinutes: duration,
-                caloriesBurned: burnedCalories
+                caloriesBurned: Math.round(burnedCalories)
             }
         });
         return res.status(201).json(training);
