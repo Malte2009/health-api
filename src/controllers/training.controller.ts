@@ -68,7 +68,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     }
 }
 
-export const getTrainingLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
     if (!userId) return res.status(400).send("Bad Request");
@@ -140,7 +140,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     }
 }
 
-export const getTrainingLogById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTrainingById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId
     const trainingLogId: string = req.params.id;
 
@@ -160,7 +160,7 @@ export const getTrainingLogById = async (req: AuthenticatedRequest, res: Respons
     }
 }
 
-export const getTrainingLogsByDate = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTrainingByDate = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
     const date: string = req.query.date?.toString() ?? getCurrentDate();
 

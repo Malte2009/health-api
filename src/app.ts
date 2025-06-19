@@ -38,9 +38,22 @@ app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
 app.use(helmet())
 
+const allowedOrigins = [
+	'http://localhost:3000',
+	'http://192.168.0.112:3000',
+	'http://192.168.0.112:5173',
+	process.env.FRONTEND_URL
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+	origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+	credentials: true,
 }));
 
 if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined in .env file');

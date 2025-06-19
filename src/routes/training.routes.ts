@@ -2,18 +2,18 @@ import {Router} from 'express';
 import {authenticateToken} from "../middleware/auth.middleware";
 import {
     createTraining,
-    getTrainingLogById,
-    getTrainingLogs,
-    getTrainingLogsByDate,
+    getTrainingById,
+    getTraining,
+    getTrainingByDate,
     updateTraining
 } from "../controllers/training.controller";
 
 const router = Router();
 
-router.get("/getTrainingLogs", authenticateToken, getTrainingLogs);
-router.get("/getTrainingLog/:id", authenticateToken, getTrainingLogById);
-router.get("/getTrainingLogsByDate", authenticateToken, getTrainingLogsByDate);
-router.patch("/updateTrainingLog/:id", authenticateToken, updateTraining);
+router.get("/getTraining", authenticateToken, getTraining);
+router.get("/getTraining/:id", authenticateToken, getTrainingById);
+router.get("/getTrainingByDate", authenticateToken, getTrainingByDate);
+router.patch("/updateTraining/:id", authenticateToken, updateTraining);
 router.post('/createTraining', authenticateToken, createTraining);
 
 export default router;
