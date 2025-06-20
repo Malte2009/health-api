@@ -31,7 +31,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        await prisma.user.create({data: { email, name, password: hashedPassword, birthYear, gender }});
+        await prisma.user.create({data: { email, name, password: hashedPassword, birthYear: parseInt(birthYear), gender }});
     } catch (error) {
         next(error);
     }

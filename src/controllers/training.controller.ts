@@ -121,6 +121,8 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!req.body.type) return res.status(400).send("Training type is required");
 
+    console.log(req.userId)
+
     const userId = req.userId;
 
     if (!userId) return res.status(401).send("Unauthorized");

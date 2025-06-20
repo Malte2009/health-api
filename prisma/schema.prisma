@@ -55,7 +55,7 @@ model ExerciseLog {
 
   sets       SetLog[]
   user       User          @relation(fields: [userId], references: [id])
-  training   TrainingLog   @relation(fields: [trainingId], references: [id])
+  training   TrainingLog   @relation(fields: [trainingId], references: [id], onDelete: Cascade)
 }
 
 model SetLog {
@@ -69,7 +69,7 @@ model SetLog {
   weight       Float
 
   user         User        @relation(fields: [userId], references: [id])
-  exercise     ExerciseLog @relation(fields: [exerciseId], references: [id])
+  exercise     ExerciseLog @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 }
 
 model NutritionLog {

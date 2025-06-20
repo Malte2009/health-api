@@ -13,7 +13,7 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!setId) return res.status(400).send("Bad Request");
 
-    let { type, weight, reps, date, time } = req.body;
+    let { type, date, time } = req.body;
 
     if (!type || typeof type !== "string") return res.status(400).send("Invalid type");
 
@@ -21,7 +21,14 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!time || typeof time != "string") time = getCurrentTime()
 
-    if (!weight || !reps) return res.status(400).send("Bad Request");
+
+    const reps = parseInt(req.body.reps);
+
+    if (isNaN(reps) || reps < 1 || reps > 100) return res.status(400).send("Invalid reps (1-100)");
+
+    const weight = parseFloat(req.body.weight);
+
+    if (isNaN(weight) || weight < 0 || weight > 1000) return res.status(400).send("Invalid weight (0-1000 kg)");
 
     const set = await prisma.setLog.findUnique({where: { id: setId, userId: userId }});
 
@@ -33,21 +40,13 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!exercise) return res.status(403).send("Access Denied");
 
-    const parsedReps = parseInt(reps);
-
-    if (isNaN(parsedReps) || parsedReps < 1 || parsedReps > 100) return res.status(400).send("Invalid reps (1-100)");
-
-    const parsedWeight = parseFloat(weight);
-
-    if (isNaN(parsedWeight) || parsedWeight < 0 || parsedWeight > 1000) return res.status(400).send("Invalid weight (0-1000 kg)");
-
     try {
         const updatedSet = await prisma.setLog.update({
             where: { id: setId },
             data: {
                 type,
-                weight: parsedWeight,
-                reps: parsedReps,
+                weight,
+                reps,
                 date,
                 time
             }
@@ -104,6 +103,36 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
             }
         });
         return res.status(201).json(set);
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+export const deleteSet = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    const userId: string = (req as any).userId;
+
+    if (!userId) return res.status(401).send('Token missing');
+
+    const setId: string = req.params.id;
+
+    if (!setId) return res.status(400).send("Bad Request");
+
+    const set = await prisma.setLog.findUnique({where: { id: setId, userId: userId }});
+
+    if (!set) return res.status(404).send("Set not found");
+
+    const exercise = await prisma.exerciseLog.findFirst({
+        where: { id: set.exerciseId, userId }
+    });
+
+    if (!exercise) return res.status(403).send("Access Denied");
+
+    try {
+        const deletedSet = await prisma.setLog.delete({
+            where: { id: setId }
+        });
+        return res.status(200).json(deletedSet);
     } catch (error) {
         next(error);
     }
