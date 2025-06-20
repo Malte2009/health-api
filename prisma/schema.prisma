@@ -62,6 +62,7 @@ model SetLog {
   id           String      @id @default(uuid())
   exerciseId   String
   userId       String
+  type         String?
   date         String
   time         String
   reps         Int

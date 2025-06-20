@@ -13,7 +13,9 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!setId) return res.status(400).send("Bad Request");
 
-    let { weight, reps, date, time } = req.body;
+    let { type, weight, reps, date, time } = req.body;
+
+    if (!type || typeof type !== "string") return res.status(400).send("Invalid type");
 
     if (!date || typeof date != "string") date = getCurrentDate()
 
@@ -43,6 +45,7 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
         const updatedSet = await prisma.setLog.update({
             where: { id: setId },
             data: {
+                type,
                 weight: parsedWeight,
                 reps: parsedReps,
                 date,
@@ -62,7 +65,9 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!userId) return res.status(401).send('Token missing');
 
-    let { exerciseId, date, time } = req.body;
+    let { type, exerciseId, date, time } = req.body;
+
+    if (!type || typeof type !== "string") return res.status(400).send("Invalid type");
 
     const reps = parseInt(req.body.reps);
 
@@ -89,6 +94,7 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
     try {
         const set = await prisma.setLog.create({
             data: {
+                type,
                 userId: userId,
                 exerciseId,
                 reps: reps,
