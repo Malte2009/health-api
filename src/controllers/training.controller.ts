@@ -152,6 +152,18 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
         select: { weight: true }
     }))?.weight;
 
+    const pauses = req.body.pauses || 0;
+    const pauseLengthInMinutes = req.body.pauseLengthInMinutes || 0;
+
+    if (isNaN(pauses) || pauses < 0 || pauses > 100) return res.status(400).send("Invalid number of pauses (0-100)");
+    if (isNaN(pauseLengthInMinutes) || pauseLengthInMinutes < 0 || pauseLengthInMinutes > 60) return res.status(400).send("Invalid pause length (0-60 minutes)");
+
+    const activeDuration = duration - pauses * pauseLengthInMinutes;
+
+    console.log("Active Duration: %d minutes", activeDuration);
+
+    let activeColoriesPerMinute = 0;
+
     if (avgHeartRate && duration) {
 
         if (!data || !weight) return res.status(404).send("User Not Found");
@@ -159,11 +171,17 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
         const age = new Date().getFullYear() - data?.birthYear;
 
         if (data.gender === "male") {
-            burnedCalories = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184) * duration
+            activeColoriesPerMinute = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184)
         } else if (data.gender === "female") {
-            burnedCalories = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184) * duration
+            activeColoriesPerMinute = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184)
         }
     }
+
+    console.log("Active Calories Per Minute: %d", activeColoriesPerMinute);
+
+    let passiveCaloriesPerMin = activeColoriesPerMinute * 0.5;
+
+    burnedCalories = (activeColoriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLengthInMinutes * pauses);
 
     try {
         const training = await prisma.trainingLog.create({
