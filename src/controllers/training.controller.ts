@@ -15,10 +15,10 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
         const trainingLog = await prisma.trainingLog.findUnique({
             where: { id: trainingLogId, userId: userId },
             include: { exercises: { include: { sets: {
-                orderBy: {
-                    "date": "asc",
-                    "time": "asc"
-                }
+                orderBy: [
+                    { date: "asc" },
+                    { time: "asc" }
+                ]
             } } } }
         });
 
