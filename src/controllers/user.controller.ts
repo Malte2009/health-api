@@ -71,9 +71,9 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 }
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    let token = req.cookies.token;
+    let token = req.headers.authorization?.split(' ')[1];
 
-    if (!token) token = req.headers.authorization?.split(' ')[1];
+    if (!token) token = req.cookies.token; 
 
     if (!token) return res.status(401).send('Unauthorized');
 
