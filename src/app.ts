@@ -52,7 +52,7 @@ app.use(cors({
             callback(new Error('Not allowed by CORS'));
         }
     },
-	credentials: true,
+	credentials: true
 }));
 
 if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined in .env file');
