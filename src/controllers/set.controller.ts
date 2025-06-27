@@ -2,6 +2,28 @@ import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import {getCurrentDate, getCurrentTime} from "../utility/date";
 
+export const getSetById = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    const userId: string = (req as any).userId;
+
+    if (!userId) return res.status(401).send('Token missing');
+
+    const setId: string = req.params.id;
+
+    if (!setId) return res.status(400).send("Bad Request");
+
+    try {
+        const set = await prisma.setLog.findUnique({
+            where: { id: setId, userId: userId },
+        });
+        
+        if (!set) return res.status(404).send("Set not found");
+
+        return res.status(200).json(set);
+    } catch (error) {
+        return next(error);
+    }
+}
+
 export const getSetTypes = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     const userId: string = (req as any).userId;
 
