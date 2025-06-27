@@ -14,7 +14,12 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
     try {
         const trainingLog = await prisma.trainingLog.findUnique({
             where: { id: trainingLogId, userId: userId },
-            include: { exercises: { include: { sets: true } } }
+            include: { exercises: { include: { sets: {
+                orderBy: {
+                    "date": "asc",
+                    "time": "asc"
+                }
+            } } } }
         });
 
         if (!trainingLog) return res.status(404).send("Training Log Not Found");
