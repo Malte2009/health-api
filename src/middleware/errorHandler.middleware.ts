@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 
 interface CustomError extends Error {
     status?: number;
@@ -8,8 +8,7 @@ interface CustomError extends Error {
 export const errorHandler = (
     error: CustomError, 
     req: Request, 
-    res: Response, 
-    next: NextFunction
+    res: Response
 ) => {
     const isDevelopment = process.env.NODE_ENV === 'development';
     

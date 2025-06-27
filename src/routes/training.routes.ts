@@ -6,7 +6,8 @@ import {
     getTraining,
     getTrainingByDate,
     updateTraining,
-    deleteTraining
+    deleteTraining,
+    getTrainingTypes
 } from "../controllers/training.controller";
 
 const router = Router();
@@ -14,8 +15,9 @@ const router = Router();
 router.get("/getTraining", authenticateToken, getTraining);
 router.get("/getTraining/:id", authenticateToken, getTrainingById);
 router.get("/getTrainingByDate", authenticateToken, getTrainingByDate);
+router.get("/getTrainingTypes", authenticateToken, getTrainingTypes);
 router.patch("/updateTraining/:id", authenticateToken, updateTraining);
 router.post('/createTraining', authenticateToken, createTraining);
-router.delete('/deleteTraining/:id', authenticateToken, deleteTraining)
+router.delete('/deleteTraining/:id', authenticateToken, deleteTraining);
 
 export default router;

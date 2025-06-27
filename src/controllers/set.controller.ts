@@ -2,6 +2,25 @@ import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import {getCurrentDate, getCurrentTime} from "../utility/date";
 
+export const getSetTypes = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    const userId: string = (req as any).userId;
+
+    if (!userId) return res.status(401).send('Token missing');
+
+    try {
+        const sets = await prisma.setLog.findMany({
+            where: { userId: userId },
+            select: { type: true },
+            distinct: ['type'],
+            orderBy: { type: 'asc' }
+        });
+        return res.status(200).json(sets);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+
 export const changeSet = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 

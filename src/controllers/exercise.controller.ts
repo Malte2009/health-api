@@ -1,11 +1,31 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {getCurrentDate, getCurrentTime} from "../utility/date";
+import {AuthenticatedRequest} from "../middleware/auth.middleware";
 
-export const changeExercise = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const getExerciseNames = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    if (!userId) return res.status(401).send('Token missing');
+
+    try {
+        const exerciseNames = await prisma.exerciseLog.findMany({
+            where: { userId: userId },
+            select: { name: true },
+            distinct: ['name'],
+            orderBy: { name: 'asc' }
+        });
+
+        return res.status(200).json(exerciseNames);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const changeExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
-    const userId: string = (req as any).userId;
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 
@@ -40,10 +60,10 @@ export const changeExercise = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const createExercise = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const createExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
-    const userId: string = (req as any).userId;
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 
@@ -75,8 +95,8 @@ export const createExercise = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const deleteExercise = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const userId: string = (req as any).userId;
+export const deleteExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 

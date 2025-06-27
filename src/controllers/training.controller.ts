@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {getCurrentDate, getCurrentTime} from "../utility/date";
 import {AuthenticatedRequest} from "../middleware/auth.middleware";
@@ -7,7 +7,9 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
     const userId = req.userId
     const trainingLogId: string = req.params.id;
 
-    if (!userId || !trainingLogId) return res.status(400).send("Bad Request");
+    if (!userId) return res.status(401).send("Unauthorized");
+
+    if (!trainingLogId) return res.status(400).send("Bad Request");
 
     try {
         const trainingLog = await prisma.trainingLog.findUnique({
@@ -27,7 +29,7 @@ export const getTrainingByDate = async (req: AuthenticatedRequest, res: Response
     const userId = req.userId;
     const date: string = req.query.date?.toString() ?? getCurrentDate();
 
-    if (!userId) return res.status(400).send("Bad Request");
+    if (!userId) return res.status(401).send("Unauthorized");
 
     try {
         const trainingLogs = await prisma.trainingLog.findMany({
@@ -45,7 +47,7 @@ export const getTrainingByDate = async (req: AuthenticatedRequest, res: Response
 export const getTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
-    if (!userId) return res.status(400).send("Bad Request");
+    if (!userId) return res.status(401).send("Unauthorized");
 
     try {
         const trainingLogs = await prisma.trainingLog.findMany({
@@ -54,6 +56,24 @@ export const getTraining = async (req: AuthenticatedRequest, res: Response, next
             include:  { exercises: { include: { sets: true } } }
         });
         return res.status(200).json(trainingLogs);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getTrainingTypes = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    if (!userId) return res.status(401).send("Unauthorized");
+
+    try {
+        const trainingTypes = await prisma.trainingLog.findMany({
+            where: { userId: userId },
+            select: { type: true },
+            distinct: ['type'],
+            orderBy: { type: 'asc' }
+        });
+        return res.status(200).json(trainingTypes);
     } catch (error) {
         next(error);
     }
