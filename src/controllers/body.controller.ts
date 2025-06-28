@@ -8,14 +8,10 @@ export const getCaloriesBurnedOnDay = async (req: Request, res: Response, next: 
 
     if (!userId) return res.status(400).send("Bad Request");
 
-    const date: string = req.query.date?.toString() ?? getCurrentDate();
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
-
     try {
         const BMR = await prisma.bodyLog.findFirst({
             where: {userId: userId},
-            orderBy: {date: 'desc'},
+            orderBy: {createdAt: 'desc'},
             select: {BMR: true}
         });
 
@@ -23,8 +19,7 @@ export const getCaloriesBurnedOnDay = async (req: Request, res: Response, next: 
 
         const burnedCalories = await prisma.trainingLog.findMany({
             where: {
-                userId,
-                date
+                userId
             },
             select: { caloriesBurned: true }
         });
@@ -62,19 +57,10 @@ export const createBodyLog = async (req: Request, res: Response, next: NextFunct
         BMR = 655.1 + (9.563 * weight) + (1.850 * height) - (4.676 * age);
     }
 
-    let date;
-
-    if (req.body?.date) {
-        date = new Date(req.body.date)
-    } else {
-        date = new Date()
-    }
-
     try {
         const bodyLog = await prisma.bodyLog.create({
             data: {
                 userId: userId,
-                date: date,
                 weight: weight,
                 height: height,
                 fatMass: fatMass,

@@ -1,6 +1,5 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
-import {getCurrentDate, getCurrentTime} from "../utility/date";
 import {AuthenticatedRequest} from "../middleware/auth.middleware";
 
 export const getTrainingById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
@@ -15,35 +14,13 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
         const trainingLog = await prisma.trainingLog.findUnique({
             where: { id: trainingLogId, userId: userId },
             include: { exercises: { include: { sets: {
-                orderBy: [
-                    { date: "asc" },
-                    { time: "asc" }
-                ]
+                orderBy: { createdAt: "asc" }
             } } } }
         });
 
         if (!trainingLog) return res.status(404).send("Training Log Not Found");
 
         return res.status(200).json(trainingLog);
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const getTrainingByDate = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
-    const userId = req.userId;
-    const date: string = req.query.date?.toString() ?? getCurrentDate();
-
-    if (!userId) return res.status(401).send("Unauthorized");
-
-    try {
-        const trainingLogs = await prisma.trainingLog.findMany({
-            where: { userId: userId, date: date },
-            orderBy: { date: 'desc' },
-            include: { exercises: { include: { sets: true } } }
-        });
-
-        return res.status(200).json(trainingLogs);
     } catch (error) {
         next(error);
     }
@@ -57,7 +34,7 @@ export const getTraining = async (req: AuthenticatedRequest, res: Response, next
     try {
         const trainingLogs = await prisma.trainingLog.findMany({
             where: { userId: userId },
-            orderBy: { date: 'desc' },
+            orderBy: { createdAt: 'desc' },
             include:  { exercises: { include: { sets: true } } }
         });
         return res.status(200).json(trainingLogs);
@@ -106,8 +83,8 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     })
 
     const weight = (await prisma.bodyLog.findFirst({
-        where: { userId: userId, date: { lte: new Date() } },
-        orderBy: { date: 'desc' },
+        where: { userId: userId },
+        orderBy: { createdAt: 'desc' },
         select: { weight: true }
     }))?.weight;
 
@@ -146,15 +123,9 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!req.body.type) return res.status(400).send("Training type is required");
 
-    console.log(req.userId)
-
     const userId = req.userId;
 
     if (!userId) return res.status(401).send("Unauthorized");
-
-    const date = req.body?.date?.toString() ?? getCurrentDate();
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).send("Invalid date format, use YYYY-MM-DD");
 
     const avgHeartRate = parseInt(req.body.avgHeartRate);
 
@@ -172,8 +143,8 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     })
 
     const weight = (await prisma.bodyLog.findFirst({
-        where: { userId: userId, date: { lte: new Date() } },
-        orderBy: { date: 'desc' },
+        where: { userId: userId },
+        orderBy: { createdAt: 'desc' },
         select: { weight: true }
     }))?.weight;
 
@@ -212,8 +183,6 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
         const training = await prisma.trainingLog.create({
             data: {
                 userId: userId,
-                date: req.body?.date ?? getCurrentDate(),
-                time: req.body?.time ?? getCurrentTime(),
                 type: req.body?.type,
                 notes: req.body?.notes,
                 avgHeartRate,

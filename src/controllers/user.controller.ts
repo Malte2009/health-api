@@ -70,7 +70,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const isAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const isAuthenticated = async (req: Request, res: Response): Promise<any> => {
     let token = req.headers.authorization?.split(' ')[1];
 
     if (!token) token = req.cookies.token; 
@@ -90,7 +90,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
 }
 
-export const logoutUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const logoutUser = async (req: Request, res: Response): Promise<any> => {
     res.clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

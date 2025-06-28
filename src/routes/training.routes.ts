@@ -4,7 +4,6 @@ import {
     createTraining,
     getTrainingById,
     getTraining,
-    getTrainingByDate,
     updateTraining,
     deleteTraining,
     getTrainingTypes
@@ -14,7 +13,6 @@ const router = Router();
 
 router.get("/getTraining", authenticateToken, getTraining);
 router.get("/getTraining/:id", authenticateToken, getTrainingById);
-router.get("/getTrainingByDate", authenticateToken, getTrainingByDate);
 router.get("/getTrainingTypes", authenticateToken, getTrainingTypes);
 router.patch("/updateTraining/:id", authenticateToken, updateTraining);
 router.post('/createTraining', authenticateToken, createTraining);

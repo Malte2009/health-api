@@ -32,8 +32,8 @@ model User {
 model TrainingLog {
   id        String         @id @default(uuid())
   userId    String
-  date      String
-  time      String
+  createdAt DateTime      @default(now())
+  changedAt DateTime      @updatedAt
   type      String
   score     Float?
   notes     String?
@@ -50,8 +50,8 @@ model ExerciseLog {
   userId     String
   trainingId String
   name       String
-  date       String
-  time       String
+  createdAt  DateTime      @default(now())
+  changedAt  DateTime      @updatedAt
 
   sets       SetLog[]
   user       User          @relation(fields: [userId], references: [id])
@@ -63,8 +63,8 @@ model SetLog {
   exerciseId   String
   userId       String
   type         String?
-  date         String
-  time         String
+  createdAt   DateTime   @default(now())
+  changedAt   DateTime   @updatedAt
   reps         Int
   weight       Float
 
@@ -75,7 +75,8 @@ model SetLog {
 model NutritionLog {
   id        String         @id @default(uuid())
   userId    String
-  date      DateTime
+  createdAt DateTime      @default(now())
+  changedAt DateTime      @updatedAt
   mealType  String
   kcal      Int
   protein   Int
@@ -88,7 +89,8 @@ model NutritionLog {
 model BodyLog {
   id         String        @id @default(uuid())
   userId     String
-  date       DateTime
+  createdAt  DateTime      @default(now())
+  changedAt  DateTime      @updatedAt
   weight     Float
   height     Float
   fatMass    Float?

@@ -88,8 +88,6 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
                 type,
                 weight,
                 reps,
-                date,
-                time
             }
         });
         return res.status(200).json(updatedSet);
@@ -139,8 +137,6 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
                 exerciseId,
                 reps: reps,
                 weight : weight,
-                date,
-                time
             }
         });
         return res.status(201).json(set);

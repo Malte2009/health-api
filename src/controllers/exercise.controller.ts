@@ -1,6 +1,5 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
-import {getCurrentDate, getCurrentTime} from "../utility/date";
 import {AuthenticatedRequest} from "../middleware/auth.middleware";
 
 export const getExerciseNames = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
@@ -56,11 +55,7 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
     if (!exerciseId) return res.status(400).send("Bad Request");
 
-    let { name, date, time } = req.body;
-
-    if (!date || typeof date != "string") date = getCurrentDate()
-
-    if (!time || typeof time != "string") time = getCurrentTime()
+    let { name } = req.body;
 
     if (!name) return res.status(400).send("Bad Request");
 
@@ -72,9 +67,7 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
         const updatedExercise = await prisma.exerciseLog.update({
             where: { id: exerciseId },
             data: {
-                name,
-                date,
-                time
+                name
             }
         });
         return res.status(200).json(updatedExercise);
@@ -90,11 +83,7 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
 
     if (!userId) return res.status(401).send('Token missing');
 
-    let { name, trainingId, date, time } = req.body;
-
-    if (!date || typeof date != "string") date = getCurrentDate()
-
-    if (!time || typeof time != "string") time = getCurrentTime()
+    let { name, trainingId } = req.body;
 
     if (!name || !trainingId) return res.status(400).send("Bad Request");
 
@@ -107,9 +96,7 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
             data: {
                 trainingId,
                 userId,
-                name,
-                date,
-                time
+                name
             }
         });
         return res.status(201).json(exercise);
