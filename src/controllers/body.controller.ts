@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import {getAge, getGender} from "../utility/userData";
-import {getCurrentDate} from "../utility/date";
 
 export const getCaloriesBurnedOnDay = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     const userId: string = (req as any).userId;

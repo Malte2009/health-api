@@ -21,6 +21,7 @@ model User {
   password   String
   birthYear  Int
   createdAt  DateTime      @default(now())
+  changedAt  DateTime?     @updatedAt
 
   trainings  TrainingLog[]
   exercises  ExerciseLog[]
@@ -33,7 +34,7 @@ model TrainingLog {
   id        String         @id @default(uuid())
   userId    String
   createdAt DateTime      @default(now())
-  changedAt DateTime      @updatedAt
+  changedAt DateTime?      @updatedAt
   type      String
   score     Float?
   notes     String?
@@ -51,7 +52,7 @@ model ExerciseLog {
   trainingId String
   name       String
   createdAt  DateTime      @default(now())
-  changedAt  DateTime      @updatedAt
+  changedAt  DateTime?     @updatedAt
 
   sets       SetLog[]
   user       User          @relation(fields: [userId], references: [id])
@@ -64,7 +65,7 @@ model SetLog {
   userId       String
   type         String?
   createdAt   DateTime   @default(now())
-  changedAt   DateTime   @updatedAt
+  changedAt  DateTime?     @updatedAt
   reps         Int
   weight       Float
 
@@ -76,7 +77,7 @@ model NutritionLog {
   id        String         @id @default(uuid())
   userId    String
   createdAt DateTime      @default(now())
-  changedAt DateTime      @updatedAt
+  changedAt  DateTime?     @updatedAt
   mealType  String
   kcal      Int
   protein   Int
@@ -90,7 +91,7 @@ model BodyLog {
   id         String        @id @default(uuid())
   userId     String
   createdAt  DateTime      @default(now())
-  changedAt  DateTime      @updatedAt
+  changedAt  DateTime?     @updatedAt
   weight     Float
   height     Float
   fatMass    Float?
