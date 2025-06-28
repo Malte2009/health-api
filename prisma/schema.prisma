@@ -34,7 +34,7 @@ model TrainingLog {
   id        String         @id @default(uuid())
   userId    String
   createdAt DateTime      @default(now())
-  changedAt DateTime?      @updatedAt
+  changedAt DateTime?     @updatedAt
   type      String
   score     Float?
   notes     String?
@@ -53,6 +53,7 @@ model ExerciseLog {
   name       String
   createdAt  DateTime      @default(now())
   changedAt  DateTime?     @updatedAt
+  order      Int           @default(0)
 
   sets       SetLog[]
   user       User          @relation(fields: [userId], references: [id])
@@ -64,8 +65,9 @@ model SetLog {
   exerciseId   String
   userId       String
   type         String?
-  createdAt   DateTime   @default(now())
-  changedAt  DateTime?     @updatedAt
+  createdAt    DateTime    @default(now())
+  changedAt    DateTime?   @updatedAt
+  order        Int         @default(0)
   reps         Int
   weight       Float
 
@@ -76,7 +78,7 @@ model SetLog {
 model NutritionLog {
   id        String         @id @default(uuid())
   userId    String
-  createdAt DateTime      @default(now())
+  createdAt DateTime       @default(now())
   changedAt  DateTime?     @updatedAt
   mealType  String
   kcal      Int
