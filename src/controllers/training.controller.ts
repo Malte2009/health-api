@@ -65,7 +65,13 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     const userId = req.userId;
     const trainingLogId: string = req.params.id;
 
+    if (!userId) return res.status(401).send("Unauthorized");
+
     const notes = req.body.notes
+
+    const type = req.body.type;
+
+    if (!type) return res.status(400).send("Training type is required");
 
     const avgHeartRate = parseInt(req.body.avgHeartRate);
 
@@ -104,6 +110,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
         const updatedTrainingLog = await prisma.trainingLog.update({
             where: { id: trainingLogId, userId: userId },
             data: {
+                type: type,
                 avgHeartRate: avgHeartRate,	
                 notes: notes || null,
                 durationMinutes,
