@@ -127,18 +127,18 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                             user: { connect: { id: userId } },
                             
                             sets: {
-                                update: exercise.sets.map((set: any) => ({
-                                    where: { id: set.id || '' },
-                                    data: {
-                                        reps: set.reps,
-                                        weight: set.weight,
-                                        order: set.order || 0,
-                                        user: { connect: { id: userId } }
-                                    }
-                                }))
-                            }
-                        }
-                    }))
+                                update: exercise.sets
+                                    .filter((set: any) => set.id) // Filter out sets with missing id
+                                    .map((set: any) => ({
+                                        where: { id: set.id },
+                                        data: {
+                                            reps: set.reps,
+                                            weight: set.weight,
+                                            order: set.order || 0,
+                                            user: { connect: { id: userId } }
+                                        }
+                                    }))
+                }}}))
                 }
             }
         });
