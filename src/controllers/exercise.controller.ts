@@ -64,7 +64,7 @@ export const changeExerciseOrder = async (req: AuthenticatedRequest, res: Respon
     try {
         const exercise = await prisma.exerciseLog.findUnique({where: { id: exerciseId,
             userId: userId }});
-        
+
         if (!exercise) return res.status(404).send("Exercise not found");
 
         const updatedExercise = await prisma.exerciseLog.update({
@@ -91,19 +91,24 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
     if (!exerciseId) return res.status(400).send("Bad Request");
 
-    let { name } = req.body;
-
-    if (!name) return res.status(400).send("Bad Request");
+    let { name, notes } = req.body;
 
     const exercise = await prisma.exerciseLog.findUnique({where: { id: exerciseId, userId: userId }});
 
     if (!exercise) return res.status(404).send("Exercise not found");
 
+    if (name == null && notes == null) return res.status(400).send("Bad Request");
+
+    if (notes == null && exercise?.notes) notes = exercise.notes;
+
+    if (name == null && exercise?.name) name = exercise.name;
+
     try {
         const updatedExercise = await prisma.exerciseLog.update({
             where: { id: exerciseId },
             data: {
-                name
+                name,
+                notes
             },
             include: { sets: true }
         });
@@ -120,9 +125,11 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
 
     if (!userId) return res.status(401).send('Token missing');
 
-    let { name, trainingId } = req.body;
+    let { name, trainingId, notes } = req.body;
 
     if (!name || !trainingId) return res.status(400).send("Bad Request");
+
+    if (notes != null && typeof notes !== 'string') return res.status(400).send("Notes must be a string");
 
     const training = await prisma.trainingLog.findUnique({where: { id: trainingId, userId: userId }});
 
@@ -133,7 +140,8 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
             data: {
                 trainingId,
                 userId,
-                name
+                name,
+                notes: notes || null
             }
         });
         return res.status(201).json(exercise);

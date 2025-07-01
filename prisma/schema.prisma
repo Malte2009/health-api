@@ -54,6 +54,7 @@ model ExerciseLog {
   createdAt  DateTime      @default(now())
   changedAt  DateTime?     @updatedAt
   order      Int           @default(autoincrement())
+  notes      String?
 
   sets       SetLog[]
   user       User          @relation(fields: [userId], references: [id])
