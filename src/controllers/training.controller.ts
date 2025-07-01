@@ -119,7 +119,6 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                 notes: notes || null,
                 durationMinutes,
                 caloriesBurned: Math.round(burnedCalories * 100) / 100,
-                type: type,
                 score: score || null,
                 exercises: {
                     update: exercises?.map((exercise: any) => ({
