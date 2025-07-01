@@ -53,7 +53,7 @@ model ExerciseLog {
   name       String
   createdAt  DateTime      @default(now())
   changedAt  DateTime?     @updatedAt
-  order      Int           @default(0)
+  order      Int           @default(autoincrement())
   notes      String?
 
   sets       SetLog[]
@@ -68,7 +68,7 @@ model SetLog {
   type         String?
   createdAt    DateTime    @default(now())
   changedAt    DateTime?   @updatedAt
-  order        Int         @default(0)
+  order        Int         @default(autoincrement())
   reps         Int
   weight       Float
 

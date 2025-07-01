@@ -44,6 +44,42 @@ export const getExerciseById = async (req: AuthenticatedRequest, res: Response, 
     }
 }
 
+export const changeExerciseOrder = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    if (!req.body) return res.status(400).send("Bad Request");
+
+    const userId = req.userId;
+
+    if (!userId) return res.status(401).send('Token missing');
+
+    const exerciseId: string = req.params.id;
+
+    if (!exerciseId) return res.status(400).send("Bad Request");
+
+    const order = req.body.order;
+
+    console.log("Order: ", order, "Type: ", typeof(order)   );
+
+    if (typeof(order) != "number") return res.status(400).send("Bad Request");
+
+    try {
+        const exercise = await prisma.exerciseLog.findUnique({where: { id: exerciseId,
+            userId: userId }});
+
+        if (!exercise) return res.status(404).send("Exercise not found");
+
+        const updatedExercise = await prisma.exerciseLog.update({
+            where: { id: exerciseId },
+            data: {
+                order: order
+            }
+        });
+
+        return res.status(200).json(updatedExercise);
+    } catch (error) {
+        next(error);
+    }
+}
+
 export const changeExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
@@ -73,7 +109,8 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
             data: {
                 name,
                 notes
-            }
+            },
+            include: { sets: true }
         });
         return res.status(200).json(updatedExercise);
     } catch (error) {

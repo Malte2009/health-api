@@ -14,8 +14,8 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
         const trainingLog = await prisma.trainingLog.findUnique({
             where: { id: trainingLogId, userId: userId },
             include: { exercises: { include: { sets: {
-                orderBy: { createdAt: "asc" }
-            } } } }
+                orderBy: [{ order: "asc" }, { createdAt: "asc" } ]
+            } }, orderBy: {order: "asc"} } }
         });
 
         if (!trainingLog) return res.status(404).send("Training Log Not Found");
@@ -73,6 +73,10 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!type) return res.status(400).send("Training type is required");
 
+    const exercises = req.body.exercises;
+
+    const score = req.body.score;
+
     const avgHeartRate = parseInt(req.body.avgHeartRate);
 
     if (isNaN(avgHeartRate) || avgHeartRate < 30 || avgHeartRate > 220) return res.status(400).send("Invalid heart rate (30-220)");
@@ -111,10 +115,34 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
             where: { id: trainingLogId, userId: userId },
             data: {
                 type: type,
-                avgHeartRate: avgHeartRate,	
+                avgHeartRate: avgHeartRate,
                 notes: notes || null,
                 durationMinutes,
-                caloriesBurned: Math.round(burnedCalories * 100) / 100
+                caloriesBurned: Math.round(burnedCalories * 100) / 100,
+                type: type,
+                score: score || null,
+                exercises: {
+                    update: exercises?.map((exercise: any) => ({
+                        where: { id: exercise.id },
+                        data: {
+                            name: exercise.name,
+                            order: exercise.order,
+                            user: { connect: { id: userId } },
+
+                            sets: {
+                                update: exercise.sets
+                                    .filter((set: any) => set.id) // Filter out sets with missing id
+                                    .map((set: any) => ({
+                                        where: { id: set.id },
+                                        data: {
+                                            reps: set.reps,
+                                            weight: set.weight,
+                                            order: set.order || 0,
+                                            user: { connect: { id: userId } }
+                                        }
+                                    }))
+                }}}))
+                }
             }
         });
         return res.status(200).json(updatedTrainingLog);
