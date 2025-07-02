@@ -31,19 +31,21 @@ model User {
 }
 
 model TrainingLog {
-  id        String         @id @default(uuid())
-  userId    String
-  createdAt DateTime      @default(now())
-  changedAt DateTime?     @updatedAt
-  type      String
-  score     Float?
-  notes     String?
-  caloriesBurned Float?
+  id              String       @id @default(uuid())
+  userId          String
+  createdAt       DateTime     @default(now())
+  changedAt       DateTime?    @updatedAt
+  type            String
+  score           Float?
+  notes           String?
+  caloriesBurned  Float?
   durationMinutes Int?
   avgHeartRate    Int?
+  pauses          Int          @default(0)
+  pauseLength     Int          @default(0)
 
-  user      User           @relation(fields: [userId], references: [id])
-  exercises ExerciseLog[]
+  user            User         @relation(fields: [userId], references: [id])
+  exercises       ExerciseLog[]
 }
 
 model ExerciseLog {
@@ -80,7 +82,7 @@ model NutritionLog {
   id        String         @id @default(uuid())
   userId    String
   createdAt DateTime       @default(now())
-  changedAt  DateTime?     @updatedAt
+  changedAt DateTime?      @updatedAt
   mealType  String
   kcal      Int
   protein   Int

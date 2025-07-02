@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
-import {getCurrentDate, getCurrentTime} from "../utility/date";
 
 export const getSetById = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     const userId: string = (req as any).userId;
@@ -54,26 +53,25 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!setId) return res.status(400).send("Bad Request");
 
-    let { type, date, time } = req.body;
-
-    if (!type || typeof type !== "string") return res.status(400).send("Invalid type");
-
-    if (!date || typeof date != "string") date = getCurrentDate()
-
-    if (!time || typeof time != "string") time = getCurrentTime()
-
-
-    const reps = parseInt(req.body.reps);
-
-    if (isNaN(reps) || reps < 1 || reps > 100) return res.status(400).send("Invalid reps (1-100)");
-
-    const weight = parseFloat(req.body.weight);
-
-    if (isNaN(weight) || weight < 0 || weight > 1000) return res.status(400).send("Invalid weight (0-1000 kg)");
+    let type = req.body.type;
 
     const set = await prisma.setLog.findUnique({where: { id: setId, userId: userId }});
 
     if (!set) return res.status(404).send("Set not found");
+
+    let reps = parseInt(req.body.reps);
+    let weight = parseFloat(req.body.weight);
+
+    if (!reps && !weight && !type) return res.status(400).send("Bad Request");
+
+    if (!reps && set.reps) reps = set.reps;
+    if (isNaN(reps) || reps < 1 || reps > 1000) return res.status(400).send("Invalid reps (1-1000)");
+
+    if (!weight && set.weight) weight = set.weight;
+    if (isNaN(weight) || weight < 0 || weight > 1000) return res.status(400).send("Invalid weight (0-1000 kg)");
+
+    if (!type && set.type) type = set.type;
+    if (type != null && typeof type !== 'string') return res.status(400).send("Invalid type");
 
     const exercise = await prisma.exerciseLog.findFirst({
         where: { id: set.exerciseId, userId }
@@ -103,7 +101,7 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!userId) return res.status(401).send('Token missing');
 
-    let { type, exerciseId, date, time } = req.body;
+    let { type, exerciseId} = req.body;
 
     if (!type || typeof type !== "string") return res.status(400).send("Invalid type");
 
@@ -123,20 +121,16 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!exercise) return res.status(403).send("Access Denied");
 
-    if (!date || typeof date != "string") date = getCurrentDate()
-
-    if (!time || typeof time != "string") time = getCurrentTime()
-
     if (!exerciseId || !reps || !weight) return res.status(400).send("Bad Request");
 
     try {
         const set = await prisma.setLog.create({
             data: {
                 type,
-                userId: userId,
+                userId,
                 exerciseId,
-                reps: reps,
-                weight : weight,
+                reps,
+                weight
             }
         });
         return res.status(201).json(set);

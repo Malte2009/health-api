@@ -67,30 +67,54 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!userId) return res.status(401).send("Unauthorized");
 
-    const notes = req.body.notes
+    let { notes, type, exercises, pauses, pauseLength } = req.body;
 
-    const type = req.body.type;
+    let avgHeartRate = parseInt(req.body.avgHeartRate);
+    let durationMinutes = parseInt(req.body.durationMinutes);
 
-    if (!type) return res.status(400).send("Training type is required");
+    const training = await prisma.trainingLog.findUnique({
+        where: { id: trainingLogId, userId: userId },
+        include: { exercises: { include: { sets: true } } }
+    });
 
-    const exercises = req.body.exercises;
+    if (!training) return res.status(404).send("Training Not Found");
 
-    const score = req.body.score;
+    if (!type && !notes && !exercises && !avgHeartRate && !durationMinutes) return res.status(400).send("Bad Request");
 
-    const avgHeartRate = parseInt(req.body.avgHeartRate);
+    if (!notes && training.notes) notes = training.notes;
+    if (notes != null && typeof notes !== 'string') return res.status(400).send("Notes must be a string");
+    if (notes != null && notes.length > 500) return res.status(400).send("Notes must be at most 500 characters long");
+    if (notes != null && notes.length < 1) return res.status(400).send("Notes must be at least 1 character long");
 
+    if (!type && training.type) type = training.type;
+    if (type != null && typeof type !== 'string') return res.status(400).send("Type must be a string");
+    if (type != null && type.length > 100) return res.status(400).send("Type must be at most 100 characters long");
+    if (type != null && type.length < 1) return res.status(400).send("Type must be at least 1 character long");
+
+    if (!exercises && training.exercises) exercises = training.exercises;
+    if (exercises && !Array.isArray(exercises)) return res.status(400).send("Exercises must be an array");
+    if (exercises && exercises.length > 100) return res.status(400).send("Too many exercises (max 100)");
+
+    if (avgHeartRate == null && training.avgHeartRate) avgHeartRate = training.avgHeartRate;
     if (isNaN(avgHeartRate) || avgHeartRate < 30 || avgHeartRate > 220) return res.status(400).send("Invalid heart rate (30-220)");
 
-    const durationMinutes = parseInt(req.body.durationMinutes);
-
+    if (durationMinutes == null && training.durationMinutes) durationMinutes = training.durationMinutes;
     if (isNaN(durationMinutes) || durationMinutes < 1 || durationMinutes > 600) return res.status(400).send("Invalid duration (1-600 minutes)");
 
-    if (!userId || !trainingLogId || !avgHeartRate || !durationMinutes) return res.status(400).send("Bad Request");
+    if (!pauses && training.pauses) pauses = training.pauses;
+    if (pauses == null) pauses = 0;
+    if (isNaN(pauses) || pauses < 0 || pauses > 100) return res.status(400).send("Invalid number of pauses (0-100)");
+
+    if (!pauseLength && training.pauseLength) pauseLength = training.pauseLength;
+    if (pauseLength == null) pauseLength = 0;
+    if (isNaN(pauseLength) || pauseLength < 0 || pauseLength > 60) return res.status(400).send("Invalid pause length (0-60 minutes)");
+
+    //TODO: Validate exercises & sets
 
     const data = await prisma.user.findUnique({
         where: { id: userId },
         select: { gender: true, birthYear: true }
-    })
+    });
 
     const weight = (await prisma.bodyLog.findFirst({
         where: { userId: userId },
@@ -98,16 +122,15 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
         select: { weight: true }
     }))?.weight;
 
-    if (!data || !weight) return res.status(404).send("User Not Found");
+    let caloriesBurned = 0;
 
-    const age = new Date().getFullYear() - data.birthYear;
-
-    let burnedCalories = 0;
-
-    if (data.gender === "male") {
-        burnedCalories = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184) * durationMinutes
-    } else if (data.gender === "female") {
-        burnedCalories = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184) * durationMinutes
+    if (data && weight) {
+        const age = new Date().getFullYear() - data.birthYear;
+        if (data.gender === "male") {
+            caloriesBurned = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184) * durationMinutes
+        } else if (data.gender === "female") {
+            caloriesBurned = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184) * durationMinutes
+        }
     }
 
     try {
@@ -118,8 +141,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                 avgHeartRate: avgHeartRate,
                 notes: notes || null,
                 durationMinutes,
-                caloriesBurned: Math.round(burnedCalories * 100) / 100,
-                score: score || null,
+                caloriesBurned: Math.round(caloriesBurned * 100) / 100,
                 exercises: {
                     update: exercises?.map((exercise: any) => ({
                         where: { id: exercise.id },
@@ -127,7 +149,6 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                             name: exercise.name,
                             order: exercise.order,
                             user: { connect: { id: userId } },
-
                             sets: {
                                 update: exercise.sets
                                     .filter((set: any) => set.id) // Filter out sets with missing id
@@ -142,7 +163,8 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                                     }))
                 }}}))
                 }
-            }
+            },
+            include: { exercises: { include: { sets: true } } }
         });
         return res.status(200).json(updatedTrainingLog);
     } catch (error) {
@@ -152,22 +174,36 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
 
 export const createTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
-
-    if (!req.body) return res.status(400).send("Bad Request");
-
-    if (!req.body.type) return res.status(400).send("Training type is required");
-
     const userId = req.userId;
 
     if (!userId) return res.status(401).send("Unauthorized");
 
-    const avgHeartRate = parseInt(req.body.avgHeartRate);
+    let { notes, type, pauses, pauseLength } = req.body;
 
-    if (isNaN(avgHeartRate) || avgHeartRate < 30 || avgHeartRate > 220) return res.status(400).send("Invalid heart rate (30-220)");
+    const avgHeartRate: number | null = req.body.avgHeartRate;
+    const duration: number | null = req.body.duration;
 
-    const durationMinutes = parseInt(req.body.durationMinutes);
+    //Validate request body
+    if (!req.body) return res.status(400).send("Bad Request");
 
-    if (isNaN(durationMinutes) || durationMinutes < 1 || durationMinutes > 600) return res.status(400).send("Invalid duration (1-600 minutes)");
+    if (!type) return res.status(400).send("Training type is required");
+    if (typeof type !== 'string') return res.status(400).send("Type must be a string");
+    if (type.length < 1 || type.length > 100) return res.status(400).send("Type must be between 1 and 100 characters long");
+
+    if (notes && typeof notes !== 'string') return res.status(400).send("Notes must be a string");
+    if (notes.length < 1 || notes.length > 500) return res.status(400).send("Notes must be between 1 and 500 characters long");
+
+    if (pauses == null) pauses = 0;
+    if (isNaN(pauses) || pauses < 0 || pauses > 100) return res.status(400).send("Invalid number of pauses (0-100)");
+
+    if (pauseLength == null) pauseLength = 0;
+    if (isNaN(pauseLength) || pauseLength < 0 || pauseLength > 60) return res.status(400).send("Invalid pause length (0-60 minutes)");
+
+    if (avgHeartRate != null && isNaN(avgHeartRate)) return res.status(400).send("Invalid heart rate");
+    if (avgHeartRate != null && (avgHeartRate < 30 || avgHeartRate > 220)) return res.status(400).send("Invalid heart rate (30-220)");
+
+    if (duration != null && isNaN(duration)) return res.status(400).send("Invalid duration");
+    if (duration != null && (duration < 1 || duration > 600)) return res.status(400).send("Invalid duration (1-600 minutes)");
 
     let burnedCalories = 0;
 
@@ -182,43 +218,31 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
         select: { weight: true }
     }))?.weight;
 
-    const pauses = req.body.pauses || 0;
-    const pauseLengthInMinutes = req.body.pauseLengthInMinutes || 0;
-
-    if (isNaN(pauses) || pauses < 0 || pauses > 100) return res.status(400).send("Invalid number of pauses (0-100)");
-    if (isNaN(pauseLengthInMinutes) || pauseLengthInMinutes < 0 || pauseLengthInMinutes > 60) return res.status(400).send("Invalid pause length (0-60 minutes)");
-
-    const activeDuration = durationMinutes - pauses * pauseLengthInMinutes;
-
-    let activeColoriesPerMinute = 0;
-
-    if (avgHeartRate && durationMinutes) {
-
-        if (!data || !weight) return res.status(404).send("User Not Found");
-
+    if (avgHeartRate && duration && data && weight) {
         const age = new Date().getFullYear() - data?.birthYear;
+        const activeDuration = duration - pauses * pauseLength;
+
+        let activeColoriesPerMinute = 0;
 
         if (data.gender === "male") {
             activeColoriesPerMinute = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184)
         } else if (data.gender === "female") {
             activeColoriesPerMinute = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184)
         }
+
+        let passiveCaloriesPerMin = activeColoriesPerMinute * 0.7;
+
+        burnedCalories = (activeColoriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLength * pauses);
     }
-
-    console.log("Active Calories Per Minute: %d", activeColoriesPerMinute);
-
-    let passiveCaloriesPerMin = activeColoriesPerMinute * 0.5;
-
-    burnedCalories = (activeColoriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLengthInMinutes * pauses);
 
     try {
         const training = await prisma.trainingLog.create({
             data: {
                 userId: userId,
-                type: req.body?.type,
-                notes: req.body?.notes,
+                type,
+                notes,
                 avgHeartRate,
-                durationMinutes,
+                durationMinutes: duration,
                 caloriesBurned: Math.round(burnedCalories)
             }
         });
