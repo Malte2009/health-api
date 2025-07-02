@@ -55,7 +55,10 @@ app.use(cors({
 	credentials: true
 }));
 
-if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined in .env file');
+if (!process.env.JWT_SECRET) {
+	console.error("JWT_SECRET is not defined in the environment variables.");
+	process.exit(1);
+}
 
 app.use("/api", limiter);
 app.use("/api", requestLogger)
