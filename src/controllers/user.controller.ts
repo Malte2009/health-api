@@ -21,7 +21,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
         if (existingUser) return res.status(400).send("Registration failed: Please check your credentials");
     } catch (error) {
-        return res.status(500).send('Internal Server Error');
+        next(error);
     }
 
     if (!email || !name || !password || !birthYear) {
@@ -86,6 +86,7 @@ export const isAuthenticated = async (req: Request, res: Response): Promise<any>
 
         return res.status(200).send(token);
     } catch (error) {
+        console.error('Token verification failed:', error);
         return res.status(401).send('Unauthorized');
     }
 }
