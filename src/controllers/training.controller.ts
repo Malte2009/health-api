@@ -259,7 +259,7 @@ export const deleteTraining = async (req: AuthenticatedRequest, res: Response, n
     if (!userId || !trainingLogId) return res.status(400).send("Bad Request");
 
     try {
-        const deletedTrainingLog = await prisma.trainingLog.delete({
+        await prisma.trainingLog.delete({
             where: { id: trainingLogId, userId: userId }
         });
 
