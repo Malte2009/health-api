@@ -11,9 +11,10 @@ import exerciseRoutes from "./routes/exercise.routes";
 import setRoutes from "./routes/set.routes";
 import bodyRoutes from "./routes/body.routes";
 import { requestLogger } from './middleware/logger.middleware';
-import { sanitizeInput } from './middleware/inputSanitizer.middleware';
+import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isAuthenticated } from './controllers/user.controller';
+import { authenticateToken } from './middleware/auth.middleware';
 
 dotenv.config();
 
@@ -60,13 +61,15 @@ if (!process.env.JWT_SECRET) {
 	process.exit(1);
 }
 
-app.use("/api", limiter);
-app.use("/api", requestLogger)
 app.use("/api", sanitizeInput);
+app.use("/api", validateInput);
+app.use("/api", limiter);
+app.use("/api", requestLogger);
 
-app.use("/api/users/isAuthenticated", isAuthenticatedLimiter, isAuthenticated);
+app.use("/api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
 app.use('/api/users', authLimiter, userRoutes);
 app.use("/api/training", trainingRoutes);
+
 app.use("/api/exercise", exerciseRoutes)
 app.use("/api/set", setRoutes)
 app.use("/api/body", bodyRoutes)

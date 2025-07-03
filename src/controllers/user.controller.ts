@@ -86,7 +86,6 @@ export const isAuthenticated = async (req: Request, res: Response): Promise<any>
 
         return res.status(200).send(token);
     } catch (error) {
-        console.error('Token verification failed:', error);
         return res.status(401).send('Unauthorized');
     }
 }

@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
 import {getAge, getGender} from "../utility/userData";
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
-export const getCaloriesBurnedOnDay = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const userId: string = (req as any).userId;
+export const getCaloriesBurnedOnDay = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
 
     if (!userId) return res.status(400).send("Bad Request");
 
@@ -35,10 +36,10 @@ export const getCaloriesBurnedOnDay = async (req: Request, res: Response, next: 
     }
 }
 
-export const createBodyLog = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const createBodyLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
-    const userId: string = (req as any).userId;
+    const userId = req.userId;
 
     const { weight, height, fatMass, fatPercentage, muscleMass, waterMass } = req.body;
 

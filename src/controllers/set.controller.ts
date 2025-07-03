@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../prisma/client';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
-export const getSetById = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const userId: string = (req as any).userId;
+export const getSetById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 
@@ -23,8 +24,8 @@ export const getSetById = async (req: Request, res: Response, next: NextFunction
     }
 }
 
-export const getSetTypes = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const userId: string = (req as any).userId;
+export const getSetTypes = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 
@@ -42,10 +43,10 @@ export const getSetTypes = async (req: Request, res: Response, next: NextFunctio
 }
 
 
-export const changeSet = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const changeSet = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
-    const userId: string = (req as any).userId;
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 
@@ -94,26 +95,18 @@ export const changeSet = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const createSet = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const createSet = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
-    const userId: string = (req as any).userId;
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 
     let { type, exerciseId} = req.body;
 
-    if (!type || typeof type !== "string") return res.status(400).send("Invalid type");
-
     const reps = parseInt(req.body.reps);
 
-    if (isNaN(reps) || reps < 1 || reps > 100) return res.status(400).send("Invalid reps (1-100)");
-
     const weight = parseFloat(req.body.weight);
-
-    if (isNaN(weight) || weight < 0 || weight > 1000) return res.status(400).send("Invalid weight (0-1000 kg)");
-
-
 
     const exercise = await prisma.exerciseLog.findFirst({
         where: { id: exerciseId, userId }
@@ -121,7 +114,7 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
 
     if (!exercise) return res.status(403).send("Access Denied");
 
-    if (!exerciseId || !reps || !weight) return res.status(400).send("Bad Request");
+    if (exerciseId == null || reps == null || weight == null) return res.status(400).send("Bad Request");
 
     try {
         const set = await prisma.setLog.create({
@@ -140,8 +133,8 @@ export const createSet = async (req: Request, res: Response, next: NextFunction)
 }
 
 
-export const deleteSet = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const userId: string = (req as any).userId;
+export const deleteSet = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
 

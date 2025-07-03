@@ -39,7 +39,7 @@ model TrainingLog {
   score           Float?
   notes           String?
   caloriesBurned  Float?
-  durationMinutes Int?
+  duration        Int?
   avgHeartRate    Int?
   pauses          Int          @default(0)
   pauseLength     Int          @default(0)
