@@ -20,13 +20,12 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     next();
 };
 
-export const validateInput = (req: Request, res: Response, next: NextFunction, custom?: any): any => {
-
+export const validateInput = (req: Request, res: Response, next: NextFunction): any => {
     if (req.method === "GET" || req.method === "DELETE") return next();
     
     let body = req.body;
 
-    if (custom) body = custom;  
+    if (req.body.custom) body = req.body.custom;  
 
     // Notes
     if (body?.notes != null) {
@@ -51,7 +50,8 @@ export const validateInput = (req: Request, res: Response, next: NextFunction, c
         const exercises = body.exercises;
         if (!isArray(exercises)) return res.status(400).send("Exercises must be an array");
         for (const exercise of exercises) {
-            validateInput(req, res, next, exercise);
+            req.body.custom = exercise;
+            validateInput(req, res, next);
         }
     }
 
@@ -90,12 +90,21 @@ export const validateInput = (req: Request, res: Response, next: NextFunction, c
         if (pauseLength < 0 || pauseLength > 3600) return res.status(400).send("Pause length must be between 0 and 3600 seconds");
     }
 
+    // Rep Unit
+    if (body?.repUnit != null) {
+        const repUnit = body.repUnit;
+        if (!isString(repUnit)) return res.status(400).send("Rep unit must be a string");
+        if (repUnit.length < 1 || repUnit.length > 10) return res.status(400).send("Rep unit must be between 1 and 10 characters");
+        body.repUnit = repUnit.trim();
+    }
+
     // Sets (recursive)
     if (body?.sets != null) {
         const sets = body.sets;
         if (!isArray(sets)) return res.status(400).send("Sets must be an array");
         for (const set of sets) {
-            validateInput(req, res, next, set);
+            req.body.custom = set;
+            validateInput(req, res, next);
         }
     }
 
@@ -185,7 +194,10 @@ export const validateInput = (req: Request, res: Response, next: NextFunction, c
     }
 
     // If no errors, continue
-    if (custom) return
+    if (req.body.custom) {
+        req.body.custom = null;
+        return
+    }
 
     next();
 }
