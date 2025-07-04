@@ -36,7 +36,7 @@ export const getSetTypes = async (req: AuthenticatedRequest, res: Response, next
             distinct: ['type'],
             orderBy: { type: 'asc' }
         });
-        return res.status(200).json(sets);
+        return res.status(200).json(sets.map(set => (set.type)));
     } catch (error) {
         return next(error);
     }
@@ -134,6 +134,7 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (reps == null || isNaN(reps)) return res.status(400).send("Reps must be a number");
     if (weight == null || isNaN(weight)) return res.status(400).send("Weight must be a number");
     if (!type || type.length === 0) return res.status(400).send("Type cannot be empty");
+    if (!repUnit || repUnit.length === 0) return res.status(400).send("Rep unit cannot be empty");
 
     try {
         const set = await prisma.setLog.create({
@@ -173,10 +174,10 @@ export const deleteSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (!exercise) return res.status(403).send("Access Denied");
 
     try {
-        const deletedSet = await prisma.setLog.delete({
+        await prisma.setLog.delete({
             where: { id: setId }
         });
-        return res.status(200).json(deletedSet);
+        return res.status(204).send();
     } catch (error) {
         next(error);
     }
