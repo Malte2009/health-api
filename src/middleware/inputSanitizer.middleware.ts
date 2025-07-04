@@ -184,14 +184,10 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
 
     // If no errors, continue
 
-    console.log("Request body after validation:", req.body);
-
     if (req.body.custom) {
         req.body.custom = null;
         return
     }
-
-    console.log("Input validation passed");
 
     return next();
 }
