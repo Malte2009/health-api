@@ -182,12 +182,5 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
         if (birthYear < 1900 || birthYear > currentYear) return res.status(400).send("Birth year must be valid");
     }
 
-    // If no errors, continue
-
-    if (req.body.custom) {
-        req.body.custom = null;
-        return
-    }
-
     return next();
 }
