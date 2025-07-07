@@ -60,6 +60,8 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     if (!set) return res.status(404).send("Set not found");
 
+    const exerciseId = set.exerciseId;
+
     let reps = parseInt(req.body.reps);
     let weight = parseFloat(req.body.weight);
 
@@ -75,7 +77,7 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (type != null && typeof type !== 'string') return res.status(400).send("Invalid type");
 
     const exercise = await prisma.exerciseLog.findFirst({
-        where: { id: set.exerciseId, userId }
+        where: { id: exerciseId, userId }
     });
 
     if (!exercise) return res.status(403).send("Access Denied");
@@ -89,6 +91,27 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
                 reps,
             }
         });
+        
+
+        const averages = await prisma.setLog.aggregate({
+            _avg: {
+                weight: true,
+                reps: true,
+            },
+            where: { exerciseId, userId, type: {
+                not: "Warmup"
+            } }
+        });
+
+        if (averages) {
+            await prisma.exerciseLog.update({
+                where: { id: exerciseId, userId: userId },
+                data: {
+                    avgWeight: averages._avg.weight,
+                    avgReps: averages._avg.reps
+                }
+            });
+        }
         return res.status(200).json(updatedSet);
     } catch (error) {
         next(error);
@@ -126,6 +149,26 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
                 weight
             }
         });
+
+        const averages = await prisma.setLog.aggregate({
+            _avg: {
+                weight: true,
+                reps: true,
+            },
+            where: { exerciseId, userId, type: {
+                not: "Warmup"
+            } }
+        });
+
+        if (averages) {
+            await prisma.exerciseLog.update({
+                where: { id: exerciseId, userId: userId },
+                data: {
+                    avgWeight: averages._avg.weight,
+                    avgReps: averages._avg.reps
+                }
+            });
+        }
         return res.status(201).json(set);
     } catch (error) {
         next(error);

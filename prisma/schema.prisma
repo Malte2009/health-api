@@ -28,6 +28,8 @@ model User {
   sets       SetLog[]
   nutrition  NutritionLog[]
   bodyLogs   BodyLog[]
+  exerciseScores ExerciseScore[]
+  exerciseScoreHistory ExerciseScoreHistory[]
 }
 
 model TrainingLog {
@@ -36,7 +38,6 @@ model TrainingLog {
   createdAt       DateTime     @default(now())
   changedAt       DateTime?    @updatedAt
   type            String
-  score           Float?
   notes           String?
   caloriesBurned  Float?
   duration        Int?
@@ -53,6 +54,9 @@ model ExerciseLog {
   userId     String
   trainingId String
   name       String
+  avgWeight  Float?
+  avgReps    Int?
+  Score      Float?
   createdAt  DateTime      @default(now())
   changedAt  DateTime?     @updatedAt
   order      Int           @default(autoincrement())
@@ -107,4 +111,33 @@ model BodyLog {
   BMR        Float?
 
   user       User          @relation(fields: [userId], references: [id])
+}
+
+model ExerciseScore {
+  id             String      @id @default(uuid())
+  userId         String
+  exerciseName   String
+  lastWeight     Float       // Letztes Gewicht
+  lastReps       Int         // Letzte Wiederholungszahl
+  factor         Float       @default(1.0) // Faktor für Gewicht / Wiederholungen
+  createdAt      DateTime    @default(now())
+  changedAt      DateTime?   @updatedAt
+
+  user           User        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, exerciseName])
+}
+
+model ExerciseScoreHistory {
+  id             String      @id @default(uuid())
+  userId         String
+  exerciseName   String
+  factor         Float       // Faktor für Gewicht / Wiederholungen
+  weight         Float       @unique
+  reps           Int?        // Wiederholungszahl
+  score          Float      // Gesamtpunktzahl
+
+  createdAt      DateTime    @default(now())
+
+  user           User        @relation(fields: [userId], references: [id])
 }
