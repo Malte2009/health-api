@@ -8,14 +8,14 @@ export const getExerciseNames = async (req: AuthenticatedRequest, res: Response,
     if (!userId) return res.status(401).send('Token missing');
 
     try {
-        const exerciseNames = await prisma.exerciseLog.findMany({
+        const exercises = await prisma.exerciseLog.findMany({
             where: { userId: userId },
             select: { name: true },
             distinct: ['name'],
             orderBy: { name: 'asc' }
         });
 
-        return res.status(200).json(exerciseNames);
+        return res.status(200).json(exercises.map(exercise => exercise.name));
     } catch (error) {
         return next(error);
     }
@@ -119,7 +119,8 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
                 name,
                 notes: notes || null,
                 order: order
-            }
+            },
+            include: { sets: true }
         });
         return res.status(201).json(exercise);
     } catch (error) {

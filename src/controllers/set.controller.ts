@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
@@ -36,7 +36,7 @@ export const getSetTypes = async (req: AuthenticatedRequest, res: Response, next
             distinct: ['type'],
             orderBy: { type: 'asc' }
         });
-        return res.status(200).json(sets);
+        return res.status(200).json(sets.map(set => (set.type)));
     } catch (error) {
         return next(error);
     }
