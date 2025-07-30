@@ -9,7 +9,6 @@ dotenv.config();
 export const registerUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send('Bad Request');
 
-
     const { email, name, password, birthYear, gender } = req.body;
 
     if (!email || !name || !password || !birthYear || !gender) return res.status(400).send('Bad Request');
