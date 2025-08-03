@@ -41,6 +41,7 @@ app.use(helmet())
 
 const allowedOrigins = [
 	'http://localhost:3000',
+	"https://node00.tailf7c6ee.ts.net",
 	process.env.FRONTEND_URL,
 	process.env.FRONTEND_URL2
 ];
