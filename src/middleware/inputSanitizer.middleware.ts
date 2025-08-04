@@ -26,7 +26,7 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
     let body = req.body;
 
     // Notes
-    if (body?.notes != null) {
+    if (body?.notes != null && body.notes !== "") {
         const notes = body.notes;
         if (!isString(notes)) return res.status(400).send("Notes must be a string");
         if (notes.length > 500) return res.status(400).send("Notes must be less than 500 characters");
@@ -57,7 +57,7 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
                 if (exercise.type.length < 1 || exercise.type.length > 50) return res.status(400).send("Exercise type must be between 1 and 50 characters");
             }
 
-            if (exercise.notes != null) {
+            if (exercise.notes != null && exercise.notes !== "") {
                 if (!isString(exercise.notes)) return res.status(400).send("Exercise notes must be a string");
                 if (exercise.notes.length > 500) return res.status(400).send("Exercise notes must be less than 500 characters");
                 exercise.notes = exercise.notes.trim();

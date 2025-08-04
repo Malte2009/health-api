@@ -84,7 +84,8 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
                 name,
                 notes,
                 order
-            }
+            },
+            include: { sets: true }
         });
         return res.status(200).json(updatedExercise);
     } catch (error) {

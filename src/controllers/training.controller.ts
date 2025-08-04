@@ -172,6 +172,9 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!type) return res.status(400).send("Training type is required");
 
+    if (!pauses || pauses < 0) pauses = 0;
+    if (!pauseLength || pauseLength < 0) pauseLength = 0;
+
     let caloriesBurned = 0;
 
     const data = await prisma.user.findUnique({
@@ -202,9 +205,8 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
         caloriesBurned = (activeCaloriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLength * pauses);
     }
 
-    if (caloriesBurned < 0) {
-        caloriesBurned = 0;
-    }
+    if (caloriesBurned < 0) caloriesBurned = 0;
+    
 
     try {
         const training = await prisma.trainingLog.create({
