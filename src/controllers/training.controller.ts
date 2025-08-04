@@ -49,13 +49,13 @@ export const getTrainingTypes = async (req: AuthenticatedRequest, res: Response,
     if (!userId) return res.status(401).send("Unauthorized");
 
     try {
-        const trainingTypes = await prisma.trainingLog.findMany({
+        const trainings = await prisma.trainingLog.findMany({
             where: { userId: userId },
             select: { type: true },
             distinct: ['type'],
             orderBy: { type: 'asc' }
         });
-        return res.status(200).json(trainingTypes);
+        return res.status(200).json(trainings.map(training => (training.type)));
     } catch (error) {
         next(error);
     }
@@ -215,7 +215,8 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
                 avgHeartRate,
                 duration,
                 caloriesBurned: Math.round(caloriesBurned)
-            }
+            },
+            include: { exercises: { include: { sets: true } } }
         });
         return res.status(201).json(training);
     } catch (error) {
