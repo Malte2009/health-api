@@ -20,13 +20,10 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     next();
 };
 
-export const validateInput = (req: Request, res: Response, next: NextFunction, custom?: any): any => {
-
+export const validateInput = (req: Request, res: Response, next: NextFunction): any => {
     if (req.method === "GET" || req.method === "DELETE") return next();
     
     let body = req.body;
-
-    if (custom) body = custom;  
 
     // Notes
     if (body?.notes != null) {
@@ -51,7 +48,61 @@ export const validateInput = (req: Request, res: Response, next: NextFunction, c
         const exercises = body.exercises;
         if (!isArray(exercises)) return res.status(400).send("Exercises must be an array");
         for (const exercise of exercises) {
-            validateInput(req, res, next, exercise);
+            if (exercise.name != null) {
+                if (!isString(exercise.name)) return res.status(400).send("Exercise name must be a string");
+                if (exercise.name.length < 1 || exercise.name.length > 100) return res.status(400).send("Exercise name must be between 1 and 100 characters");
+            }
+            if (exercise.type != null) {
+                if (!isString(exercise.type)) return res.status(400).send("Exercise type must be a string");
+                if (exercise.type.length < 1 || exercise.type.length > 50) return res.status(400).send("Exercise type must be between 1 and 50 characters");
+            }
+
+            if (exercise.notes != null) {
+                if (!isString(exercise.notes)) return res.status(400).send("Exercise notes must be a string");
+                if (exercise.notes.length > 500) return res.status(400).send("Exercise notes must be less than 500 characters");
+                exercise.notes = exercise.notes.trim();
+            }
+
+            if (exercise.order != null) {
+                if (!isNumber(exercise.order)) return res.status(400).send("Exercise order must be a number");
+                if (exercise.order < 0) return res.status(400).send("Exercise order must be a positive number");
+            }
+
+            if (exercise.sets != null) {
+                for (const set of exercise.sets || []) {
+                    if (set.reps != null) {
+                        if (!isNumber(set.reps)) return res.status(400).send("Set reps must be a number");
+                        if (set.reps < 1 || set.reps > 1000) return res.status(400).send("Set reps must be between 1 and 1000");
+                    }
+
+                    if (set.repUnit != null) {
+                        if (!isString(set.repUnit)) return res.status(400).send("Set rep unit must be a string");
+                        if (set.repUnit.length < 1 || set.repUnit.length > 10) return res.status(400).send("Set rep unit must be between 1 and 10 characters");
+                        set.repUnit = set.repUnit.trim();
+                    }
+
+                    if (set.weight != null) {
+                        if (!isNumber(set.weight)) return res.status(400).send("Set weight must be a number");
+                        if (set.weight < 0 || set.weight > 1000) return res.status(400).send("Set weight must be between 0 and 1000 kg");
+                    }
+
+                    if (set.order != null) {
+                        if (!isNumber(set.order)) return res.status(400).send("Set order must be a number");
+                        if (set.order < 0) return res.status(400).send("Set order must be a positive number");
+                    }
+
+                    if (set.pauseLength != null) {
+                        if (!isNumber(set.pauseLength)) return res.status(400).send("Set pause length must be a number");
+                        if (set.pauseLength < 0 || set.pauseLength > 3600) return res.status(400).send("Set pause length must be between 0 and 3600 seconds");
+                    }
+
+                    if (set.pauses != null) {
+                        if (!isNumber(set.pauses)) return res.status(400).send("Set pauses must be a number");
+                        if (set.pauses < 0 || set.pauses > 1000) return res.status(400).send("Set pauses must be between 0 and 1000");
+                    }
+                    
+                }
+            }
         }
     }
 
@@ -59,60 +110,7 @@ export const validateInput = (req: Request, res: Response, next: NextFunction, c
     if (body?.avgHeartRate != null) {
         const avgHeartRate = body.avgHeartRate;
         if (!isNumber(avgHeartRate)) return res.status(400).send("Average heart rate must be a number");
-        if (avgHeartRate < 0 || avgHeartRate > 300) return res.status(400).send("Average heart rate must be between 0 and 300");
-    }
-
-    // Reps
-    if (body?.reps != null) {
-        const reps = body.reps;
-        if (!isNumber(reps)) return res.status(400).send("Reps must be a number");
-        if (reps < 1 || reps > 1000) return res.status(400).send("Reps must be between 1 and 1000");
-    }
-
-    // Weight
-    if (body?.weight != null) {
-        const weight = body.weight;
-        if (!isNumber(weight)) return res.status(400).send("Weight must be a number");
-        if (weight < 0 || weight > 1000) return res.status(400).send("Weight must be between 0 and 1000 kg");
-    }
-
-    // Pauses
-    if (body?.pauses != null) {
-        const pauses = body.pauses;
-        if (!isNumber(pauses)) return res.status(400).send("Pauses must be a number");
-        if (pauses < 0 || pauses > 1000) return res.status(400).send("Pauses must be between 0 and 1000");
-    }
-
-    // Pause Length
-    if (body?.pauseLength != null) {
-        const pauseLength = body.pauseLength;
-        if (!isNumber(pauseLength)) return res.status(400).send("Pause length must be a number");
-        if (pauseLength < 0 || pauseLength > 3600) return res.status(400).send("Pause length must be between 0 and 3600 seconds");
-    }
-
-    // Sets (recursive)
-    if (body?.sets != null) {
-        const sets = body.sets;
-        if (!isArray(sets)) return res.status(400).send("Sets must be an array");
-        for (const set of sets) {
-            validateInput(req, res, next, set);
-        }
-    }
-
-    // Order
-    if (body?.order != null) {
-        const order = body.order;
-        if (!isNumber(order)) return res.status(400).send("Order must be a number");
-        if (order < 0) return res.status(400).send("Order must be a positive number");
-    }
-
-    // Name
-    if (body?.name != null) {
-        const name = body.name;
-        if (!isString(name)) return res.status(400).send("Name must be a string");
-        if (name.length < 1) return res.status(400).send("Name must be at least 1 character long");
-        if (name.length > 100) return res.status(400).send("Name must be at most 100 characters long");
-        body.name = name.trim();
+        if (avgHeartRate < 20 || avgHeartRate > 300) return res.status(400).send("Average heart rate must be between 20 and 300");
     }
 
     // Gender
@@ -184,8 +182,5 @@ export const validateInput = (req: Request, res: Response, next: NextFunction, c
         if (birthYear < 1900 || birthYear > currentYear) return res.status(400).send("Birth year must be valid");
     }
 
-    // If no errors, continue
-    if (custom) return
-
-    next();
+    return next();
 }
