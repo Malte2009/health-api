@@ -8,7 +8,9 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "generate": "npx prisma generate",
     "website": "npx prisma studio",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "pull": "npx prisma db pull",
+    "push": "npx prisma db push"
   },
   "keywords": [],
   "author": "",
