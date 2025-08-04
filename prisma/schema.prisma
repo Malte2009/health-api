@@ -72,6 +72,7 @@ model SetLog {
   changedAt    DateTime?   @updatedAt
   order        Int         @default(autoincrement())
   reps         Int
+  repUnit      String      @default("Wdh.")
   weight       Float
 
   user         User        @relation(fields: [userId], references: [id])

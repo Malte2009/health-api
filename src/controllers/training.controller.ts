@@ -69,8 +69,6 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
     let { notes, type, exercises, pauses, pauseLength } = req.body;
 
-    console.log(req.body);
-
     let avgHeartRate = parseInt(req.body.avgHeartRate);
     let duration = parseInt(req.body.duration);
 
@@ -82,8 +80,6 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     if (!training) return res.status(404).send("Training Not Found");
 
     if (!type && !notes && !exercises && !avgHeartRate && !duration) return res.status(400).send("Bad Request");
-
-    console.log(notes)
 
     if (notes == null && training.notes != null) notes = training.notes;
     if (type == null && training.type != null) type = training.type;
@@ -115,6 +111,10 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
         } else if (data.gender === "female") {
             caloriesBurned = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184) * duration
         }
+    }
+
+    if (caloriesBurned < 0) {
+        caloriesBurned = 0;
     }
 
     try {
@@ -152,7 +152,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
         });
         return res.status(200).json(updatedTrainingLog);
     } catch (error) {
-        next(error);
+        return next(error);
     }
 }
 
@@ -172,7 +172,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!type) return res.status(400).send("Training type is required");
 
-    let burnedCalories = 0;
+    let caloriesBurned = 0;
 
     const data = await prisma.user.findUnique({
         where: { id: userId },
@@ -199,7 +199,11 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
         let passiveCaloriesPerMin = activeCaloriesPerMinute * 0.7;
 
-        burnedCalories = (activeCaloriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLength * pauses);
+        caloriesBurned = (activeCaloriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLength * pauses);
+    }
+
+    if (caloriesBurned < 0) {
+        caloriesBurned = 0;
     }
 
     try {
@@ -210,13 +214,13 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
                 notes,
                 avgHeartRate,
                 duration,
-                caloriesBurned: Math.round(burnedCalories)
+                caloriesBurned: Math.round(caloriesBurned)
             },
             include: { exercises: { include: { sets: true } } }
         });
         return res.status(201).json(training);
     } catch (error) {
-        next(error);
+        return next(error);
     }
 }
 
@@ -233,6 +237,6 @@ export const deleteTraining = async (req: AuthenticatedRequest, res: Response, n
 
         return res.status(200).send("Training Log Deleted Successfully");
     } catch (error) {
-        next(error);
+        return next(error);
     }
 }

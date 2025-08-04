@@ -41,6 +41,7 @@ app.use(helmet())
 
 const allowedOrigins = [
 	'http://localhost:3000',
+	"https://node00.tailf7c6ee.ts.net",
 	process.env.FRONTEND_URL,
 	process.env.FRONTEND_URL2
 ];
@@ -61,18 +62,18 @@ if (!process.env.JWT_SECRET) {
 	process.exit(1);
 }
 
-app.use("/api", sanitizeInput);
-app.use("/api", validateInput);
-app.use("/api", limiter);
-app.use("/api", requestLogger);
+app.use("/health-api", sanitizeInput);
+app.use("/health-api", validateInput);
+app.use("/health-api", limiter);
+app.use("/health-api", requestLogger);
 
-app.use("/api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
-app.use('/api/users', authLimiter, userRoutes);
-app.use("/api/training", trainingRoutes);
+app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
+app.use('/health-api/users', authLimiter, userRoutes);
+app.use("/health-api/training", trainingRoutes);
 
-app.use("/api/exercise", exerciseRoutes)
-app.use("/api/set", setRoutes)
-app.use("/api/body", bodyRoutes)
+app.use("/health-api/exercise", exerciseRoutes)
+app.use("/health-api/set", setRoutes)
+app.use("/health-api/body", bodyRoutes)
 
 app.use(notFoundHandler);
 
