@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {AuthenticatedRequest} from "../middleware/auth.middleware";
+import { calculateBurnedCalories } from '../utility/calculateBurnedCalories';
 
 export const getTrainingById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId
@@ -91,31 +92,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
     //TODO: Validate exercises & sets
 
-    const data = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { gender: true, birthYear: true }
-    });
-
-    const weight = (await prisma.bodyLog.findFirst({
-        where: { userId: userId },
-        orderBy: { createdAt: 'desc' },
-        select: { weight: true }
-    }))?.weight;
-
-    let caloriesBurned = 0;
-
-    if (data && weight) {
-        const age = new Date().getFullYear() - data.birthYear;
-        if (data.gender === "male") {
-            caloriesBurned = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184) * duration
-        } else if (data.gender === "female") {
-            caloriesBurned = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184) * duration
-        }
-    }
-
-    if (caloriesBurned < 0) {
-        caloriesBurned = 0;
-    }
+    let caloriesBurned = await calculateBurnedCalories(userId, avgHeartRate, duration, pauses, pauseLength);
 
     try {
         const updatedTrainingLog = await prisma.trainingLog.update({
@@ -164,8 +141,8 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
     let { notes, type, pauses, pauseLength } = req.body;
 
-    const avgHeartRate: number | null = req.body.avgHeartRate;
-    const duration: number | null = req.body.duration;
+    const avgHeartRate: number = req.body.avgHeartRate;
+    const duration: number = req.body.duration;
 
     //Validate request body
     if (!req.body) return res.status(400).send("Bad Request");
@@ -175,38 +152,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     if (!pauses || pauses < 0) pauses = 0;
     if (!pauseLength || pauseLength < 0) pauseLength = 0;
 
-    let caloriesBurned = 0;
-
-    const data = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { gender: true, birthYear: true }
-    })
-
-    const weight = (await prisma.bodyLog.findFirst({
-        where: { userId: userId },
-        orderBy: { createdAt: 'desc' },
-        select: { weight: true }
-    }))?.weight;
-
-    if (avgHeartRate && duration && data && weight) {
-        const age = new Date().getFullYear() - data?.birthYear;
-        const activeDuration = duration - pauses * pauseLength;
-
-        let activeCaloriesPerMinute = 0;
-
-        if (data.gender === "male") {
-            activeCaloriesPerMinute = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * weight) + (0.2017 * age)) / 4.184)
-        } else if (data.gender === "female") {
-            activeCaloriesPerMinute = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * weight) + (0.074 * age)) / 4.184)
-        }
-
-        let passiveCaloriesPerMin = activeCaloriesPerMinute * 0.7;
-
-        caloriesBurned = (activeCaloriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLength * pauses);
-    }
-
-    if (caloriesBurned < 0) caloriesBurned = 0;
-    
+    let caloriesBurned = await calculateBurnedCalories(userId, avgHeartRate, duration, pauses, pauseLength);
 
     try {
         const training = await prisma.trainingLog.create({
