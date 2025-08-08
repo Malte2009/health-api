@@ -93,7 +93,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
     //TODO: Validate exercises & sets
 
-    let caloriesBurned = await calculateBurnedCalories(userId, mode, avgHeartRate, duration, pauses, pauseLength);
+    let caloriesBurned = await calculateBurnedCalories(userId, mode, duration, pauses, pauseLength);
 
     try {
         const updatedTrainingLog = await prisma.trainingLog.update({
@@ -156,7 +156,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     if (!pauses || pauses < 0) pauses = 0;
     if (!pauseLength || pauseLength < 0) pauseLength = 0;
 
-    let caloriesBurned = await calculateBurnedCalories(userId, mode, avgHeartRate, duration, pauses, pauseLength);
+    let caloriesBurned = await calculateBurnedCalories(userId, mode, duration, pauses, pauseLength);
 
     try {
         const training = await prisma.trainingLog.create({

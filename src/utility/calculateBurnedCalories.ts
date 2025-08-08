@@ -16,7 +16,6 @@ function kcalFromMET(met: number, weightKg: number, minutes: number) {
 export async function calculateBurnedCalories(
 	userId: string,
 	mode: Mode,
-	avgHeartRate: number,
 	duration: number,
 	pauses: number = 0,
 	pauseLength: number = 0,
