@@ -64,18 +64,8 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
     if (name == null && notes == null && order == null) return res.status(400).send("Bad Request");
 
     if (notes == null) notes = exercise.notes;
-    if (notes != null && typeof notes !== 'string') return res.status(400).send("Notes must be a string");
-    if (notes != null && notes.length > 500) return res.status(400).send("Notes must be at most 500 characters long");
-    if (notes != null && notes.length < 1) return res.status(400).send("Notes must be at least 1 character long");
-
     if (name == null) name = exercise.name;
-    if (name != null && typeof name !== 'string') return res.status(400).send("Name must be a string");
-    if (name != null && name.length < 1) return res.status(400).send("Name must be at least 1 character long");
-    if (name != null && name.length > 100) return res.status(400).send("Name must be at most 100 characters long");
-
     if (order == null) order = exercise.order;
-    if (order != null && typeof order !== 'number') return res.status(400).send("Order must be a number");
-    if (order != null && order < 0) return res.status(400).send("Order must be a positive number");
 
     try {
         const updatedExercise = await prisma.exerciseLog.update({
