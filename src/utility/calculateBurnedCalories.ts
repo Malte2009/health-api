@@ -1,16 +1,31 @@
 import prisma from '../prisma/client';
 
+type Mode = 'weights_light' | 'weights_mod' | 'weights_vig' | 'cardio';
+
+const METS: Record<Mode, number> = {
+	weights_light: 3.5,
+	weights_mod: 5.0,
+	weights_vig: 6.0,
+	cardio: 7.0,
+};
+
+function kcalFromMET(met: number, weightKg: number, minutes: number) {
+  return met * 3.5 * weightKg / 200 * minutes;
+}
+
 export async function calculateBurnedCalories(
 	userId: string,
+	mode: Mode,
 	avgHeartRate: number,
 	duration: number,
 	pauses: number = 0,
 	pauseLength: number = 0,
+	pauseMet: number = 1.5
 ): Promise<number> {
-	const userData = await prisma.user.findUnique({
+	const userGender = (await prisma.user.findUnique({
         where: { id: userId },
-        select: { gender: true, birthYear: true }
-    });
+        select: { gender: true }
+    }))?.gender;
 
 	const userWeight = (await prisma.bodyLog.findFirst({
 		where: { userId: userId },
@@ -18,24 +33,13 @@ export async function calculateBurnedCalories(
 		select: { weight: true }
 	}))?.weight;
 
-	if (!userData || !userWeight) return 0;
+	if (!userGender || !userWeight) return 0;
 
-	const userAge = new Date().getFullYear() - userData.birthYear;
-	const activeDuration = duration - pauses * pauseLength;
+	const totalPauses = pauses * pauseLength;
+	const activeMinutes = Math.max(0, duration - totalPauses);
 
-	let activeCaloriesPerMinute = 0;
-
-	if (userData.gender === "male") {
-		activeCaloriesPerMinute = ((-55.0969 + (0.6309 * avgHeartRate) + (0.1988 * userWeight) + (0.2017 * userAge)) / 4.184)
-	} else if (userData.gender === "female") {
-		activeCaloriesPerMinute = ((-20.4022 + (0.4472 * avgHeartRate) - (0.1263 * userWeight) + (0.074 * userAge)) / 4.184)
-	}
-
-	let passiveCaloriesPerMin = activeCaloriesPerMinute * 0.7;
-
-	let caloriesBurned = Math.round((activeCaloriesPerMinute * activeDuration) + (passiveCaloriesPerMin * pauseLength * pauses));
-
-	if (caloriesBurned < 0) return 0;
-
-	return caloriesBurned;
+	const kcalActive = kcalFromMET(METS[mode], userWeight, activeMinutes);
+	const kcalPaused = kcalFromMET(pauseMet, userWeight, totalPauses);
+	
+	return Math.round(kcalActive + kcalPaused);
 }

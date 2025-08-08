@@ -68,7 +68,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!userId) return res.status(401).send("Unauthorized");
 
-    let { notes, type, exercises, pauses, pauseLength } = req.body;
+    let { notes, type, exercises, pauses, pauseLength, mode } = req.body;
 
     let avgHeartRate = parseInt(req.body.avgHeartRate);
     let duration = parseInt(req.body.duration);
@@ -89,10 +89,11 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     if (duration == null && training.duration != null) duration = training.duration;
     if (pauses == null && training.pauses != null) pauses = training.pauses;
     if (pauseLength == null && training.pauseLength != null) pauseLength = training.pauseLength;
+    if (mode == null && training.mode != null) mode = training.mode;
 
     //TODO: Validate exercises & sets
 
-    let caloriesBurned = await calculateBurnedCalories(userId, avgHeartRate, duration, pauses, pauseLength);
+    let caloriesBurned = await calculateBurnedCalories(userId, mode, avgHeartRate, duration, pauses, pauseLength);
 
     try {
         const updatedTrainingLog = await prisma.trainingLog.update({
@@ -103,6 +104,9 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                 notes: notes || null,
                 duration,
                 caloriesBurned: Math.round(caloriesBurned * 100) / 100,
+                mode,
+                pauseLength,
+                pauses,
                 exercises: {
                     update: exercises?.map((exercise: any) => ({
                         where: { id: exercise.id },
@@ -139,7 +143,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
     if (!userId) return res.status(401).send("Unauthorized");
 
-    let { notes, type, pauses, pauseLength } = req.body;
+    let { notes, type, pauses, pauseLength, mode } = req.body;
 
     const avgHeartRate: number = req.body.avgHeartRate;
     const duration: number = req.body.duration;
@@ -152,7 +156,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     if (!pauses || pauses < 0) pauses = 0;
     if (!pauseLength || pauseLength < 0) pauseLength = 0;
 
-    let caloriesBurned = await calculateBurnedCalories(userId, avgHeartRate, duration, pauses, pauseLength);
+    let caloriesBurned = await calculateBurnedCalories(userId, mode, avgHeartRate, duration, pauses, pauseLength);
 
     try {
         const training = await prisma.trainingLog.create({
