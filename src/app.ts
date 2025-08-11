@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/exercise.routes";
 import setRoutes from "./routes/set.routes";
 import bodyRoutes from "./routes/body.routes";
+import progressionRoutes from "./routes/progression.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
@@ -74,6 +75,7 @@ app.use("/health-api/training", trainingRoutes);
 app.use("/health-api/exercise", exerciseRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/body", bodyRoutes)
+app.use("/health-api/progression", progressionRoutes)
 
 app.use(notFoundHandler);
 

@@ -10,12 +10,12 @@ export const getExerciseNames = async (req: AuthenticatedRequest, res: Response,
     try {
         const exercises = await prisma.exerciseLog.findMany({
             where: { userId: userId },
-            select: { name: true },
+            select: { name: true, id: true },
             distinct: ['name'],
             orderBy: { name: 'asc' }
         });
 
-        return res.status(200).json(exercises.map(exercise => exercise.name));
+        return res.status(200).json(exercises);
     } catch (error) {
         return next(error);
     }
