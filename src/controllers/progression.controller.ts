@@ -21,6 +21,7 @@ export const getProgression = async (req: AuthenticatedRequest, res: Response, n
 						weight: true,
 						reps: true,
 						type: true,
+						repUnit: true
 					}
 				}
 			}
@@ -39,28 +40,17 @@ export const getProgression = async (req: AuthenticatedRequest, res: Response, n
 		if (!userWeight) userWeight = 0
 
 		exercises.forEach(exercise => {
-			let avgWeight = 0;
-			let avgReps = 0;
-			let count = 0;
-			exercise.sets.forEach(set => {
-				if (set.weight === null || set.reps === null || set.type === "Warmup") return;
-				avgWeight += set.weight;
-				avgReps += set.reps;
-				count++;
-			});
+			let score;
 
-			let score = calculateScore(exercise.sets, { bodyweight: userWeight });
-
-			if (count === 0) count = 1;
-
-			avgWeight = roundTo(avgWeight / count, 1)
-			avgReps = roundTo(avgReps / count, 1)
+			if (exercise.sets[0].repUnit === "s") {
+				score = calculateScore(exercise.sets, { bodyweight: userWeight, capReps: 120 });
+			} else {
+				score = calculateScore(exercise.sets, { bodyweight: userWeight });
+			}
 
 			filteredExercises.push({
 				...exercise,
-				avgWeight,
-				avgReps,
-				score: roundTo(score.score, 1),
+				score: roundTo(score.score, 0),
 			});
 		});
 
