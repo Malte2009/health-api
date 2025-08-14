@@ -28,6 +28,7 @@ model User {
   sets       SetLog[]
   nutrition  NutritionLog[]
   bodyLogs   BodyLog[]
+  trainingsPlan  TrainingsPlan[]
 }
 
 model TrainingLog {
@@ -109,4 +110,25 @@ model BodyLog {
   BMR        Float?
 
   user       User          @relation(fields: [userId], references: [id])
+}
+
+model TrainingsPlan {
+  id          String        @id @default(uuid())
+  userId      String
+  name        String
+  createdAt   DateTime      @default(now())
+  changedAt   DateTime?     @updatedAt
+  exercises   Exercises[]
+
+  user       User          @relation(fields: [userId], references: [id])
+}
+
+model Exercises {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  changedAt   DateTime?     @updatedAt
+
+  trainingsPlan TrainingsPlan[]
 }

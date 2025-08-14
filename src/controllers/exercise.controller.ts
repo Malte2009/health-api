@@ -44,7 +44,7 @@ export const getExerciseById = async (req: AuthenticatedRequest, res: Response, 
     }
 }
 
-export const changeExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const changeExerciseInTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
@@ -83,7 +83,7 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
     }
 }
 
-export const createExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const addExerciseToTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
@@ -119,7 +119,7 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
     }
 }
 
-export const deleteExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const deleteExerciseFromTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
     if (!userId) return res.status(401).send('Token missing');
