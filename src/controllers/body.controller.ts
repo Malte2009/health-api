@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {getAge, getGender} from "../utility/userData";
 import { AuthenticatedRequest } from '../middleware/auth.middleware';

@@ -24,11 +24,12 @@ model User {
   changedAt  DateTime?     @updatedAt
 
   trainings  TrainingLog[]
-  exercises  ExerciseLog[]
+  exerciseLog  ExerciseLog[]
   sets       SetLog[]
   nutrition  NutritionLog[]
   bodyLogs   BodyLog[]
   trainingsPlan  TrainingsPlan[]
+  exercises  Exercises[]
 }
 
 model TrainingLog {
@@ -125,10 +126,11 @@ model TrainingsPlan {
 
 model Exercises {
   id          String        @id @default(uuid())
-  name        String
-  description String?
+  userId      String
+  name        String        @unique
   createdAt   DateTime      @default(now())
   changedAt   DateTime?     @updatedAt
 
+  user       User          @relation(fields: [userId], references: [id])
   trainingsPlan TrainingsPlan[]
 }

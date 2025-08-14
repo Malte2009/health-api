@@ -70,7 +70,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const isAuthenticated = async (req: Request, res: Response): Promise<any> => {
+export const isAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     let token = req.headers.authorization?.split(' ')[1];
 
     if (!token) token = req.cookies.token; 
@@ -86,7 +86,8 @@ export const isAuthenticated = async (req: Request, res: Response): Promise<any>
 
         return res.status(200).send(token);
     } catch (error) {
-        return res.status(401).send('Unauthorized');
+        req.statusCode = 401;
+        next(error);
     }
 }
 

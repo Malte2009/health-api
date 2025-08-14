@@ -24,6 +24,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
         req.userId = decoded.userId;
         next();
     } catch (error) {
-        return res.status(403).json({ error: 'Invalid token' });
+        req.statusCode = 401;
+        next(error);
     }
 };
