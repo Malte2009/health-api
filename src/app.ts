@@ -6,6 +6,7 @@ import cors from 'cors';
 
 import userRoutes from './routes/user.routes';
 import trainingRoutes from "./routes/training.routes";
+import traingsPlanRoutes from "./routes/traingsPlan.routes";
 import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/exercise.routes";
 import setRoutes from "./routes/set.routes";
@@ -36,7 +37,7 @@ const isAuthenticatedLimiter = rateLimit({
 });
 
 app.use(cookieParser());
-app.use(express.json( { limit: '10mb' }));
+app.use(express.json());
 app.use(helmet())
 
 const allowedOrigins = [
@@ -74,6 +75,7 @@ app.use("/health-api/training", trainingRoutes);
 app.use("/health-api/exercise", exerciseRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/body", bodyRoutes)
+app.use("/health-api/trainingsPlan", traingsPlanRoutes)
 
 app.use(notFoundHandler);
 

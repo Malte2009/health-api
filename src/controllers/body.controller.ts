@@ -9,13 +9,13 @@ export const getCaloriesBurnedOnDay = async (req: AuthenticatedRequest, res: Res
     if (!userId) return res.status(400).send("Bad Request");
 
     try {
-        const BMR = await prisma.bodyLog.findFirst({
+        const BMR = (await prisma.bodyLog.findFirst({
             where: {userId: userId},
             orderBy: {createdAt: 'desc'},
             select: {BMR: true}
-        });
+        }))?.BMR;
 
-        if (!BMR || !BMR.BMR) return res.status(404).send("No body log found");
+        if (!BMR) return res.status(404).send("No body log found");
 
         const burnedCalories = await prisma.trainingLog.findMany({
             where: {
@@ -25,11 +25,11 @@ export const getCaloriesBurnedOnDay = async (req: AuthenticatedRequest, res: Res
         });
 
         if (burnedCalories.length != 0) {
-            const totalBurnedCalories = burnedCalories.reduce((acc, log) => acc + (log.caloriesBurned || 0), 0) + BMR.BMR;
+            const totalBurnedCalories = burnedCalories.reduce((acc, log) => acc + (log.caloriesBurned || 0), 0) + BMR;
 
             return res.status(200).send(totalBurnedCalories);
         } else {
-            return res.status(200).send(BMR.BMR);
+            return res.status(200).send(BMR);
         }
     } catch (error) {
         next(error);
