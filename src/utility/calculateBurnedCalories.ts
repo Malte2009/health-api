@@ -1,12 +1,14 @@
 import prisma from '../prisma/client';
 
-type Mode = 'weights_light' | 'weights_mod' | 'weights_vig' | 'cardio';
+type Mode = 'weights_light' | 'weights_mod' | 'weights_vig' | 'cardio_light' | 'cardio_mod' | 'cardio_vig';
 
 const METS: Record<Mode, number> = {
 	weights_light: 3.5,
 	weights_mod: 5.0,
 	weights_vig: 6.0,
-	cardio: 7.0,
+	cardio_light: 4.0,
+	cardio_mod: 6.0,
+	cardio_vig: 8.0
 };
 
 function kcalFromMET(met: number, weightKg: number, minutes: number) {

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import type { AuthenticatedRequest } from '../middleware/auth.middleware';
 import prisma from '../prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -70,7 +71,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const isAuthenticated = async (req: Request, res: Response): Promise<any> => {
+export const isAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     let token = req.headers.authorization?.split(' ')[1];
 
     if (!token) token = req.cookies.token; 
@@ -86,7 +87,8 @@ export const isAuthenticated = async (req: Request, res: Response): Promise<any>
 
         return res.status(200).send(token);
     } catch (error) {
-        return res.status(401).send('Unauthorized');
+        req.statusCode = 401;
+        next(error);
     }
 }
 
@@ -97,4 +99,26 @@ export const logoutUser = async (req: Request, res: Response): Promise<any> => {
         sameSite: 'strict'
     });
     return res.status(200).send('Logged out successfully');
+}
+
+export const getUserAge = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    if (!userId) return res.status(400).send("Bad Request");
+
+    try {
+        const age = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { birthYear: true }
+        });
+
+        if (!age) return res.status(404).send("User not found");
+
+        const currentYear = new Date().getFullYear();
+        const userAge = currentYear - age.birthYear;
+
+        return res.status(200).send(userAge);
+    } catch (error) {
+        next(error);
+    }
 }
