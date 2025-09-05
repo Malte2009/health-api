@@ -28,15 +28,16 @@ model User {
   sets       SetLog[]
   nutrition  NutritionLog[]
   bodyLogs   BodyLog[]
-  trainingsPlan  TrainingsPlan[]
+  trainingPlan  TrainingPlan[]
   exercises  Exercises[]
+  days       Days[]
 }
 
 model TrainingLog {
-  id              String       @id @default(uuid())
+  id              String        @id @default(uuid())
   userId          String
-  createdAt       DateTime     @default(now())
-  changedAt       DateTime?    @updatedAt
+  createdAt       DateTime      @default(now())
+  changedAt       DateTime?     @updatedAt
   type            String
   mode            String?
   score           Float?
@@ -44,63 +45,63 @@ model TrainingLog {
   caloriesBurned  Float?
   duration        Int?
   avgHeartRate    Int?
-  pauses          Int          @default(0)
-  pauseLength     Int          @default(0)
+  pauses          Int           @default(0)
+  pauseLength     Int           @default(0)
 
-  user            User         @relation(fields: [userId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
   exercises       ExerciseLog[]
 }
 
 model ExerciseLog {
-  id         String        @id @default(uuid())
+  id         String         @id @default(uuid())
   userId     String
   trainingId String
   name       String
-  createdAt  DateTime      @default(now())
-  changedAt  DateTime?     @updatedAt
-  order      Int           @default(autoincrement())
+  createdAt  DateTime       @default(now())
+  changedAt  DateTime?      @updatedAt
+  order      Int            @default(autoincrement())
   notes      String?
 
   sets       SetLog[]
-  user       User          @relation(fields: [userId], references: [id])
-  training   TrainingLog   @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id])
+  training   TrainingLog    @relation(fields: [trainingId], references: [id], onDelete: Cascade)
 }
 
 model SetLog {
-  id           String      @id @default(uuid())
+  id           String       @id @default(uuid())
   exerciseId   String
   userId       String
   type         String?
-  createdAt    DateTime    @default(now())
-  changedAt    DateTime?   @updatedAt
-  order        Int         @default(autoincrement())
+  createdAt    DateTime     @default(now())
+  changedAt    DateTime?    @updatedAt
+  order        Int          @default(0)
   reps         Int
-  repUnit      String      @default("Wdh.")
+  repUnit      String       @default("Wdh.")
   weight       Float
 
-  user         User        @relation(fields: [userId], references: [id])
-  exercise     ExerciseLog @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+  exercise     ExerciseLog  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 }
 
 model NutritionLog {
-  id        String         @id @default(uuid())
+  id        String          @id @default(uuid())
   userId    String
-  createdAt DateTime       @default(now())
-  changedAt DateTime?      @updatedAt
+  createdAt DateTime        @default(now())
+  changedAt DateTime?       @updatedAt
   mealType  String
   kcal      Int
   protein   Int
   carbs     Int
   fat       Int
 
-  user      User           @relation(fields: [userId], references: [id])
+  user      User            @relation(fields: [userId], references: [id])
 }
 
 model BodyLog {
-  id         String        @id @default(uuid())
+  id         String         @id @default(uuid())
   userId     String
-  createdAt  DateTime      @default(now())
-  changedAt  DateTime?     @updatedAt
+  createdAt  DateTime       @default(now())
+  changedAt  DateTime?      @updatedAt
   weight     Float
   height     Float
   fatMass    Float?
@@ -110,18 +111,18 @@ model BodyLog {
   BMI        Float?
   BMR        Float?
 
-  user       User          @relation(fields: [userId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
 }
 
-model TrainingsPlan {
+model TrainingPlan {
   id          String        @id @default(uuid())
   userId      String
   name        String
   createdAt   DateTime      @default(now())
   changedAt   DateTime?     @updatedAt
-  exercises   Exercises[]
 
-  user       User          @relation(fields: [userId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+  days       Days[]
 }
 
 model Exercises {
@@ -131,6 +132,19 @@ model Exercises {
   createdAt   DateTime      @default(now())
   changedAt   DateTime?     @updatedAt
 
-  user       User          @relation(fields: [userId], references: [id])
-  trainingsPlan TrainingsPlan[]
+  user       User           @relation(fields: [userId], references: [id])
+  days       Days[]
+}
+
+model Days {
+  id         String        @id @default(uuid())
+  userId     String
+  trainingPlanId String
+  dayOfWeek  Int
+  createdAt  DateTime      @default(now())
+  changedAt  DateTime?     @updatedAt
+  exercises  Exercises[]
+
+  trainingPlan TrainingPlan @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id])
 }

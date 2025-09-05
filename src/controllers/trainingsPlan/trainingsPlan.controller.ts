@@ -1,8 +1,8 @@
 import { NextFunction, Response } from 'express';
-import prisma from '../prisma/client';
-import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import prisma from '../../prisma/client';
+import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 
-export const getTrainingsPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTrainingPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
     if (!userId) return res.status(401).send('Unauthorized');
@@ -10,7 +10,7 @@ export const getTrainingsPlan = async (req: AuthenticatedRequest, res: Response,
     try {
         const trainingsPlan = await prisma.trainingsPlan.findMany({
             where: { userId: userId },
-            include: { exercises: true }
+            include: { days: { include: { exercises: true } } }
         });
 
         return res.status(200).json(trainingsPlan);
@@ -19,7 +19,7 @@ export const getTrainingsPlan = async (req: AuthenticatedRequest, res: Response,
     }
 };
 
-export const getTrainingsPlanById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTrainingPlanById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
     const id = req.params.id;
 
@@ -30,7 +30,7 @@ export const getTrainingsPlanById = async (req: AuthenticatedRequest, res: Respo
     try {
         const trainingPlan = await prisma.trainingsPlan.findUnique({
             where: { id: id, userId: userId },
-            include: { exercises: true }
+            include: { days: { include: { exercises: true } } }
         });
 
         if (!trainingPlan) return res.status(404).send('Training plan not found');
@@ -41,14 +41,12 @@ export const getTrainingsPlanById = async (req: AuthenticatedRequest, res: Respo
     }
 };
 
-export const createTrainingsPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const createTrainingPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
 	const userId = req.userId;
 
 	if (!userId) return res.status(401).send('Unauthorized');
 
-	const body = req.body;
-
-	if (!body) return res.status(400).send('Bad Request');
+	if (!req.body) return res.status(400).send('Bad Request');
 
 	const { name } = req.body;
 
@@ -59,7 +57,8 @@ export const createTrainingsPlan = async (req: AuthenticatedRequest, res: Respon
 			data: {
 				name: name,
 				userId: userId
-			}
+			},
+			include: { days: { include: { exercises: true } } }
 		});
 
 		return res.status(201).json(newPlan);
@@ -68,7 +67,7 @@ export const createTrainingsPlan = async (req: AuthenticatedRequest, res: Respon
 	}
 };
 
-export const updateTrainingsPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const updateTrainingPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
 	const userId = req.userId;
 
 	if (!userId) return res.status(401).send('Unauthorized');
@@ -77,14 +76,15 @@ export const updateTrainingsPlan = async (req: AuthenticatedRequest, res: Respon
 
 	if (!id) return res.status(400).send('Bad Request');
 
-	const { name, exercises } = req.body;
+	if (!req.body) return res.status(400).send('Bad Request');
+
+	const name = req.body.name;
 
 	try {
 		const updatedPlan = await prisma.trainingsPlan.update({
 			where: { id: id, userId: userId },
 			data: {
-				name: name,
-				exercises: exercises
+				name: name
 			}
 		});
 
@@ -94,7 +94,7 @@ export const updateTrainingsPlan = async (req: AuthenticatedRequest, res: Respon
 	}
 };
 
-export const deleteTrainingsPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const deleteTrainingPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
 	const userId = req.userId;
 	const id = req.params.id;
 

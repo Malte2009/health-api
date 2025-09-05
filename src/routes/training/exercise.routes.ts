@@ -1,6 +1,6 @@
 import {Router} from 'express';
-import {authenticateToken} from "../middleware/auth.middleware";
-import {getExerciseById, getExerciseNames, changeExerciseInTraining, addExerciseToTraining, deleteExerciseFromTraining} from "../controllers/exercise.controller";
+import {authenticateToken} from "../../middleware/auth.middleware";
+import {getExerciseById, getExerciseNames, changeExerciseInTraining, addExerciseToTraining, deleteExerciseFromTraining} from "../../controllers/training/exercise.controller";
 
 
 const router = Router();

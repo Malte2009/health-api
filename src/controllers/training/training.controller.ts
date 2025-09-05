@@ -1,7 +1,7 @@
 import { NextFunction, Response } from 'express';
-import prisma from '../prisma/client';
-import {AuthenticatedRequest} from "../middleware/auth.middleware";
-import { calculateBurnedCalories } from '../utility/calculateBurnedCalories';
+import prisma from '../../prisma/client';
+import {AuthenticatedRequest} from "../../middleware/auth.middleware";
+import { calculateBurnedCalories } from '../../utility/calculateBurnedCalories';
 
 export const getTrainingById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId

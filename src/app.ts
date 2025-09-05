@@ -3,13 +3,15 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
+import fs from 'fs';
 
 import userRoutes from './routes/user.routes';
-import trainingRoutes from "./routes/training.routes";
-import traingsPlanRoutes from "./routes/traingsPlan.routes";
+import trainingRoutes from "./routes/training/training.routes";
+import traingsPlanRoutes from "./routes/trainingsPlan/traingsPlan.routes";
+import dayRoutes from "./routes/trainingsPlan/day.routes";
 import cookieParser from 'cookie-parser';
-import exerciseRoutes from "./routes/exercise.routes";
-import setRoutes from "./routes/set.routes";
+import exerciseRoutes from "./routes/training/exercise.routes";
+import setRoutes from "./routes/training/set.routes";
 import bodyRoutes from "./routes/body.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
@@ -75,7 +77,8 @@ app.use("/health-api/training", trainingRoutes);
 app.use("/health-api/exercise", exerciseRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/body", bodyRoutes)
-app.use("/health-api/trainingsPlan", traingsPlanRoutes)
+app.use("/health-api/trainingPlan", traingsPlanRoutes)
+app.use("/health-api/days", authenticateToken, dayRoutes);
 
 app.use(notFoundHandler);
 

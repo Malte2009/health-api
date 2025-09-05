@@ -164,6 +164,17 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
         }
     }
 
+    // Day fields
+    if (body?.trainingsPlanId != null) {
+        const trainingsPlanId = body.trainingsPlanId;
+        if (!isString(trainingsPlanId)) return res.status(400).send("Trainings plan ID must be a string");
+        if (trainingsPlanId.length !== 36) return res.status(400).send("Trainings plan ID must be a valid UUID");
+    }
+    if (body?.dayOfWeek != null) {
+        const dayOfWeek = body.dayOfWeek;
+        if (!isNumber(dayOfWeek)) return res.status(400).send("Day of week must be a number");
+        if (dayOfWeek < 0 || dayOfWeek > 6) return res.status(400).send("Day of week must be between 0 (Monday) and 6 (Sunday)");
+    }
     // User registration fields
     if (body?.email != null) {
         const email = body.email;

@@ -1,6 +1,6 @@
 import { NextFunction, Response } from 'express';
-import prisma from '../prisma/client';
-import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import prisma from '../../prisma/client';
+import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 
 export const getSetById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
@@ -15,7 +15,7 @@ export const getSetById = async (req: AuthenticatedRequest, res: Response, next:
         const set = await prisma.setLog.findUnique({
             where: { id: setId, userId: userId },
         });
-        
+
         if (!set) return res.status(404).send("Set not found");
 
         return res.status(200).json(set);
@@ -54,7 +54,7 @@ export const getSetUnits = async (req: AuthenticatedRequest, res: Response, next
             distinct: ['repUnit'],
             orderBy: { repUnit: 'asc' }
         });
-        
+
         return res.status(200).json(sets.map(set => (set.repUnit)));
     } catch (error) {
         return next(error);
@@ -126,7 +126,7 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
     const weight = parseFloat(req.body.weight);
 
     const exercise = await prisma.exerciseLog.findFirst({
-        where: { id: exerciseId, userId }
+        where: { id: exerciseId, userId }, include: { sets: true }
     });
 
     if (!exercise) return res.status(403).send("Access Denied");
@@ -144,7 +144,8 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
                 reps,
                 weight,
                 repUnit,
-                userId
+                userId,
+                order: exercise.sets.length
             }
         });
         return res.status(201).json(set);
