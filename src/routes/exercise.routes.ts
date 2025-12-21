@@ -1,14 +1,19 @@
 import {Router} from 'express';
 import {authenticateToken} from "../middleware/auth.middleware";
-import {getExerciseById, getExerciseNames, changeExercise, createExercise, deleteExercise} from "../controllers/exercise.controller";
-
+import {
+    changeExercise,
+    createExercise,
+    deleteExercise,
+    getExerciseByName,
+    getExerciseNames
+} from "../controllers/exercise.controller";
 
 const router = Router();
 
 router.get("/getExerciseNames", authenticateToken, getExerciseNames);
-router.get("/getExercise/:id", authenticateToken, getExerciseById);
-router.patch("/changeExercise/:id", authenticateToken, changeExercise);
-router.post('/createExercise', authenticateToken, createExercise);
-router.delete("/deleteExercise/:id", authenticateToken, deleteExercise);
+router.get("/getExercise/:name", authenticateToken, getExerciseByName);
+router.post("/createExercise", authenticateToken, createExercise);
+router.patch("/changeExercise/:name", authenticateToken, changeExercise);
+router.delete("/deleteExercise/:name", authenticateToken, deleteExercise);
 
 export default router;

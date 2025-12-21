@@ -15,6 +15,7 @@ import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middle
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isAuthenticated } from './controllers/user.controller';
 import { authenticateToken } from './middleware/auth.middleware';
+import exerciseLogRoutes from "./routes/exerciseLog.routes";
 
 dotenv.config();
 
@@ -71,9 +72,10 @@ app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticat
 app.use('/health-api/users', userRoutes);
 app.use("/health-api/training", trainingRoutes);
 
-app.use("/health-api/exercise", exerciseRoutes)
+app.use("/health-api/exerciseLog", exerciseLogRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/body", bodyRoutes)
+app.use("/health-api/exercise", exerciseRoutes)
 
 app.use(notFoundHandler);
 
