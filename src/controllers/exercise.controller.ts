@@ -70,7 +70,7 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
     const userId = req.userId;
     const oldName: string = req.params.name;
-    const newName: string = req.body.name;
+    const newName = req.body.name;
 
     if (!oldName || !newName) return res.status(400).send("Bad Request");
 
