@@ -7,8 +7,6 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
     const userId = req.userId
     const trainingLogId: string = req.params.id;
 
-    if (!userId) return res.status(401).send("Unauthorized");
-
     if (!trainingLogId) return res.status(400).send("Bad Request");
 
     try {
@@ -30,8 +28,6 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
 export const getTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
-    if (!userId) return res.status(401).send("Unauthorized");
-
     try {
         const trainingLogs = await prisma.trainingLog.findMany({
             where: { userId: userId },
@@ -46,8 +42,6 @@ export const getTraining = async (req: AuthenticatedRequest, res: Response, next
 
 export const getTrainingTypes = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send("Unauthorized");
 
     try {
         const trainings = await prisma.trainingLog.findMany({
@@ -65,9 +59,6 @@ export const getTrainingTypes = async (req: AuthenticatedRequest, res: Response,
 export const updateTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
     const trainingLogId: string = req.params.id;
-
-    if (!userId) return res.status(401).send("Unauthorized");
-
     let { notes, type, exerciseLogs, pauses, pauseLength, mode } = req.body;
 
     let avgHeartRate = parseInt(req.body.avgHeartRate);
@@ -155,9 +146,6 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
 export const createTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send("Unauthorized");
-
     let { notes, type, pauses, pauseLength, mode } = req.body;
 
     const avgHeartRate: number = req.body.avgHeartRate;
@@ -195,7 +183,7 @@ export const deleteTraining = async (req: AuthenticatedRequest, res: Response, n
     const userId = req.userId;
     const trainingLogId: string = req.params.id;
 
-    if (!userId || !trainingLogId) return res.status(400).send("Bad Request");
+    if (!trainingLogId) return res.status(400).send("Bad Request");
 
     try {
         await prisma.trainingLog.delete({

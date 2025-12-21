@@ -1,12 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {getAge, getGender} from "../utility/userData";
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export const getCaloriesBurnedOnDay = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
-    if (!userId) return res.status(400).send("Bad Request");
 
     try {
         const BMR = await prisma.bodyLog.findFirst({
@@ -40,10 +38,9 @@ export const createBodyLog = async (req: AuthenticatedRequest, res: Response, ne
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-
     const { weight, height, fatMass, fatPercentage, muscleMass, waterMass } = req.body;
 
-    if (!userId || !weight || !height) return res.status(400).send("Bad Request");
+    if (!weight || !height) return res.status(400).send("Bad Request");
 
     const BMI = weight / ((height / 100) * (height / 100));
 
