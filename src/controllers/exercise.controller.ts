@@ -45,7 +45,7 @@ export const getExerciseByName = async (req: AuthenticatedRequest, res: Response
 
         return res.status(200).json(exercise);
     } catch (error) {
-        return next(error);
+        next(error);
     }
 }
 

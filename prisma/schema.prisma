@@ -73,7 +73,7 @@ model Exercise {
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id])
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   exerciseLogs ExerciseLog[]
 
   @@id([name, userId])
