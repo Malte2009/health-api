@@ -4,10 +4,7 @@ import {AuthenticatedRequest} from "../middleware/auth.middleware";
 
 export const getExerciseLogById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
     const exerciseLogId: string = req.params.id;
-
-    if (!userId) return res.status(401).send('Token missing');
 
     if (!exerciseLogId) return res.status(400).send("Exercise log ID is required");
 
@@ -29,9 +26,6 @@ export const changeExerciseLog = async (req: AuthenticatedRequest, res: Response
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send('Token missing');
-
     const exerciseLogId: string = req.params.id;
 
     if (!exerciseLogId) return res.status(400).send("Bad Request");
@@ -83,15 +77,10 @@ export const createExerciseLog = async (req: AuthenticatedRequest, res: Response
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send('Token missing');
-
     let { name, trainingId, notes, order } = req.body;
 
     if (!name || !trainingId) return res.status(400).send("Bad Request");
-
     if (notes != null && typeof notes !== 'string') return res.status(400).send("Notes must be a string");
-
     if (order != null && typeof order !== 'number') return res.status(400).send("Order must be a number");
 
     const training = await prisma.trainingLog.findUnique({where: { id: trainingId, userId: userId }});
@@ -134,9 +123,6 @@ export const createExerciseLog = async (req: AuthenticatedRequest, res: Response
 
 export const deleteExerciseLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send('Token missing');
-
     const exerciseLogId: string = req.params.id;
 
     if (!exerciseLogId) return res.status(400).send("Bad Request");

@@ -5,8 +5,6 @@ import {AuthenticatedRequest} from "../middleware/auth.middleware";
 export const getExerciseNames = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
-    if (!userId) return res.status(401).send('Token missing');
-
     try {
         const exercises = await prisma.exercise.findMany({
             where: { userId: userId },
@@ -23,10 +21,7 @@ export const getExerciseNames = async (req: AuthenticatedRequest, res: Response,
 
 export const getExerciseByName = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
     const exerciseName: string = req.params.name;
-
-    if (!userId) return res.status(401).send('Token missing');
 
     if (!exerciseName) return res.status(400).send("Exercise name is required");
 
@@ -53,9 +48,6 @@ export const createExercise = async (req: AuthenticatedRequest, res: Response, n
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send('Token missing');
-
     const name = req.body.name;
 
     if (!name) return res.status(400).send("Bad Request");
@@ -77,20 +69,14 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send('Token missing');
-
     const oldName: string = req.params.name;
+    const newName: string = req.body.name;
 
-    if (!oldName) return res.status(400).send("Bad Request");
-
-    let newName = req.body.name;
+    if (!oldName || !newName) return res.status(400).send("Bad Request");
 
     const exercise = await prisma.exercise.findFirst({where: { name: oldName, userId: userId }});
 
     if (!exercise) return res.status(404).send("Exercise not found");
-
-    if (newName == null) return res.status(400).send("Bad Request");
 
     try {
         const updatedExercise = await prisma.exercise.update({
@@ -112,9 +98,6 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
 export const deleteExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-
-    if (!userId) return res.status(401).send('Token missing');
-
     const exerciseName: string = req.params.name;
 
     if (!exerciseName) return res.status(400).send("Bad Request");
