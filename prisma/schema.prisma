@@ -64,7 +64,7 @@ model ExerciseLog {
   sets     SetLog[]
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   training TrainingLog @relation(fields: [trainingId], references: [id], onDelete: Cascade)
-  exercise Exercise    @relation(fields: [name, userId], references: [name, userId], onDelete: Cascade)
+  exercise Exercise    @relation(fields: [name, userId], references: [name, userId], onDelete: Restrict)
 }
 
 model Exercise {
@@ -91,8 +91,8 @@ model SetLog {
   repUnit       String    @default("Wdh.")
   weight        Float
 
-  user     User        @relation(fields: [userId], references: [id])
-  exercise ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id])
+  exerciseLog ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
 }
 
 model NutritionLog {

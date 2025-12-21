@@ -80,28 +80,28 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
     if (!userId) return res.status(401).send('Token missing');
 
-    const exerciseName: string = req.params.name;
+    const oldName: string = req.params.name;
 
-    if (!exerciseName) return res.status(400).send("Bad Request");
+    if (!oldName) return res.status(400).send("Bad Request");
 
-    let name = req.body.name;
+    let newName = req.body.name;
 
-    const exercise = await prisma.exercise.findFirst({where: { name: exerciseName, userId: userId }});
+    const exercise = await prisma.exercise.findFirst({where: { name: oldName, userId: userId }});
 
     if (!exercise) return res.status(404).send("Exercise not found");
 
-    if (name == null) return res.status(400).send("Bad Request");
+    if (newName == null) return res.status(400).send("Bad Request");
 
     try {
         const updatedExercise = await prisma.exercise.update({
             where: {
                 name_userId: {
-                    name: exerciseName,
+                    name: oldName,
                     userId: userId
                 }
             },
             data: {
-                name
+                name: newName
             }
         });
         return res.status(200).json(updatedExercise);

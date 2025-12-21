@@ -46,26 +46,26 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
     // Exercises (recursive)
     if (body?.exerciseLogs != null) {
         const exerciseLogs = body.exerciseLogs;
-        if (!isArray(exerciseLogs)) return res.status(400).send("Exercises must be an array");
+        if (!isArray(exerciseLogs)) return res.status(400).send("Exercise logs must be an array");
         for (const exerciseLog of exerciseLogs) {
             if (exerciseLog.name != null) {
-                if (!isString(exerciseLog.name)) return res.status(400).send("Exercise name must be a string");
-                if (exerciseLog.name.length < 1 || exerciseLog.name.length > 100) return res.status(400).send("Exercise name must be between 1 and 100 characters");
+                if (!isString(exerciseLog.name)) return res.status(400).send("Exercise log name must be a string");
+                if (exerciseLog.name.length < 1 || exerciseLog.name.length > 100) return res.status(400).send("Exercise log name must be between 1 and 100 characters");
             }
             if (exerciseLog.type != null) {
-                if (!isString(exerciseLog.type)) return res.status(400).send("Exercise type must be a string");
-                if (exerciseLog.type.length < 1 || exerciseLog.type.length > 50) return res.status(400).send("Exercise type must be between 1 and 50 characters");
+                if (!isString(exerciseLog.type)) return res.status(400).send("Exercise log type must be a string");
+                if (exerciseLog.type.length < 1 || exerciseLog.type.length > 50) return res.status(400).send("Exercise log type must be between 1 and 50 characters");
             }
 
             if (exerciseLog.notes != null && exerciseLog.notes !== "") {
-                if (!isString(exerciseLog.notes)) return res.status(400).send("Exercise notes must be a string");
-                if (exerciseLog.notes.length > 500) return res.status(400).send("Exercise notes must be less than 500 characters");
+                if (!isString(exerciseLog.notes)) return res.status(400).send("Exercise log notes must be a string");
+                if (exerciseLog.notes.length > 500) return res.status(400).send("Exercise log notes must be less than 500 characters");
                 exerciseLog.notes = exerciseLog.notes.trim();
             }
 
             if (exerciseLog.order != null) {
-                if (!isNumber(exerciseLog.order)) return res.status(400).send("Exercise order must be a number");
-                if (exerciseLog.order < 0) return res.status(400).send("Exercise order must be a positive number");
+                if (!isNumber(exerciseLog.order)) return res.status(400).send("Exercise log order must be a number");
+                if (exerciseLog.order < 0) return res.status(400).send("Exercise log order must be a positive number");
             }
 
             if (exerciseLog.sets != null) {

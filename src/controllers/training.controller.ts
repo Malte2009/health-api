@@ -139,8 +139,10 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                                             user: { connect: { id: userId } }
                                         }
                                         }))
-                }}}))
-                }
+                            }
+                        }
+                    }))
+                },
             },
             include: { exerciseLogs: { include: { sets: true } } }
         });

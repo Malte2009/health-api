@@ -17,7 +17,7 @@ export const getExerciseLogById = async (req: AuthenticatedRequest, res: Respons
             include: { sets: true }
         });
 
-        if (!exerciseLog) return res.status(404).send("Exercise not found");
+        if (!exerciseLog) return res.status(404).send("Exercise log not found");
 
         return res.status(200).json(exerciseLog);
     } catch (error) {
