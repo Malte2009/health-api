@@ -22,6 +22,9 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
         req.userId = decoded.userId;
+
+        if (!req.userId) return res.status(401).send('Authentication required');
+
         next();
     } catch (error) {
         return res.status(403).json({ error: 'Invalid token' });
