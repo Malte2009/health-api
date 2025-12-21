@@ -15,3 +15,5 @@ node_modules
 /prisma/migrations
 
 update_restart_health_api.sh
+
+package-lock.json
