@@ -14,99 +14,114 @@ datasource db {
 }
 
 model User {
-  id         String        @id @default(uuid())
-  email      String        @unique
-  name       String
-  gender     String
-  password   String
-  birthYear  Int
-  createdAt  DateTime      @default(now())
-  changedAt  DateTime?     @updatedAt
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  gender    String
+  password  String
+  birthYear Int
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
 
-  trainings  TrainingLog[]
-  exercises  ExerciseLog[]
-  sets       SetLog[]
-  nutrition  NutritionLog[]
-  bodyLogs   BodyLog[]
+  trainings    TrainingLog[]
+  exerciseLogs ExerciseLog[]
+  sets         SetLog[]
+  nutrition    NutritionLog[]
+  bodyLogs     BodyLog[]
+
+  exercises Exercise[]
 }
 
 model TrainingLog {
-  id              String       @id @default(uuid())
-  userId          String
-  createdAt       DateTime     @default(now())
-  changedAt       DateTime?    @updatedAt
-  type            String
-  mode            String?
-  score           Float?
-  notes           String?
-  caloriesBurned  Float?
-  duration        Int?
-  avgHeartRate    Int?
-  pauses          Int          @default(0)
-  pauseLength     Int          @default(0)
+  id             String    @id @default(uuid())
+  userId         String
+  createdAt      DateTime  @default(now())
+  changedAt      DateTime? @updatedAt
+  type           String
+  mode           String?
+  score          Float?
+  notes          String?
+  caloriesBurned Float?
+  duration       Int?
+  avgHeartRate   Int?
+  pauses         Int       @default(0)
+  pauseLength    Int       @default(0)
 
-  user            User         @relation(fields: [userId], references: [id])
-  exercises       ExerciseLog[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseLogs ExerciseLog[]
 }
 
 model ExerciseLog {
-  id         String        @id @default(uuid())
+  id         String    @id @default(uuid())
+  name       String
   userId     String
   trainingId String
-  name       String
-  createdAt  DateTime      @default(now())
-  changedAt  DateTime?     @updatedAt
-  order      Int           @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  changedAt  DateTime? @updatedAt
+  order      Int       @default(autoincrement())
   notes      String?
 
-  sets       SetLog[]
-  user       User          @relation(fields: [userId], references: [id])
-  training   TrainingLog   @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  sets     SetLog[]
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  training TrainingLog @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  exercise Exercise    @relation(fields: [name, userId], references: [name, userId], onDelete: Restrict)
+}
+
+model Exercise {
+  name      String
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseLogs ExerciseLog[]
+
+  @@id([name, userId])
 }
 
 model SetLog {
-  id           String      @id @default(uuid())
-  exerciseId   String
-  userId       String
-  type         String?
-  createdAt    DateTime    @default(now())
-  changedAt    DateTime?   @updatedAt
-  order        Int         @default(autoincrement())
-  reps         Int
-  repUnit      String      @default("Wdh.")
-  weight       Float
+  id            String    @id @default(uuid())
+  exerciseLogId String
+  userId        String
+  type          String?
+  createdAt     DateTime  @default(now())
+  changedAt     DateTime? @updatedAt
+  order         Int       @default(autoincrement())
+  reps          Int
+  repUnit       String    @default("Wdh.")
+  weight        Float
 
-  user         User        @relation(fields: [userId], references: [id])
-  exercise     ExerciseLog @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id])
+  exerciseLog ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
 }
 
 model NutritionLog {
-  id        String         @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  createdAt DateTime       @default(now())
-  changedAt DateTime?      @updatedAt
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
   mealType  String
   kcal      Int
   protein   Int
   carbs     Int
   fat       Int
 
-  user      User           @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model BodyLog {
-  id         String        @id @default(uuid())
-  userId     String
-  createdAt  DateTime      @default(now())
-  changedAt  DateTime?     @updatedAt
-  weight     Float
-  height     Float
-  fatMass    Float?
+  id            String    @id @default(uuid())
+  userId        String
+  createdAt     DateTime  @default(now())
+  changedAt     DateTime? @updatedAt
+  weight        Float
+  height        Float
+  fatMass       Float?
   fatPercentage Float?
-  muscleMass Float?
-  waterMass   Float?
-  BMI        Float?
-  BMR        Float?
+  muscleMass    Float?
+  waterMass     Float?
+  BMI           Float?
+  BMR           Float?
 
-  user       User          @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }

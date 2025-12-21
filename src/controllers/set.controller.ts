@@ -90,11 +90,11 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (!type && set.type) type = set.type;
     if (!repUnit && set.repUnit) repUnit = set.repUnit;
 
-    const exercise = await prisma.exerciseLog.findFirst({
-        where: { id: set.exerciseId, userId }
+    const exerciseLog = await prisma.exerciseLog.findFirst({
+        where: { id: set.exerciseLogId, userId }
     });
 
-    if (!exercise) return res.status(403).send("Access Denied");
+    if (!exerciseLog) return res.status(403).send("Access Denied");
 
     try {
         const updatedSet = await prisma.setLog.update({
@@ -119,17 +119,17 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     if (!userId) return res.status(401).send('Token missing');
 
-    let { type, exerciseId, repUnit} = req.body;
+    let { type, exerciseLogId, repUnit} = req.body;
 
     const reps = parseInt(req.body.reps);
 
     const weight = parseFloat(req.body.weight);
 
-    const exercise = await prisma.exerciseLog.findFirst({
-        where: { id: exerciseId, userId }
+    const exerciseLog = await prisma.exerciseLog.findFirst({
+        where: { id: exerciseLogId, userId }
     });
 
-    if (!exercise) return res.status(403).send("Access Denied");
+    if (!exerciseLog) return res.status(403).send("Access Denied");
 
     if (reps == null || isNaN(reps)) return res.status(400).send("Reps must be a number");
     if (weight == null || isNaN(weight)) return res.status(400).send("Weight must be a number");
@@ -140,7 +140,7 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
         const set = await prisma.setLog.create({
             data: {
                 type,
-                exerciseId,
+                exerciseLogId,
                 reps,
                 weight,
                 repUnit,
@@ -167,11 +167,11 @@ export const deleteSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     if (!set) return res.status(404).send("Set not found");
 
-    const exercise = await prisma.exerciseLog.findFirst({
-        where: { id: set.exerciseId, userId }
+    const exerciseLog = await prisma.exerciseLog.findFirst({
+        where: { id: set.exerciseLogId, userId }
     });
 
-    if (!exercise) return res.status(403).send("Access Denied");
+    if (!exerciseLog) return res.status(403).send("Access Denied");
 
     try {
         await prisma.setLog.delete({
