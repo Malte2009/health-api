@@ -5,7 +5,7 @@ import {createBodyLog, getCaloriesBurnedOnDay} from "../controllers/body.control
 
 const router = Router();
 
-router.get('/getCaloriesBurnedOnDay', authenticateToken, getCaloriesBurnedOnDay);
-router.post('/createBodyLog', authenticateToken, createBodyLog);
+router.get('/getCaloriesBurnedOnDay', authenticateToken, getCaloriesBurnedOnDay as any);
+router.post('/createBodyLog', authenticateToken, createBodyLog as any);
 
 export default router;
