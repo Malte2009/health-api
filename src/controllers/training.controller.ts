@@ -40,17 +40,17 @@ export const getTraining = async (req: AuthenticatedRequest, res: Response, next
     }
 }
 
-export const getTrainingTypes = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTrainingNames = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
     try {
         const trainings = await prisma.trainingLog.findMany({
             where: { userId: userId },
-            select: { type: true },
-            distinct: ['type'],
+            select: { name: true },
+            distinct: ['name'],
             orderBy: { type: 'asc' }
         });
-        return res.status(200).json(trainings.map(training => (training.type)));
+        return res.status(200).json(trainings.map(training => (training.name)));
     } catch (error) {
         next(error);
     }
@@ -59,7 +59,7 @@ export const getTrainingTypes = async (req: AuthenticatedRequest, res: Response,
 export const updateTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
     const trainingLogId: string = req.params.id;
-    let { notes, type, exerciseLogs, pauses, pauseLength, mode } = req.body;
+    let { notes, type, exerciseLogs, pauses, pauseLength, name } = req.body;
 
     let avgHeartRate = parseInt(req.body.avgHeartRate);
     let duration = parseInt(req.body.duration);
@@ -80,11 +80,11 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     if (duration == null && training.duration != null) duration = training.duration;
     if (pauses == null && training.pauses != null) pauses = training.pauses;
     if (pauseLength == null && training.pauseLength != null) pauseLength = training.pauseLength;
-    if (mode == null && training.mode != null) mode = training.mode;
+    if (name == null && training.mode != null) name = training.name;
 
     //TODO: Validate exercises & sets
 
-    let caloriesBurned = await calculateBurnedCalories(userId, mode, duration, pauses, pauseLength);
+    let caloriesBurned = await calculateBurnedCalories(userId, avgHeartRate, type, duration, pauses, pauseLength);
 
     try {
         const updatedTrainingLog = await prisma.trainingLog.update({
@@ -95,7 +95,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
                 notes: notes || null,
                 duration,
                 caloriesBurned: Math.round(caloriesBurned * 100) / 100,
-                mode,
+                name,
                 pauseLength,
                 pauses,
                 exerciseLogs: {
@@ -146,7 +146,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
 
 export const createTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    let { notes, type, pauses, pauseLength, mode } = req.body;
+    let { notes, type, pauses, pauseLength, name } = req.body;
 
     const avgHeartRate: number = req.body.avgHeartRate;
     const duration: number = req.body.duration;
@@ -159,17 +159,20 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     if (!pauses || pauses < 0) pauses = 0;
     if (!pauseLength || pauseLength < 0) pauseLength = 0;
 
-    let caloriesBurned = await calculateBurnedCalories(userId, mode, duration, pauses, pauseLength);
+    let caloriesBurned = await calculateBurnedCalories(userId, avgHeartRate, type, duration, pauses, pauseLength);
 
     try {
         const training = await prisma.trainingLog.create({
             data: {
                 userId: userId,
+                name,
                 type,
                 notes,
                 avgHeartRate,
                 duration,
-                caloriesBurned: Math.round(caloriesBurned)
+                caloriesBurned: Math.round(caloriesBurned),
+                pauses,
+                pauseLength
             },
             include: { exerciseLogs: { include: { sets: true } } }
         });

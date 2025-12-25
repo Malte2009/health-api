@@ -36,8 +36,8 @@ model TrainingLog {
   userId         String
   createdAt      DateTime  @default(now())
   changedAt      DateTime? @updatedAt
-  type           String
-  mode           String?
+  name           String
+  type           String?
   score          Float?
   notes          String?
   caloriesBurned Float?
