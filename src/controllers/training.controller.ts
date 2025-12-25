@@ -80,7 +80,7 @@ export const updateTraining = async (req: AuthenticatedRequest, res: Response, n
     if (duration == null && training.duration != null) duration = training.duration;
     if (pauses == null && training.pauses != null) pauses = training.pauses;
     if (pauseLength == null && training.pauseLength != null) pauseLength = training.pauseLength;
-    if (name == null && training.mode != null) name = training.name;
+    if (name == null && training.name != null) name = training.name;
 
     //TODO: Validate exercises & sets
 
