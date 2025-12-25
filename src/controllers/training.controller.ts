@@ -198,3 +198,26 @@ export const deleteTraining = async (req: AuthenticatedRequest, res: Response, n
         return next(error);
     }
 }
+
+export const recalculateTrainingCalories = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    const trainings = await prisma.trainingLog.findMany({
+        where: { userId: userId }
+    });
+
+    try {
+        for (const log of trainings) {
+            const caloriesBurned = await calculateBurnedCalories(userId, log.avgHeartRate || 0, log.type, log.duration || 0, log.pauses || 0, log.pauseLength || 0);
+
+            await prisma.trainingLog.update({
+                where: { id: log.id },
+                data: { caloriesBurned: Math.round(caloriesBurned) }
+            });
+        }
+    } catch (error) {
+        return next(error);
+    }
+
+    return res.status(200).send("Recalculation Completed");
+}

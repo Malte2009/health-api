@@ -50,7 +50,7 @@ export async function calculateBurnedCalories(
 		select: { weight: true }
 	}))?.weight;
 
-	if (!userAge || !userWeight) return 0;
+	if (!userAge || !userWeight || !type) return 0;
 
     const mode = getMode(avgHeartRate, userAge, type);
 
