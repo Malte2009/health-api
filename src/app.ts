@@ -9,7 +9,7 @@ import trainingRoutes from "./routes/training.routes";
 import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/exercise.routes";
 import setRoutes from "./routes/set.routes";
-import bodyRoutes from "./routes/body.routes";
+import bodyRoutes from "./routes/bodyLog.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
@@ -40,12 +40,12 @@ app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
 app.use(helmet())
 
-const allowedOrigins = [
-	'http://localhost:3000',
-	"https://node00.tailf7c6ee.ts.net",
-	process.env.FRONTEND_URL,
-	process.env.FRONTEND_URL2
-];
+if (!process.env.ALLOWED_ORIGINS) {
+	console.error("ALLOWED_ORIGINS is not defined in the environment variables.");
+	process.exit(1);
+}
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(", ").map(origin => origin.trim());
 
 app.use(cors({
 	origin: (origin, callback) => {
@@ -74,7 +74,7 @@ app.use("/health-api/training", trainingRoutes);
 
 app.use("/health-api/exerciseLog", exerciseLogRoutes)
 app.use("/health-api/set", setRoutes)
-app.use("/health-api/body", bodyRoutes)
+app.use("/health-api/bodyLog", bodyRoutes)
 app.use("/health-api/exercise", exerciseRoutes)
 
 app.use(notFoundHandler);
