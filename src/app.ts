@@ -40,12 +40,12 @@ app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
 app.use(helmet())
 
-const allowedOrigins = [
-	'http://localhost:3000',
-	"https://node00.tailf7c6ee.ts.net",
-	process.env.FRONTEND_URL,
-	process.env.FRONTEND_URL2
-];
+if (!process.env.ALLOWED_ORIGINS) {
+	console.error("ALLOWED_ORIGINS is not defined in the environment variables.");
+	process.exit(1);
+}
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(", ").map(origin => origin.trim());
 
 app.use(cors({
 	origin: (origin, callback) => {
