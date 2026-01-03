@@ -2,6 +2,22 @@ import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {AuthenticatedRequest} from "../middleware/auth.middleware";
 
+export const getExercises = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    try {
+        const exercises = await prisma.exercise.findMany({
+            where: { userId: userId },
+            include: { exerciseLogs: true },
+            orderBy: { name: 'asc' }
+        });
+
+        return res.status(200).json(exercises);
+        } catch (error) {
+        return next(error);
+    }
+}
+
 export const getExerciseNames = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
