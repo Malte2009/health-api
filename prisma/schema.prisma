@@ -59,6 +59,8 @@ model ExerciseLog {
   changedAt  DateTime? @updatedAt
   order      Int       @default(autoincrement())
   notes      String?
+  score      Float?
+  weightedScore Float?
 
   sets     SetLog[]
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)

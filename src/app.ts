@@ -16,6 +16,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.middlew
 import { isAuthenticated } from './controllers/user.controller';
 import { authenticateToken } from './middleware/auth.middleware';
 import exerciseLogRoutes from "./routes/exerciseLog.routes";
+import exerciseScoreRoutes from "./routes/exerciseScore.routes";
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ app.use("/health-api/exerciseLog", exerciseLogRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/bodyLog", bodyRoutes)
 app.use("/health-api/exercise", exerciseRoutes)
+app.use("/health-api/exerciseScore", exerciseScoreRoutes);
 
 app.use(notFoundHandler);
 
