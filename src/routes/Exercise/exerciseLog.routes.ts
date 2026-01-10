@@ -1,6 +1,6 @@
 import {Router} from 'express';
-import {authenticateToken} from "../middleware/auth.middleware";
-import {getExerciseLogById, changeExerciseLog, createExerciseLog, deleteExerciseLog} from "../controllers/exerciseLog.controller";
+import {authenticateToken} from "../../middleware/auth.middleware";
+import {getExerciseLogById, changeExerciseLog, createExerciseLog, deleteExerciseLog} from "../../controllers/Exercise/exerciseLog.controller";
 
 
 const router = Router();

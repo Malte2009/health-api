@@ -1,6 +1,6 @@
-import {getExerciseScoresByName} from "../controllers/exerciseScore.controller";
+import {getExerciseScoresByName} from "../../controllers/Exercise/exerciseScore.controller";
 import {Router} from 'express';
-import {authenticateToken} from "../middleware/auth.middleware";
+import {authenticateToken} from "../../middleware/auth.middleware";
 
 const router = Router();
 

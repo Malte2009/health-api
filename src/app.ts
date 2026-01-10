@@ -7,7 +7,7 @@ import cors from 'cors';
 import userRoutes from './routes/user.routes';
 import trainingRoutes from "./routes/training.routes";
 import cookieParser from 'cookie-parser';
-import exerciseRoutes from "./routes/exercise.routes";
+import exerciseRoutes from "./routes/Exercise/exercise.routes";
 import setRoutes from "./routes/set.routes";
 import bodyRoutes from "./routes/bodyLog.routes";
 import { requestLogger } from './middleware/logger.middleware';
@@ -15,8 +15,8 @@ import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middle
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isAuthenticated } from './controllers/user.controller';
 import { authenticateToken } from './middleware/auth.middleware';
-import exerciseLogRoutes from "./routes/exerciseLog.routes";
-import exerciseScoreRoutes from "./routes/exerciseScore.routes";
+import exerciseLogRoutes from "./routes/Exercise/exerciseLog.routes";
+import exerciseScoreRoutes from "./routes/Exercise/exerciseScore.routes";
 
 dotenv.config();
 

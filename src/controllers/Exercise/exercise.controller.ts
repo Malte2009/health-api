@@ -1,6 +1,6 @@
 import { NextFunction, Response } from 'express';
-import prisma from '../prisma/client';
-import {AuthenticatedRequest} from "../middleware/auth.middleware";
+import prisma from '../../prisma/client';
+import {AuthenticatedRequest} from "../../middleware/auth.middleware";
 
 export const getExercises = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
