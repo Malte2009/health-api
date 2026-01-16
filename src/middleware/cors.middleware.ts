@@ -4,8 +4,8 @@ export default function cors(req: Request, res: Response, next: NextFunction) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map(origin => origin.trim()) || [];
     const origin = req.headers.origin;
 
-    if (process.env.NODE_ENV !== "production") {
-        setHeaders(req, res, next);
+    if (process.env.NODE_ENV === "development") {
+        setHeaders(req, res);
 
         if (req.method === "OPTIONS") return res.sendStatus(204);
 
