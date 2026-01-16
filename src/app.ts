@@ -2,7 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import cors from 'cors';
+
+import cors from "./middleware/cors.middleware";
 
 import userRoutes from './routes/user.routes';
 import trainingRoutes from "./routes/training.routes";
@@ -45,18 +46,7 @@ if (!process.env.ALLOWED_ORIGINS) {
 	process.exit(1);
 }
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS.split(", ").map(origin => origin.trim());
-
-app.use(cors({
-	origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-	credentials: true
-}));
+app.use(cors);
 
 if (!process.env.JWT_SECRET) {
 	console.error("JWT_SECRET is not defined in the environment variables.");
