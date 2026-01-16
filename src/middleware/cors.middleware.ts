@@ -17,7 +17,7 @@ export default function cors(req: Request, res: Response, next: NextFunction) {
     }
 
     if (allowedOrigins.includes(origin)) {
-        setHeaders(req, res, next);
+        setHeaders(req, res);
 
         if (req.method === "OPTIONS") return res.sendStatus(204);
 
