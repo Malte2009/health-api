@@ -22,14 +22,22 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
 
+        if (typeof decoded !== 'object' || !decoded || !decoded.userId) return res.status(401).send("Invalid token payload");
+
         const userId = decoded.userId;
 
-        if (!userId) return res.status(401).send('Authentication required');
+        if (!userId) return res.status(401).send('Invalid User ID in token');
 
         (req as AuthenticatedRequest).userId = userId;
 
-        next();
+        return next();
     } catch (error) {
-        return res.status(403).json({ error: 'Invalid token' });
+        if (error instanceof jwt.TokenExpiredError) {
+            return res.status(401).send('Token has expired');
+        } else if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).send('Invalid token');
+        } else {
+            return res.status(500).send('Internal server error');
+        }
     }
 };
