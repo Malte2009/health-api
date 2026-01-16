@@ -59,7 +59,7 @@ app.use("/health-api", limiter);
 app.use("/health-api", requestLogger);
 
 app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
-app.use('/health-api/users', userRoutes);
+app.use('/health-api/users', authLimiter, userRoutes);
 app.use("/health-api/training", trainingRoutes);
 
 app.use("/health-api/exerciseLog", exerciseLogRoutes)
