@@ -22,7 +22,8 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
                 .replace(/vbscript\s*:/gi, '')
                 // Encode potentially dangerous characters
                 .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+                .replace(/>/g, '&gt;')
+                .trim();
         }
         if (Array.isArray(obj)) {
             // Limit array size to prevent DoS
