@@ -80,10 +80,10 @@ if (!process.env.JWT_SECRET) {
 	process.exit(1);
 }
 
-app.use("/health-api", sanitizeInput);
-app.use("/health-api", validateInput);
-app.use("/health-api", limiter);
-app.use("/health-api", requestLogger);
+app.use(sanitizeInput);
+app.use(validateInput);
+app.use(limiter);
+app.use(requestLogger);
 
 app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
 app.use('/health-api/users', authLimiter, userRoutes);
