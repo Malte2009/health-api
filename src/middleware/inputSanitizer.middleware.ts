@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import {Request, Response, NextFunction} from 'express';
 import {isArray, isNumber, isString} from "../utility/checkType";
 
 export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
@@ -55,9 +55,18 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 };
 
 export const validateInput = (req: Request, res: Response, next: NextFunction): any => {
+    console.log("Validating input for path:", req.path, "and method:", req.method);
+
     if (req.method === "GET" || req.method === "DELETE") return next();
     
     let body = req.body;
+
+    try {
+        body = JSON.parse(JSON.stringify(body));
+        console.log(body);
+    } catch (error) {
+        return res.status(400).send("Invalid JSON format");
+    }
 
     // Training Name
     if (body?.name != null && !req.path.includes('/register')) {
