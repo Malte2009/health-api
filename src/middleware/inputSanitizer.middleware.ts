@@ -55,7 +55,6 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 };
 
 export const validateInput = (req: Request, res: Response, next: NextFunction): any => {
-    console.log("Validating input for path:", req.path, "and method:", req.method);
 
     if (req.method === "GET" || req.method === "DELETE") return next();
     
