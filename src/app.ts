@@ -39,7 +39,34 @@ const isAuthenticatedLimiter = rateLimit({
 
 app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
-app.use(helmet())
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
+        },
+    },
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: true,
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    dnsPrefetchControl: { allow: false },
+    frameguard: { action: "deny" },
+    hidePoweredBy: true,
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    ieNoOpen: true,
+    noSniff: true,
+    originAgentCluster: true,
+    permittedCrossDomainPolicies: { permittedPolicies: "none" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    xssFilter: true,
+}))
 
 if (!process.env.ALLOWED_ORIGINS) {
 	console.error("ALLOWED_ORIGINS is not defined in the environment variables.");
@@ -53,10 +80,10 @@ if (!process.env.JWT_SECRET) {
 	process.exit(1);
 }
 
-app.use("/health-api", sanitizeInput);
-app.use("/health-api", validateInput);
-app.use("/health-api", limiter);
-app.use("/health-api", requestLogger);
+app.use(sanitizeInput);
+app.use(validateInput);
+app.use(limiter);
+app.use(requestLogger);
 
 app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
 app.use('/health-api/users', authLimiter, userRoutes);

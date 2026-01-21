@@ -1,29 +1,79 @@
-import { Request, Response, NextFunction } from 'express';
+import {Request, Response, NextFunction} from 'express';
 import {isArray, isNumber, isString} from "../utility/checkType";
 
 export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
-    // Sanitize strings to prevent basic XSS
-    const sanitize = (obj: any): any => {
+    // Sanitize strings to prevent XSS attacks
+    const sanitize = (obj: any, depth: number = 0): any => {
+        // Prevent deep recursion attacks
+        if (depth > 10) return obj;
+
         if (typeof obj === 'string') {
-            return obj.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+            return obj
+                // Remove script tags
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                // Remove event handlers (onclick, onerror, onload, etc.)
+                .replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '')
+                .replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '')
+                // Remove javascript: URLs
+                .replace(/javascript\s*:/gi, '')
+                // Remove data: URLs that could contain scripts
+                .replace(/data\s*:\s*text\/html/gi, '')
+                // Remove vbscript: URLs
+                .replace(/vbscript\s*:/gi, '')
+                // Encode potentially dangerous characters
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .trim();
+        }
+        if (Array.isArray(obj)) {
+            // Limit array size to prevent DoS
+            if (obj.length > 100) {
+                throw new Error('Array size exceeds maximum limit');
+            }
+            return obj.map(item => sanitize(item, depth + 1));
         }
         if (typeof obj === 'object' && obj !== null) {
-            for (const key in obj) {
-                obj[key] = sanitize(obj[key]);
+            const keys = Object.keys(obj);
+            // Limit object keys to prevent DoS
+            if (keys.length > 50) {
+                throw new Error('Object has too many properties');
+            }
+            for (const key of keys) {
+                obj[key] = sanitize(obj[key], depth + 1);
             }
         }
         return obj;
     };
 
-    req.body = sanitize(req.body);
-    Object.assign(req.query, sanitize(req.query));
-    next();
+    try {
+        req.body = sanitize(req.body);
+        Object.assign(req.query, sanitize(req.query));
+        next();
+    } catch (error) {
+        return res.status(400).send('Invalid input: ' + (error as Error).message);
+    }
 };
 
 export const validateInput = (req: Request, res: Response, next: NextFunction): any => {
+
     if (req.method === "GET" || req.method === "DELETE") return next();
     
     let body = req.body;
+
+    try {
+        body = JSON.parse(JSON.stringify(body));
+        console.log(body);
+    } catch (error) {
+        return res.status(400).send("Invalid JSON format");
+    }
+
+    // Training Name
+    if (body?.name != null && !req.path.includes('/register')) {
+        const name = body.name;
+        if (!isString(name)) return res.status(400).send("Name must be a string");
+        if (name.length < 1 || name.length > 100) return res.status(400).send("Name must be between 1 and 100 characters");
+        body.name = name.trim();
+    }
 
     // Notes
     if (body?.notes != null && body.notes !== "") {
@@ -165,6 +215,14 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
     }
 
     // User registration fields
+    if (body?.name != null && req.path.includes('/register')) {
+        const name = body.name;
+        if (!isString(name)) return res.status(400).send("Name must be a string");
+        if (name.length < 2 || name.length > 50) return res.status(400).send("Name must be between 2 and 50 characters");
+        // Only allow letters, spaces, hyphens and apostrophes in names
+        if (!/^[a-zA-ZäöüÄÖÜß\s'-]+$/.test(name)) return res.status(400).send("Name contains invalid characters");
+        body.name = name.trim();
+    }
     if (body?.email != null) {
         const email = body.email;
         if (!isString(email)) return res.status(400).send("Email must be a string");
@@ -173,7 +231,11 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
     if (body?.password != null) {
         const password = body.password;
         if (!isString(password)) return res.status(400).send("Password must be a string");
-        if (password.length < 6 || password.length > 100) return res.status(400).send("Password must be between 6 and 100 characters");
+        if (password.length < 8 || password.length > 100) return res.status(400).send("Password must be between 8 and 100 characters");
+        // Require at least one uppercase, one lowercase, one digit, and one special character
+        if (!/[A-Z]/.test(password)) return res.status(400).send("Password must contain at least one uppercase letter");
+        if (!/[a-z]/.test(password)) return res.status(400).send("Password must contain at least one lowercase letter");
+        if (!/[0-9]/.test(password)) return res.status(400).send("Password must contain at least one digit");
     }
     if (body?.birthYear != null) {
         const birthYear = body.birthYear;

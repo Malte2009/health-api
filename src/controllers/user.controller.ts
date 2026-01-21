@@ -29,7 +29,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
         return res.status(400).send('Bad Request');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     try {
         await prisma.user.create({data: { email, name, password: hashedPassword, birthYear: parseInt(birthYear), gender }});
@@ -62,10 +62,10 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000
         });
 
-        return res.status(200).send(token);
+        return res.status(200).send("Login successful");
     } catch (error) {
         next(error);
     }
@@ -85,7 +85,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
 
         if (!user) return res.status(401).send('Unauthorized');
 
-        return res.status(200).send(token);
+        return res.status(200).send(true);
     } catch (error) {
         req.statusCode = 401;
         next(error);

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 interface CustomError extends Error {
     status?: number;
@@ -8,7 +8,9 @@ interface CustomError extends Error {
 export const errorHandler = (
     error: CustomError, 
     req: Request, 
-    res: Response
+    res: Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    next: NextFunction // Required for Express error handler signature
 ) => {
     const isDevelopment = process.env.NODE_ENV === 'development';
     
