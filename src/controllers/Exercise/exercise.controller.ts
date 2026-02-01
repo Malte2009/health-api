@@ -94,6 +94,31 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
     if (!exercise) return res.status(404).send("Exercise not found");
 
+    const existingExercise = await prisma.exercise.findFirst({where: { name: newName, userId: userId }});
+
+    if (existingExercise) {
+        const exerciseLogs = await prisma.exerciseLog.updateMany({
+            where: {
+                name: oldName,
+                userId: userId
+            },
+            data: {
+                name: newName,
+            }
+        })
+
+        await prisma.exercise.delete({
+            where: {
+                name_userId: {
+                    name: oldName,
+                    userId: userId
+                }
+            }
+        });
+
+        return res.status(200).json({ ...existingExercise, exerciseLogs: exerciseLogs.count });
+    }
+
     try {
         const updatedExercise = await prisma.exercise.update({
             where: {
@@ -104,6 +129,9 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
             },
             data: {
                 name: newName
+            },
+            include: {
+                exerciseLogs: true
             }
         });
         return res.status(200).json(updatedExercise);

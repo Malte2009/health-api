@@ -51,21 +51,21 @@ model TrainingLog {
 }
 
 model ExerciseLog {
-  id         String    @id @default(uuid())
-  name       String
-  userId     String
-  trainingId String
-  createdAt  DateTime  @default(now())
-  changedAt  DateTime? @updatedAt
-  order      Int       @default(autoincrement())
-  notes      String?
-  score      Float?
+  id            String    @id @default(uuid())
+  name          String
+  userId        String
+  trainingId    String
+  createdAt     DateTime  @default(now())
+  changedAt     DateTime? @updatedAt
+  order         Int       @default(autoincrement())
+  notes         String?
+  score         Float?
   weightedScore Float?
 
   sets     SetLog[]
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   training TrainingLog @relation(fields: [trainingId], references: [id], onDelete: Cascade)
-  exercise Exercise    @relation(fields: [name, userId], references: [name, userId], onDelete: Restrict)
+  exercise Exercise    @relation(fields: [name, userId], references: [name, userId], onDelete: Restrict, onUpdate: Cascade)
 }
 
 model Exercise {

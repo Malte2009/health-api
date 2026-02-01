@@ -65,7 +65,7 @@ export const changeExerciseLog = async (req: AuthenticatedRequest, res: Response
                     },
                 },
             },
-            include: { sets: true, exercise: true }
+            include: { sets: true }
         });
         return res.status(200).json(updatedExerciseLog);
     } catch (error) {
