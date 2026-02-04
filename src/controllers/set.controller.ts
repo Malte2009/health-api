@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export const getSetById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const setId: string = req.params.id;
+    const setId: string = req.params.id as string;
 
     if (!setId) return res.status(400).send("Bad Request");
 
@@ -60,7 +60,7 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-    const setId: string = req.params.id;
+    const setId: string = req.params.id as string;
 
     if (!setId) return res.status(400).send("Bad Request");
 
@@ -141,7 +141,7 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
 
 export const deleteSet = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const setId: string = req.params.id;
+    const setId: string = req.params.id as string;
 
     if (!setId) return res.status(400).send("Bad Request");
 

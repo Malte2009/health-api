@@ -51,7 +51,7 @@ export const getBodyLogs = async (req: AuthenticatedRequest, res: Response, next
 export const getBodyLogById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
-    const bodyLogId: string = req.params.id;
+    const bodyLogId: string = req.params.id as string;
 
     if (!bodyLogId) return res.status(400).send("Body log ID is required");
 
@@ -73,7 +73,7 @@ export const getBodyLogById = async (req: AuthenticatedRequest, res: Response, n
 
 export const updateBodyLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const bodyLogId: string = req.params.id;
+    const bodyLogId: string = req.params.id as string;
     let { weight, height, fatMass, fatPercentage, muscleMass, waterMass } = req.body;
 
     const bodyLog = await prisma.bodyLog.findUnique({
@@ -168,7 +168,7 @@ export const createBodyLog = async (req: AuthenticatedRequest, res: Response, ne
 export const deleteBodyLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
-    const bodyLogId: string = req.params.id;
+    const bodyLogId: string = req.params.id as string;
 
     if (!bodyLogId) return res.status(400).send("Body log ID is required");
 

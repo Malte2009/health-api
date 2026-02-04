@@ -4,7 +4,7 @@ import {AuthenticatedRequest} from "../middleware/auth.middleware";
 
 export const getExerciseLogById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const exerciseLogId: string = req.params.id;
+    const exerciseLogId: string = req.params.id as string;
 
     if (!exerciseLogId) return res.status(400).send("Exercise log ID is required");
 
@@ -26,7 +26,7 @@ export const changeExerciseLog = async (req: AuthenticatedRequest, res: Response
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-    const exerciseLogId: string = req.params.id;
+    const exerciseLogId: string = req.params.id as string;
 
     if (!exerciseLogId) return res.status(400).send("Bad Request");
 
@@ -123,7 +123,7 @@ export const createExerciseLog = async (req: AuthenticatedRequest, res: Response
 
 export const deleteExerciseLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const exerciseLogId: string = req.params.id;
+    const exerciseLogId: string = req.params.id as string;
 
     if (!exerciseLogId) return res.status(400).send("Bad Request");
 

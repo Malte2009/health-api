@@ -37,7 +37,7 @@ export const getExerciseNames = async (req: AuthenticatedRequest, res: Response,
 
 export const getExerciseByName = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const exerciseName: string = req.params.name;
+    const exerciseName: string = req.params.name as string;
 
     if (!exerciseName) return res.status(400).send("Exercise name is required");
 
@@ -85,7 +85,7 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-    const oldName: string = req.params.name;
+    const oldName: string = req.params.name as string;
     const newName = req.body.name;
 
     if (!oldName || !newName) return res.status(400).send("Bad Request");
@@ -114,7 +114,7 @@ export const changeExercise = async (req: AuthenticatedRequest, res: Response, n
 
 export const deleteExercise = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const exerciseName: string = req.params.name;
+    const exerciseName: string = req.params.name as string;
 
     if (!exerciseName) return res.status(400).send("Bad Request");
 

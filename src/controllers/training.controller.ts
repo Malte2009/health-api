@@ -5,7 +5,7 @@ import { calculateBurnedCalories } from '../utility/calculateBurnedCalories';
 
 export const getTrainingById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId
-    const trainingLogId: string = req.params.id;
+    const trainingLogId: string = req.params.id as string;
 
     if (!trainingLogId) return res.status(400).send("Bad Request");
 
@@ -58,7 +58,7 @@ export const getTrainingNames = async (req: AuthenticatedRequest, res: Response,
 
 export const updateTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const trainingLogId: string = req.params.id;
+    const trainingLogId: string = req.params.id as string;
     let { notes, type, exerciseLogs, pauses, pauseLength, name } = req.body;
 
     let avgHeartRate = parseInt(req.body.avgHeartRate);
@@ -184,7 +184,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
 
 export const deleteTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const trainingLogId: string = req.params.id;
+    const trainingLogId: string = req.params.id as string;
 
     if (!trainingLogId) return res.status(400).send("Bad Request");
 
