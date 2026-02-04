@@ -50,3 +50,17 @@ export async function calculateRelativeExerciseScore(exerciseId: string, userWei
 
   return Math.round(relativeScore * 100) / 100;
 }
+
+export async function calculateExerciseScoreForAllExercises(): Promise<void> {
+    const exerciseLogs = await prisma.exerciseLog.findMany({
+        select: { id: true }
+    });
+
+    for (const exercise of exerciseLogs) {
+        const score = await calculateExerciseScore(exercise.id);
+        await prisma.exerciseLog.update({
+            where: { id: exercise.id },
+            data: { score: score }
+        });
+    }
+}
