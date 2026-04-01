@@ -6,17 +6,23 @@ import rateLimit from 'express-rate-limit';
 import cors from "./middleware/cors.middleware";
 
 import userRoutes from './routes/user.routes';
-import trainingRoutes from "./routes/training.routes";
+import trainingRoutes from "./routes/training/training.routes";
 import cookieParser from 'cookie-parser';
-import exerciseRoutes from "./routes/exercise.routes";
-import setRoutes from "./routes/set.routes";
+import exerciseRoutes from "./routes/training/exercise.routes";
+import setRoutes from "./routes/training/set.routes";
 import bodyRoutes from "./routes/bodyLog.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isAuthenticated } from './controllers/user.controller';
 import { authenticateToken } from './middleware/auth.middleware';
-import exerciseLogRoutes from "./routes/exerciseLog.routes";
+import exerciseLogRoutes from "./routes/training/exerciseLog.routes";
+import foodRoutes from "./routes/food/food.routes";
+import mealLogRoutes from "./routes/food/mealLog.routes";
+import dashboardRoutes from "./routes/food/dashboard.routes";
+import goalsRoutes from "./routes/food/goals.routes";
+import nrvRoutes from "./routes/food/nrv.routes";
+import mealRecipeRoutes from "./routes/food/meal.routes";
 
 dotenv.config();
 
@@ -93,6 +99,13 @@ app.use("/health-api/exerciseLog", exerciseLogRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/bodyLog", bodyRoutes)
 app.use("/health-api/exercise", exerciseRoutes)
+
+app.use("/health-api/foods", foodRoutes);
+app.use("/health-api/meal-logs", mealLogRoutes);
+app.use("/health-api/dashboard", dashboardRoutes);
+app.use("/health-api/goals", goalsRoutes);
+app.use("/health-api/nrv", nrvRoutes);
+app.use("/health-api/meal-recipes", mealRecipeRoutes);
 
 app.use(notFoundHandler);
 

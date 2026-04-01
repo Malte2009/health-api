@@ -1,0 +1,125 @@
+model Food {
+  id                String    @id @default(uuid())
+  userId            String
+  createdAt         DateTime  @default(now())
+  changedAt         DateTime? @updatedAt
+  name              String
+  calories_per_100g Float?
+  carbs_g           Float?
+  protein_g         Float?
+  fat_g             Float?
+  fiber_g           Float?
+
+  foodLogs        FoodLog[]
+  nutrients       NutrientFacts?
+  mealIngredients MealIngredient[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FoodLog {
+  id        String    @id @default(uuid())
+  userId    String
+  foodId    String
+  mealLogId String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+  date      DateTime
+  weight_g  Float?
+
+  food    Food    @relation(fields: [foodId], references: [id], onDelete: Restrict)
+  mealLog MealLog @relation(fields: [mealLogId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+  OTHER
+}
+
+model MealLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+  type      MealType
+
+  foodLogs FoodLog[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NutrientFacts {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+  foodId    String    @unique
+
+  // -- Fat Soluble
+  vitamin_a Decimal? @db.Decimal(10, 4) // mcg RAE
+  vitamin_d Decimal? @db.Decimal(10, 4) // mcg
+  vitamin_e Decimal? @db.Decimal(10, 4) // mg
+  vitamin_k Decimal? @db.Decimal(10, 4) // mcg
+
+  // -- Water Soluble
+  vitamin_c   Decimal? @db.Decimal(10, 4) // mg
+  vitamin_b1  Decimal? @db.Decimal(10, 4) // mg
+  vitamin_b2  Decimal? @db.Decimal(10, 4) // mg
+  vitamin_b3  Decimal? @db.Decimal(10, 4) // mg NE
+  vitamin_b5  Decimal? @db.Decimal(10, 4) // mg
+  vitamin_b6  Decimal? @db.Decimal(10, 4) // mg
+  vitamin_b7  Decimal? @db.Decimal(10, 4) // mcg
+  vitamin_b9  Decimal? @db.Decimal(10, 4) // mcg DFE
+  vitamin_b12 Decimal? @db.Decimal(10, 4) // mcg
+  choline     Decimal? @db.Decimal(10, 4) // mg
+
+  // -- Major Minerals
+  calcium    Decimal? @db.Decimal(10, 4) // mg
+  phosphorus Decimal? @db.Decimal(10, 4) // mg
+  magnesium  Decimal? @db.Decimal(10, 4) // mg
+  sodium     Decimal? @db.Decimal(10, 4) // mg
+  potassium  Decimal? @db.Decimal(10, 4) // mg
+  chloride   Decimal? @db.Decimal(10, 4) // mg
+  sulfur     Decimal? @db.Decimal(10, 4) // mg
+
+  // -- Trace Minerals
+  iron       Decimal? @db.Decimal(10, 4) // mg
+  zinc       Decimal? @db.Decimal(10, 4) // mg
+  selenium   Decimal? @db.Decimal(10, 4) // mcg
+  iodine     Decimal? @db.Decimal(10, 4) // mcg
+  copper     Decimal? @db.Decimal(10, 4) // mg
+  manganese  Decimal? @db.Decimal(10, 4) // mg
+  chromium   Decimal? @db.Decimal(10, 4) // mcg
+  molybdenum Decimal? @db.Decimal(10, 4) // mcg
+  fluoride   Decimal? @db.Decimal(10, 4) // mg
+
+  // -- Fatty Acids
+  omega_3 Decimal? @db.Decimal(10, 4) // mg
+  omega_6 Decimal? @db.Decimal(10, 4) // mg
+  omega_9 Decimal? @db.Decimal(10, 4) // mg
+
+  food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+}
+
+model Meal {
+  id          String    @id @default(uuid())
+  userId      String
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
+  name        String
+  servingSize Float?    // grams per serving (optional reference)
+
+  ingredients MealIngredient[]
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MealIngredient {
+  id       String @id @default(uuid())
+  mealId   String
+  foodId   String
+  weight_g Float
+
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
+}

@@ -1,6 +1,6 @@
 import {Router} from 'express';
-import {authenticateToken} from "../middleware/auth.middleware";
-import {getSetTypes, changeSet, createSet, deleteSet, getSetById, getSetUnits} from "../controllers/set.controller";
+import {authenticateToken} from "../../middleware/auth.middleware";
+import {getSetTypes, changeSet, createSet, deleteSet, getSetById, getSetUnits} from "../../controllers/training/set.controller";
 
 const router = Router();
 
