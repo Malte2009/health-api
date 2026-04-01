@@ -1,6 +1,67 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+import { PortionUnit } from '@prisma/client';
+
+const isPositiveNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+const parsePortionUnit = (value: unknown): PortionUnit | undefined => {
+    if (value == null) return undefined;
+    if (value === PortionUnit.G || value === PortionUnit.ML) return value;
+    return undefined;
+};
+
+const getDefaultPortionData = (body: any): { data?: { defaultAmount?: number | null; defaultUnit?: PortionUnit | null; density_g_per_ml?: number | null }; error?: string } => {
+    const hasDefaultAmount = Object.prototype.hasOwnProperty.call(body, 'defaultAmount');
+    const hasDefaultUnit = Object.prototype.hasOwnProperty.call(body, 'defaultUnit');
+    const hasDensity = Object.prototype.hasOwnProperty.call(body, 'density_g_per_ml');
+
+    if (!hasDefaultAmount && !hasDefaultUnit && !hasDensity) return {};
+
+    const defaultAmount = body.defaultAmount;
+    const unit = parsePortionUnit(body.defaultUnit);
+    const density = body.density_g_per_ml;
+
+    if (hasDefaultUnit && body.defaultUnit != null && !unit) {
+        return { error: 'defaultUnit must be one of: G, ML' };
+    }
+
+    if (hasDefaultAmount && defaultAmount != null && !isPositiveNumber(defaultAmount)) {
+        return { error: 'defaultAmount must be a positive number' };
+    }
+
+    if (hasDensity && density != null && !isPositiveNumber(density)) {
+        return { error: 'density_g_per_ml must be a positive number' };
+    }
+
+    const data: { defaultAmount?: number | null; defaultUnit?: PortionUnit | null; density_g_per_ml?: number | null } = {};
+
+    if (hasDefaultAmount) data.defaultAmount = defaultAmount ?? null;
+    if (hasDefaultUnit) data.defaultUnit = body.defaultUnit ?? null;
+    if (hasDensity) data.density_g_per_ml = density ?? null;
+
+    const nextAmount = hasDefaultAmount ? data.defaultAmount : undefined;
+    const nextUnit = hasDefaultUnit ? data.defaultUnit : undefined;
+    const nextDensity = hasDensity ? data.density_g_per_ml : undefined;
+
+    const effectiveAmount = nextAmount === undefined ? body.defaultAmount : nextAmount;
+    const effectiveUnit = nextUnit === undefined ? body.defaultUnit : nextUnit;
+    const effectiveDensity = nextDensity === undefined ? body.density_g_per_ml : nextDensity;
+
+    if ((effectiveAmount == null) !== (effectiveUnit == null)) {
+        return { error: 'defaultAmount and defaultUnit must be provided together' };
+    }
+
+    if (effectiveUnit === PortionUnit.ML && effectiveAmount != null && effectiveDensity == null) {
+        return { error: 'density_g_per_ml is required when defaultUnit is ML' };
+    }
+
+    if (effectiveUnit !== PortionUnit.ML && hasDensity && density != null) {
+        return { error: 'density_g_per_ml can only be set when defaultUnit is ML' };
+    }
+
+    return { data };
+};
 
 export const getFoods = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const userId = req.userId;
@@ -76,6 +137,9 @@ export const createFood = async (req: AuthenticatedRequest, res: Response, next:
     const userId = req.userId;
 
     try {
+        const defaultPortionResult = getDefaultPortionData(req.body);
+        if (defaultPortionResult.error) return res.status(400).send(defaultPortionResult.error);
+
         const newFood = await prisma.food.create({
             include: { nutrients: true },
             data: {
@@ -86,6 +150,7 @@ export const createFood = async (req: AuthenticatedRequest, res: Response, next:
                 carbs_g: req.body.carbs_g,
                 fat_g: req.body.fat_g,
                 fiber_g: req.body.fiber_g,
+                ...defaultPortionResult.data,
                 nutrients: req.body.nutrients ? {
                     create: {
                         vitamin_a:   req.body.nutrients.vitamin_a,
@@ -102,6 +167,7 @@ export const createFood = async (req: AuthenticatedRequest, res: Response, next:
                         vitamin_b9:  req.body.nutrients.vitamin_b9,
                         vitamin_b12: req.body.nutrients.vitamin_b12,
                         choline:     req.body.nutrients.choline,
+                        caffeine:    req.body.nutrients.caffeine,
                         calcium:     req.body.nutrients.calcium,
                         phosphorus:  req.body.nutrients.phosphorus,
                         magnesium:   req.body.nutrients.magnesium,
@@ -142,6 +208,13 @@ export const updateFood = async (req: AuthenticatedRequest, res: Response, next:
         const existing = await prisma.food.findUnique({ where: { id: foodId, userId } });
         if (!existing) return res.status(404).send("Food not found");
 
+        const defaultPortionResult = getDefaultPortionData({
+            defaultAmount: Object.prototype.hasOwnProperty.call(req.body, 'defaultAmount') ? req.body.defaultAmount : existing.defaultAmount,
+            defaultUnit: Object.prototype.hasOwnProperty.call(req.body, 'defaultUnit') ? req.body.defaultUnit : existing.defaultUnit,
+            density_g_per_ml: Object.prototype.hasOwnProperty.call(req.body, 'density_g_per_ml') ? req.body.density_g_per_ml : existing.density_g_per_ml,
+        });
+        if (defaultPortionResult.error) return res.status(400).send(defaultPortionResult.error);
+
         const updated = await prisma.food.update({
             where: { id: foodId },
             include: { nutrients: true },
@@ -152,6 +225,9 @@ export const updateFood = async (req: AuthenticatedRequest, res: Response, next:
                 carbs_g:           req.body.carbs_g,
                 fat_g:             req.body.fat_g,
                 fiber_g:           req.body.fiber_g,
+                defaultAmount:     defaultPortionResult.data?.defaultAmount,
+                defaultUnit:       defaultPortionResult.data?.defaultUnit,
+                density_g_per_ml:  defaultPortionResult.data?.density_g_per_ml,
             }
         });
 

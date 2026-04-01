@@ -1,7 +1,7 @@
 export const NUTRIENT_KEYS = [
     'vitamin_a', 'vitamin_d', 'vitamin_e', 'vitamin_k',
     'vitamin_c', 'vitamin_b1', 'vitamin_b2', 'vitamin_b3', 'vitamin_b5',
-    'vitamin_b6', 'vitamin_b7', 'vitamin_b9', 'vitamin_b12', 'choline',
+    'vitamin_b6', 'vitamin_b7', 'vitamin_b9', 'vitamin_b12', 'choline', 'caffeine',
     'calcium', 'phosphorus', 'magnesium', 'sodium', 'potassium',
     'chloride', 'sulfur', 'iron', 'zinc', 'selenium', 'iodine',
     'copper', 'manganese', 'chromium', 'molybdenum', 'fluoride',

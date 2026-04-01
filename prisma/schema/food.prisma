@@ -9,6 +9,9 @@ model Food {
   protein_g         Float?
   fat_g             Float?
   fiber_g           Float?
+  defaultAmount     Float?
+  defaultUnit       PortionUnit?
+  density_g_per_ml  Float?
 
   foodLogs        FoodLog[]
   nutrients       NutrientFacts?
@@ -73,6 +76,7 @@ model NutrientFacts {
   vitamin_b9  Decimal? @db.Decimal(10, 4) // mcg DFE
   vitamin_b12 Decimal? @db.Decimal(10, 4) // mcg
   choline     Decimal? @db.Decimal(10, 4) // mg
+  caffeine    Decimal? @db.Decimal(10, 4) // mg
 
   // -- Major Minerals
   calcium    Decimal? @db.Decimal(10, 4) // mg
@@ -122,4 +126,9 @@ model MealIngredient {
 
   meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
   food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
+}
+
+enum PortionUnit {
+  G
+  ML
 }

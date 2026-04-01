@@ -214,6 +214,37 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
         }
     }
 
+    // Food portion fields
+    if (body?.defaultAmount != null) {
+        if (!isNumber(body.defaultAmount)) return res.status(400).send("defaultAmount must be a number");
+        if (body.defaultAmount <= 0 || body.defaultAmount > 10000) return res.status(400).send("defaultAmount must be between 0 and 10000");
+    }
+
+    if (body?.density_g_per_ml != null) {
+        if (!isNumber(body.density_g_per_ml)) return res.status(400).send("density_g_per_ml must be a number");
+        if (body.density_g_per_ml <= 0 || body.density_g_per_ml > 10) return res.status(400).send("density_g_per_ml must be between 0 and 10");
+    }
+
+    if (body?.defaultUnit != null) {
+        if (!isString(body.defaultUnit)) return res.status(400).send("defaultUnit must be a string");
+        if (body.defaultUnit !== 'G' && body.defaultUnit !== 'ML') return res.status(400).send("defaultUnit must be one of: G, ML");
+    }
+
+    if (body?.weight_g != null) {
+        if (!isNumber(body.weight_g)) return res.status(400).send("weight_g must be a number");
+        if (body.weight_g <= 0 || body.weight_g > 10000) return res.status(400).send("weight_g must be between 0 and 10000");
+    }
+
+    if (body?.amount != null) {
+        if (!isNumber(body.amount)) return res.status(400).send("amount must be a number");
+        if (body.amount <= 0 || body.amount > 10000) return res.status(400).send("amount must be between 0 and 10000");
+    }
+
+    if (body?.unit != null) {
+        if (!isString(body.unit)) return res.status(400).send("unit must be a string");
+        if (body.unit !== 'G' && body.unit !== 'ML') return res.status(400).send("unit must be one of: G, ML");
+    }
+
     // User registration fields
     if (body?.name != null && req.path.includes('/register')) {
         const name = body.name;
