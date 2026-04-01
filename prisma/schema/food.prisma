@@ -33,7 +33,7 @@ model MealLog {
   userId    String
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
-  name      String
+  type      String
 
   foodLogs FoodLog[]
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)

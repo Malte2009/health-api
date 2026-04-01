@@ -1,12 +1,12 @@
 import {Router} from 'express';
-import {authenticateToken} from "../middleware/auth.middleware";
+import {authenticateToken} from "../../middleware/auth.middleware";
 import {
     createTraining,
     getTrainingById,
     getTraining,
     updateTraining,
     deleteTraining, getTrainingNames, recalculateTrainingCalories,
-} from "../controllers/training.controller";
+} from "../../controllers/training/training.controller";
 
 const router = Router();
 

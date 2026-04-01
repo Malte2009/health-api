@@ -6,17 +6,17 @@ import rateLimit from 'express-rate-limit';
 import cors from "./middleware/cors.middleware";
 
 import userRoutes from './routes/user.routes';
-import trainingRoutes from "./routes/training.routes";
+import trainingRoutes from "./routes/training/training.routes";
 import cookieParser from 'cookie-parser';
-import exerciseRoutes from "./routes/exercise.routes";
-import setRoutes from "./routes/set.routes";
+import exerciseRoutes from "./routes/training/exercise.routes";
+import setRoutes from "./routes/training/set.routes";
 import bodyRoutes from "./routes/bodyLog.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isAuthenticated } from './controllers/user.controller';
 import { authenticateToken } from './middleware/auth.middleware';
-import exerciseLogRoutes from "./routes/exerciseLog.routes";
+import exerciseLogRoutes from "./routes/training/exerciseLog.routes";
 
 dotenv.config();
 
