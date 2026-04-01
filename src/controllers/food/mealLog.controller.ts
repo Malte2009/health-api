@@ -5,6 +5,33 @@ import { MealType } from '@prisma/client';
 
 const VALID_MEAL_TYPES = Object.values(MealType);
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const parseDateOnly = (value: unknown): Date | null => {
+    if (typeof value !== 'string' || !DATE_ONLY_REGEX.test(value)) {
+        return null;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+
+    // Guard against impossible dates like 2026-02-31.
+    if (
+        parsed.getUTCFullYear() !== year ||
+        parsed.getUTCMonth() !== month - 1 ||
+        parsed.getUTCDate() !== day
+    ) {
+        return null;
+    }
+
+    return parsed;
+};
+
+const getUtcDayRange = (date: Date) => ({
+    gte: new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0)),
+    lte: new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999)),
+});
+
 export const getMealLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
     const { date, startDate, endDate } = req.query;
@@ -12,24 +39,22 @@ export const getMealLogs = async (req: AuthenticatedRequest, res: Response, next
     const where: any = { userId };
 
     if (date) {
-        const d = new Date(date as string);
-        if (isNaN(d.getTime())) return res.status(400).send("Invalid date format");
-        const start = new Date(d); start.setHours(0, 0, 0, 0);
-        const end   = new Date(d); end.setHours(23, 59, 59, 999);
-        where.createdAt = { gte: start, lte: end };
+        const parsedDate = parseDateOnly(date);
+        if (!parsedDate) return res.status(400).send('Invalid date format. Use YYYY-MM-DD');
+        where.createdAt = getUtcDayRange(parsedDate);
     } else if (startDate || endDate) {
         where.createdAt = {};
+
         if (startDate) {
-            const s = new Date(startDate as string);
-            if (isNaN(s.getTime())) return res.status(400).send("Invalid startDate format");
-            s.setHours(0, 0, 0, 0);
-            where.createdAt.gte = s;
+            const parsedStartDate = parseDateOnly(startDate);
+            if (!parsedStartDate) return res.status(400).send('Invalid startDate format. Use YYYY-MM-DD');
+            where.createdAt.gte = getUtcDayRange(parsedStartDate).gte;
         }
+
         if (endDate) {
-            const e = new Date(endDate as string);
-            if (isNaN(e.getTime())) return res.status(400).send("Invalid endDate format");
-            e.setHours(23, 59, 59, 999);
-            where.createdAt.lte = e;
+            const parsedEndDate = parseDateOnly(endDate);
+            if (!parsedEndDate) return res.status(400).send('Invalid endDate format. Use YYYY-MM-DD');
+            where.createdAt.lte = getUtcDayRange(parsedEndDate).lte;
         }
     }
 
