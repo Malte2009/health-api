@@ -8,10 +8,12 @@ model Food {
   carbs_g           Float?
   protein_g         Float?
   fat_g             Float?
+  fiber_g           Float?
 
-  foodLogs  FoodLog[]
-  nutrients NutrientFacts?
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodLogs        FoodLog[]
+  nutrients       NutrientFacts?
+  mealIngredients MealIngredient[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model FoodLog {
@@ -98,4 +100,26 @@ model NutrientFacts {
   omega_9 Decimal? @db.Decimal(10, 4) // mg
 
   food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+}
+
+model Meal {
+  id          String    @id @default(uuid())
+  userId      String
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
+  name        String
+  servingSize Float?    // grams per serving (optional reference)
+
+  ingredients MealIngredient[]
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MealIngredient {
+  id       String @id @default(uuid())
+  mealId   String
+  foodId   String
+  weight_g Float
+
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
 }

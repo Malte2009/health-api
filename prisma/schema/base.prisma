@@ -23,9 +23,26 @@ model User {
 
   exercises Exercise[]
 
-  foodLogs FoodLog[]
-  mealLogs MealLog[]
-  food     Food[]
+  foodLogs  FoodLog[]
+  mealLogs  MealLog[]
+  food      Food[]
+  meals     Meal[]
+  userGoals UserGoals?
+}
+
+model UserGoals {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  calories  Float?
+  protein_g Float?
+  carbs_g   Float?
+  fat_g     Float?
+  fiber_g   Float?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model BodyLog {
