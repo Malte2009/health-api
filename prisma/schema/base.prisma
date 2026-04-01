@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  gender    String
+  password  String
+  birthYear Int
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  trainings    TrainingLog[]
+  exerciseLogs ExerciseLog[]
+  sets         SetLog[]
+  bodyLogs     BodyLog[]
+
+  exercises Exercise[]
+
+  foodLogs FoodLog[]
+  mealLogs MealLog[]
+  food     Food[]
+}
+
+model BodyLog {
+  id            String    @id @default(uuid())
+  userId        String
+  createdAt     DateTime  @default(now())
+  changedAt     DateTime? @updatedAt
+  weight        Float
+  height        Float
+  fatMass       Float?
+  fatPercentage Float?
+  muscleMass    Float?
+  waterMass     Float?
+  BMI           Float?
+  BMR           Float?
+
+  user User @relation(fields: [userId], references: [id])
+}
