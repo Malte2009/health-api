@@ -225,7 +225,7 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
         const fat_g = body.fat_g;
         const sat = body.saturated_fat_g ?? 0;
         const unsat = body.unsaturated_fat_g ?? 0;
-        if (isNumber(fat_g) && isNumber(sat) && isNumber(unsat) && sat + unsat > fat_g) {
+        if (isNumber(fat_g) && isNumber(sat) && isNumber(unsat) && sat + unsat > fat_g + 0.001) {
             return res.status(400).send('saturated_fat_g + unsaturated_fat_g must be <= fat_g');
         }
     }
