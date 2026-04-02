@@ -213,6 +213,22 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
             if (value < 0 || value > 10000) return res.status(400).send(`${field} must be between 0 and 10000`);
         }
     }
+    for (const field of ["sugar_g", "saturated_fat_g", "unsaturated_fat_g", "salt_g"]) {
+        if (body?.[field] != null) {
+            const value = body[field];
+            if (!isNumber(value)) return res.status(400).send(`${field} must be a number`);
+            if (value < 0 || value > 10000) return res.status(400).send(`${field} must be between 0 and 10000`);
+        }
+    }
+
+    if (body?.fat_g != null && (body?.saturated_fat_g != null || body?.unsaturated_fat_g != null)) {
+        const fat_g = body.fat_g;
+        const sat = body.saturated_fat_g ?? 0;
+        const unsat = body.unsaturated_fat_g ?? 0;
+        if (isNumber(fat_g) && isNumber(sat) && isNumber(unsat) && sat + unsat > fat_g) {
+            return res.status(400).send('saturated_fat_g + unsaturated_fat_g must be <= fat_g');
+        }
+    }
 
     // Food portion fields
     if (body?.defaultAmount != null) {

@@ -62,6 +62,7 @@ const buildDaySummary = async (userId: string, date: Date) => {
     ]);
 
     let calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0, fiber_g = 0;
+    let sugar_g = 0, saturated_fat_g = 0, unsaturated_fat_g = 0, salt_g = 0;
     const nutrientTotals: Partial<Record<NutrientKey, number>> = {};
 
     for (const meal of mealLogs) {
@@ -83,6 +84,10 @@ const buildDaySummary = async (userId: string, date: Date) => {
             carbs_g   += (f.carbs_g           ?? 0) * factor;
             fat_g     += (f.fat_g             ?? 0) * factor;
             fiber_g   += (f.fiber_g           ?? 0) * factor;
+            sugar_g   += (f.sugar_g           ?? 0) * factor;
+            saturated_fat_g   += (f.saturated_fat_g   ?? 0) * factor;
+            unsaturated_fat_g += (f.unsaturated_fat_g ?? 0) * factor;
+            salt_g            += (f.salt_g            ?? 0) * factor;
 
             if (f.nutrients) {
                 for (const key of NUTRIENT_KEYS) {
@@ -102,6 +107,10 @@ const buildDaySummary = async (userId: string, date: Date) => {
             carbs_g:   round(carbs_g),
             fat_g:     round(fat_g),
             fiber_g:   round(fiber_g),
+            sugar_g:   round(sugar_g),
+            saturated_fat_g:   round(saturated_fat_g),
+            unsaturated_fat_g: round(unsaturated_fat_g),
+            salt_g:            round(salt_g),
         },
         nutrientTotals: Object.fromEntries(
             Object.entries(nutrientTotals).map(([k, v]) => [k, round(v as number, 2)])
@@ -117,6 +126,10 @@ const buildDaySummary = async (userId: string, date: Date) => {
             carbs_g:   goalProgress(userGoals?.carbs_g,   carbs_g),
             fat_g:     goalProgress(userGoals?.fat_g,     fat_g),
             fiber_g:   goalProgress(userGoals?.fiber_g,   fiber_g),
+            sugar_g:   goalProgress(userGoals?.sugar_g,   sugar_g),
+            saturated_fat_g:   goalProgress(userGoals?.saturated_fat_g,   saturated_fat_g),
+            unsaturated_fat_g: goalProgress(userGoals?.unsaturated_fat_g, unsaturated_fat_g),
+            salt_g:            goalProgress(userGoals?.salt_g,            salt_g),
         },
     };
 };

@@ -34,7 +34,7 @@ export const NRV = {
     manganese:  2.3,    // mg
     chromium:   35,     // mcg
     molybdenum: 45,     // mcg
-    fluoride:   4,      // mg
+    fluoride:   3500,      // mcg
 
     // Fatty Acids
     omega_3: 1600,      // mg

@@ -11,6 +11,19 @@ const parsePortionUnit = (value: unknown): PortionUnit | undefined => {
     return undefined;
 };
 
+const validateFatSplit = (fat_g: unknown, saturated_fat_g: unknown, unsaturated_fat_g: unknown): string | null => {
+    if (typeof fat_g !== 'number' || !Number.isFinite(fat_g)) return null;
+
+    const sat = typeof saturated_fat_g === 'number' && Number.isFinite(saturated_fat_g) ? saturated_fat_g : 0;
+    const unsat = typeof unsaturated_fat_g === 'number' && Number.isFinite(unsaturated_fat_g) ? unsaturated_fat_g : 0;
+
+    if (sat + unsat > fat_g + 1e-6) {
+        return 'saturated_fat_g + unsaturated_fat_g must be <= fat_g';
+    }
+
+    return null;
+};
+
 const getDefaultPortionData = (body: any): { data?: { defaultAmount?: number | null; defaultUnit?: PortionUnit | null; density_g_per_ml?: number | null }; error?: string } => {
     const hasDefaultAmount = Object.prototype.hasOwnProperty.call(body, 'defaultAmount');
     const hasDefaultUnit = Object.prototype.hasOwnProperty.call(body, 'defaultUnit');
@@ -137,6 +150,9 @@ export const createFood = async (req: AuthenticatedRequest, res: Response, next:
     const userId = req.userId;
 
     try {
+        const fatSplitError = validateFatSplit(req.body.fat_g, req.body.saturated_fat_g, req.body.unsaturated_fat_g);
+        if (fatSplitError) return res.status(400).send(fatSplitError);
+
         const defaultPortionResult = getDefaultPortionData(req.body);
         if (defaultPortionResult.error) return res.status(400).send(defaultPortionResult.error);
 
@@ -150,6 +166,10 @@ export const createFood = async (req: AuthenticatedRequest, res: Response, next:
                 carbs_g: req.body.carbs_g,
                 fat_g: req.body.fat_g,
                 fiber_g: req.body.fiber_g,
+                sugar_g: req.body.sugar_g,
+                saturated_fat_g: req.body.saturated_fat_g,
+                unsaturated_fat_g: req.body.unsaturated_fat_g,
+                salt_g: req.body.salt_g,
                 ...defaultPortionResult.data,
                 nutrients: req.body.nutrients ? {
                     create: {
@@ -208,6 +228,12 @@ export const updateFood = async (req: AuthenticatedRequest, res: Response, next:
         const existing = await prisma.food.findUnique({ where: { id: foodId, userId } });
         if (!existing) return res.status(404).send("Food not found");
 
+        const effectiveFat = req.body.fat_g ?? existing.fat_g;
+        const effectiveSaturatedFat = req.body.saturated_fat_g ?? existing.saturated_fat_g;
+        const effectiveUnsaturatedFat = req.body.unsaturated_fat_g ?? existing.unsaturated_fat_g;
+        const fatSplitError = validateFatSplit(effectiveFat, effectiveSaturatedFat, effectiveUnsaturatedFat);
+        if (fatSplitError) return res.status(400).send(fatSplitError);
+
         const defaultPortionResult = getDefaultPortionData({
             defaultAmount: Object.prototype.hasOwnProperty.call(req.body, 'defaultAmount') ? req.body.defaultAmount : existing.defaultAmount,
             defaultUnit: Object.prototype.hasOwnProperty.call(req.body, 'defaultUnit') ? req.body.defaultUnit : existing.defaultUnit,
@@ -225,6 +251,10 @@ export const updateFood = async (req: AuthenticatedRequest, res: Response, next:
                 carbs_g:           req.body.carbs_g,
                 fat_g:             req.body.fat_g,
                 fiber_g:           req.body.fiber_g,
+                sugar_g:           req.body.sugar_g,
+                saturated_fat_g:   req.body.saturated_fat_g,
+                unsaturated_fat_g: req.body.unsaturated_fat_g,
+                salt_g:            req.body.salt_g,
                 defaultAmount:     defaultPortionResult.data?.defaultAmount,
                 defaultUnit:       defaultPortionResult.data?.defaultUnit,
                 density_g_per_ml:  defaultPortionResult.data?.density_g_per_ml,

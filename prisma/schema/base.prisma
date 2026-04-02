@@ -36,11 +36,15 @@ model UserGoals {
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
 
-  calories  Float?
-  protein_g Float?
-  carbs_g   Float?
-  fat_g     Float?
-  fiber_g   Float?
+  calories          Float?
+  protein_g         Float?
+  carbs_g           Float?
+  fat_g             Float?
+  fiber_g           Float?
+  sugar_g           Float?
+  saturated_fat_g   Float?
+  unsaturated_fat_g Float?
+  salt_g            Float?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

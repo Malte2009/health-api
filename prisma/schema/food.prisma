@@ -1,14 +1,18 @@
 model Food {
-  id                String    @id @default(uuid())
+  id                String       @id @default(uuid())
   userId            String
-  createdAt         DateTime  @default(now())
-  changedAt         DateTime? @updatedAt
+  createdAt         DateTime     @default(now())
+  changedAt         DateTime?    @updatedAt
   name              String
   calories_per_100g Float?
   carbs_g           Float?
   protein_g         Float?
   fat_g             Float?
   fiber_g           Float?
+  sugar_g           Float?
+  saturated_fat_g   Float?
+  unsaturated_fat_g Float?
+  salt_g            Float?
   defaultAmount     Float?
   defaultUnit       PortionUnit?
   density_g_per_ml  Float?
@@ -96,7 +100,7 @@ model NutrientFacts {
   manganese  Decimal? @db.Decimal(10, 4) // mg
   chromium   Decimal? @db.Decimal(10, 4) // mcg
   molybdenum Decimal? @db.Decimal(10, 4) // mcg
-  fluoride   Decimal? @db.Decimal(10, 4) // mg
+  fluoride   Decimal? @db.Decimal(10, 4) // mcg
 
   // -- Fatty Acids
   omega_3 Decimal? @db.Decimal(10, 4) // mg
@@ -112,7 +116,7 @@ model Meal {
   createdAt   DateTime  @default(now())
   changedAt   DateTime? @updatedAt
   name        String
-  servingSize Float?    // grams per serving (optional reference)
+  servingSize Float? // grams per serving (optional reference)
 
   ingredients MealIngredient[]
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)

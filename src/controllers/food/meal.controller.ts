@@ -14,6 +14,7 @@ const round = (n: number, dec = 1) => Math.round(n * 10 ** dec) / 10 ** dec;
 // Compute aggregated nutrition for a set of ingredients scaled by an optional factor
 const computeNutrition = (ingredients: { weight_g: number; food: any }[], scaleFactor = 1) => {
     let calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0, fiber_g = 0;
+    let sugar_g = 0, saturated_fat_g = 0, unsaturated_fat_g = 0, salt_g = 0;
     const nutrientTotals: Partial<Record<NutrientKey, number>> = {};
 
     for (const ing of ingredients) {
@@ -25,6 +26,10 @@ const computeNutrition = (ingredients: { weight_g: number; food: any }[], scaleF
         carbs_g   += (f.carbs_g           ?? 0) * factor;
         fat_g     += (f.fat_g             ?? 0) * factor;
         fiber_g   += (f.fiber_g           ?? 0) * factor;
+        sugar_g   += (f.sugar_g           ?? 0) * factor;
+        saturated_fat_g   += (f.saturated_fat_g   ?? 0) * factor;
+        unsaturated_fat_g += (f.unsaturated_fat_g ?? 0) * factor;
+        salt_g            += (f.salt_g            ?? 0) * factor;
 
         if (f.nutrients) {
             for (const key of NUTRIENT_KEYS) {
@@ -42,6 +47,10 @@ const computeNutrition = (ingredients: { weight_g: number; food: any }[], scaleF
         carbs_g:   round(carbs_g),
         fat_g:     round(fat_g),
         fiber_g:   round(fiber_g),
+        sugar_g:   round(sugar_g),
+        saturated_fat_g:   round(saturated_fat_g),
+        unsaturated_fat_g: round(unsaturated_fat_g),
+        salt_g:            round(salt_g),
         nutrientTotals: Object.fromEntries(
             Object.entries(nutrientTotals).map(([k, v]) => [k, round(v as number, 2)])
         ),
@@ -251,7 +260,7 @@ export const logMeal = async (req: AuthenticatedRequest, res: Response, next: Ne
     const { mealLogId, scaleFactor = 1, date } = req.body;
 
     if (!mealLogId) return res.status(400).send("mealLogId is required");
-    if (typeof scaleFactor !== 'number' || scaleFactor <= 0) {
+    if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) {
         return res.status(400).send("scaleFactor must be a positive number");
     }
 

@@ -24,11 +24,15 @@ export const createGoals = async (req: AuthenticatedRequest, res: Response, next
         const goals = await prisma.userGoals.create({
             data: {
                 userId,
-                calories:  req.body.calories,
-                protein_g: req.body.protein_g,
-                carbs_g:   req.body.carbs_g,
-                fat_g:     req.body.fat_g,
-                fiber_g:   req.body.fiber_g,
+                calories:          req.body.calories,
+                protein_g:         req.body.protein_g,
+                carbs_g:           req.body.carbs_g,
+                fat_g:             req.body.fat_g,
+                fiber_g:           req.body.fiber_g,
+                sugar_g:           req.body.sugar_g,
+                saturated_fat_g:   req.body.saturated_fat_g,
+                unsaturated_fat_g: req.body.unsaturated_fat_g,
+                salt_g:            req.body.salt_g,
             }
         });
         return res.status(201).json(goals);
@@ -47,11 +51,15 @@ export const updateGoals = async (req: AuthenticatedRequest, res: Response, next
         const updated = await prisma.userGoals.update({
             where: { userId },
             data: {
-                calories:  req.body.calories,
-                protein_g: req.body.protein_g,
-                carbs_g:   req.body.carbs_g,
-                fat_g:     req.body.fat_g,
-                fiber_g:   req.body.fiber_g,
+                calories:          req.body.calories,
+                protein_g:         req.body.protein_g,
+                carbs_g:           req.body.carbs_g,
+                fat_g:             req.body.fat_g,
+                fiber_g:           req.body.fiber_g,
+                sugar_g:           req.body.sugar_g,
+                saturated_fat_g:   req.body.saturated_fat_g,
+                unsaturated_fat_g: req.body.unsaturated_fat_g,
+                salt_g:            req.body.salt_g,
             }
         });
         return res.status(200).json(updated);
