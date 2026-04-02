@@ -17,7 +17,7 @@ const validateFatSplit = (fat_g: unknown, saturated_fat_g: unknown, unsaturated_
     const sat = typeof saturated_fat_g === 'number' && Number.isFinite(saturated_fat_g) ? saturated_fat_g : 0;
     const unsat = typeof unsaturated_fat_g === 'number' && Number.isFinite(unsaturated_fat_g) ? unsaturated_fat_g : 0;
 
-    if (sat + unsat > fat_g + 1e-6) {
+    if (sat + unsat > fat_g + 0.001) {
         return 'saturated_fat_g + unsaturated_fat_g must be <= fat_g';
     }
 
