@@ -7,7 +7,7 @@ const isPositiveNumber = (value: unknown): value is number => typeof value === '
 
 const parsePortionUnit = (value: unknown): PortionUnit | undefined => {
     if (value == null) return undefined;
-    if (value === PortionUnit.G || value === PortionUnit.ML) return value;
+    if (value === PortionUnit.G || value === PortionUnit.ML || value === PortionUnit.PORTION) return value;
     return undefined;
 };
 
@@ -36,7 +36,7 @@ const getDefaultPortionData = (body: any): { data?: { defaultAmount?: number | n
     const density = body.density_g_per_ml;
 
     if (hasDefaultUnit && body.defaultUnit != null && !unit) {
-        return { error: 'defaultUnit must be one of: G, ML' };
+        return { error: 'defaultUnit must be one of: G, ML, PORTION' };
     }
 
     if (hasDefaultAmount && defaultAmount != null && !isPositiveNumber(defaultAmount)) {

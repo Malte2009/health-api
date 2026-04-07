@@ -243,7 +243,7 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
 
     if (body?.defaultUnit != null) {
         if (!isString(body.defaultUnit)) return res.status(400).send("defaultUnit must be a string");
-        if (body.defaultUnit !== 'G' && body.defaultUnit !== 'ML') return res.status(400).send("defaultUnit must be one of: G, ML");
+        if (body.defaultUnit !== 'G' && body.defaultUnit !== 'ML' && body.defaultUnit != "PORTION") return res.status(400).send("defaultUnit must be one of: G, ML");
     }
 
     if (body?.weight_g != null) {

@@ -135,4 +135,5 @@ model MealIngredient {
 enum PortionUnit {
   G
   ML
+  PORTION
 }
