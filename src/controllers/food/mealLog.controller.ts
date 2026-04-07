@@ -92,16 +92,25 @@ export const getMealLogById = async (req: AuthenticatedRequest, res: Response, n
 
 export const createMealLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const { type } = req.body;
+    const { type, date } = req.body;
 
     if (!type) return res.status(400).send("type is required");
     if (!VALID_MEAL_TYPES.includes(type)) {
         return res.status(400).send(`type must be one of: ${VALID_MEAL_TYPES.join(', ')}`);
     }
 
+    const parsedDate = date == null ? null : parseDateOnly(date);
+    if (date != null && !parsedDate) {
+        return res.status(400).send('Invalid date format. Use YYYY-MM-DD');
+    }
+
     try {
         const mealLog = await prisma.mealLog.create({
-            data: { userId, type }
+            data: {
+                userId,
+                type,
+                ...(parsedDate ? { createdAt: parsedDate } : {}),
+            }
         });
         return res.status(201).json(mealLog);
     } catch (error) {
