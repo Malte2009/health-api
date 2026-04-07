@@ -24,16 +24,26 @@ const validateFatSplit = (fat_g: unknown, saturated_fat_g: unknown, unsaturated_
     return null;
 };
 
-const getDefaultPortionData = (body: any): { data?: { defaultAmount?: number | null; defaultUnit?: PortionUnit | null; density_g_per_ml?: number | null }; error?: string } => {
+const getDefaultPortionData = (body: any): {
+    data?: {
+        defaultAmount?: number | null;
+        defaultUnit?: PortionUnit | null;
+        density_g_per_ml?: number | null;
+        g_per_portion?: number | null;
+    };
+    error?: string;
+} => {
     const hasDefaultAmount = Object.prototype.hasOwnProperty.call(body, 'defaultAmount');
     const hasDefaultUnit = Object.prototype.hasOwnProperty.call(body, 'defaultUnit');
     const hasDensity = Object.prototype.hasOwnProperty.call(body, 'density_g_per_ml');
+    const hasGramsPerPortion = Object.prototype.hasOwnProperty.call(body, 'g_per_portion');
 
-    if (!hasDefaultAmount && !hasDefaultUnit && !hasDensity) return {};
+    if (!hasDefaultAmount && !hasDefaultUnit && !hasDensity && !hasGramsPerPortion) return {};
 
     const defaultAmount = body.defaultAmount;
     const unit = parsePortionUnit(body.defaultUnit);
     const density = body.density_g_per_ml;
+    const gramsPerPortion = body.g_per_portion;
 
     if (hasDefaultUnit && body.defaultUnit != null && !unit) {
         return { error: 'defaultUnit must be one of: G, ML, PORTION' };
@@ -47,19 +57,31 @@ const getDefaultPortionData = (body: any): { data?: { defaultAmount?: number | n
         return { error: 'density_g_per_ml must be a positive number' };
     }
 
-    const data: { defaultAmount?: number | null; defaultUnit?: PortionUnit | null; density_g_per_ml?: number | null } = {};
+    if (hasGramsPerPortion && gramsPerPortion != null && !isPositiveNumber(gramsPerPortion)) {
+        return { error: 'g_per_portion must be a positive number' };
+    }
+
+    const data: {
+        defaultAmount?: number | null;
+        defaultUnit?: PortionUnit | null;
+        density_g_per_ml?: number | null;
+        g_per_portion?: number | null;
+    } = {};
 
     if (hasDefaultAmount) data.defaultAmount = defaultAmount ?? null;
     if (hasDefaultUnit) data.defaultUnit = body.defaultUnit ?? null;
     if (hasDensity) data.density_g_per_ml = density ?? null;
+    if (hasGramsPerPortion) data.g_per_portion = gramsPerPortion ?? null;
 
     const nextAmount = hasDefaultAmount ? data.defaultAmount : undefined;
     const nextUnit = hasDefaultUnit ? data.defaultUnit : undefined;
     const nextDensity = hasDensity ? data.density_g_per_ml : undefined;
+    const nextGramsPerPortion = hasGramsPerPortion ? data.g_per_portion : undefined;
 
     const effectiveAmount = nextAmount === undefined ? body.defaultAmount : nextAmount;
     const effectiveUnit = nextUnit === undefined ? body.defaultUnit : nextUnit;
     const effectiveDensity = nextDensity === undefined ? body.density_g_per_ml : nextDensity;
+    const effectiveGramsPerPortion = nextGramsPerPortion === undefined ? body.g_per_portion : nextGramsPerPortion;
 
     if ((effectiveAmount == null) !== (effectiveUnit == null)) {
         return { error: 'defaultAmount and defaultUnit must be provided together' };
@@ -69,8 +91,18 @@ const getDefaultPortionData = (body: any): { data?: { defaultAmount?: number | n
         return { error: 'density_g_per_ml is required when defaultUnit is ML' };
     }
 
-    if (effectiveUnit !== PortionUnit.ML && hasDensity && density != null) {
-        return { error: 'density_g_per_ml can only be set when defaultUnit is ML' };
+    if (effectiveUnit === PortionUnit.PORTION && effectiveAmount != null && effectiveGramsPerPortion == null) {
+        return { error: 'g_per_portion is required when defaultUnit is PORTION' };
+    }
+
+    // Keep conversion fields normalized to the selected default unit.
+    if (effectiveUnit === PortionUnit.ML) {
+        data.g_per_portion = null;
+    } else if (effectiveUnit === PortionUnit.PORTION) {
+        data.density_g_per_ml = null;
+    } else if (effectiveUnit === PortionUnit.G) {
+        data.density_g_per_ml = null;
+        data.g_per_portion = null;
     }
 
     return { data };
@@ -238,6 +270,7 @@ export const updateFood = async (req: AuthenticatedRequest, res: Response, next:
             defaultAmount: Object.prototype.hasOwnProperty.call(req.body, 'defaultAmount') ? req.body.defaultAmount : existing.defaultAmount,
             defaultUnit: Object.prototype.hasOwnProperty.call(req.body, 'defaultUnit') ? req.body.defaultUnit : existing.defaultUnit,
             density_g_per_ml: Object.prototype.hasOwnProperty.call(req.body, 'density_g_per_ml') ? req.body.density_g_per_ml : existing.density_g_per_ml,
+            g_per_portion: Object.prototype.hasOwnProperty.call(req.body, 'g_per_portion') ? req.body.g_per_portion : existing.g_per_portion,
         });
         if (defaultPortionResult.error) return res.status(400).send(defaultPortionResult.error);
 
@@ -258,6 +291,7 @@ export const updateFood = async (req: AuthenticatedRequest, res: Response, next:
                 defaultAmount:     defaultPortionResult.data?.defaultAmount,
                 defaultUnit:       defaultPortionResult.data?.defaultUnit,
                 density_g_per_ml:  defaultPortionResult.data?.density_g_per_ml,
+                g_per_portion:     defaultPortionResult.data?.g_per_portion,
             }
         });
 

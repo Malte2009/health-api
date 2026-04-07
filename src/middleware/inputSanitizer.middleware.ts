@@ -241,9 +241,14 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
         if (body.density_g_per_ml <= 0 || body.density_g_per_ml > 10) return res.status(400).send("density_g_per_ml must be between 0 and 10");
     }
 
+    if (body?.g_per_portion != null) {
+        if (!isNumber(body.g_per_portion)) return res.status(400).send("g_per_portion must be a number");
+        if (body.g_per_portion <= 0 || body.g_per_portion > 10000) return res.status(400).send("g_per_portion must be between 0 and 10000");
+    }
+
     if (body?.defaultUnit != null) {
         if (!isString(body.defaultUnit)) return res.status(400).send("defaultUnit must be a string");
-        if (body.defaultUnit !== 'G' && body.defaultUnit !== 'ML' && body.defaultUnit != "PORTION") return res.status(400).send("defaultUnit must be one of: G, ML");
+        if (body.defaultUnit !== 'G' && body.defaultUnit !== 'ML' && body.defaultUnit !== 'PORTION') return res.status(400).send("defaultUnit must be one of: G, ML, PORTION");
     }
 
     if (body?.weight_g != null) {
@@ -258,7 +263,7 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
 
     if (body?.unit != null) {
         if (!isString(body.unit)) return res.status(400).send("unit must be a string");
-        if (body.unit !== 'G' && body.unit !== 'ML') return res.status(400).send("unit must be one of: G, ML");
+        if (body.unit !== 'G' && body.unit !== 'ML' && body.unit !== 'PORTION') return res.status(400).send("unit must be one of: G, ML, PORTION");
     }
 
     // User registration fields

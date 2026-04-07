@@ -11,7 +11,12 @@ const resolveWeightInGrams = ({
     amount,
     unit,
 }: {
-    food: { defaultAmount: number | null; defaultUnit: PortionUnit | null; density_g_per_ml: number | null };
+    food: {
+        defaultAmount: number | null;
+        defaultUnit: PortionUnit | null;
+        density_g_per_ml: number | null;
+        g_per_portion: number | null;
+    };
     weight_g?: unknown;
     amount?: unknown;
     unit?: unknown;
@@ -23,15 +28,25 @@ const resolveWeightInGrams = ({
 
     if (amount != null || unit != null) {
         if (!isPositiveNumber(amount)) return { error: 'amount must be a positive number when unit is provided' };
-        if (unit !== PortionUnit.G && unit !== PortionUnit.ML) return { error: 'unit must be one of: G, ML' };
+        if (unit !== PortionUnit.G && unit !== PortionUnit.ML && unit !== PortionUnit.PORTION) {
+            return { error: 'unit must be one of: G, ML, PORTION' };
+        }
 
         if (unit === PortionUnit.G) return { weight_g: amount };
 
-        if (!isPositiveNumber(food.density_g_per_ml)) {
-            return { error: 'Food density_g_per_ml is required to convert ML to grams' };
+        if (unit === PortionUnit.ML) {
+            if (!isPositiveNumber(food.density_g_per_ml)) {
+                return { error: 'Food density_g_per_ml is required to convert ML to grams' };
+            }
+
+            return { weight_g: amount * food.density_g_per_ml };
         }
 
-        return { weight_g: amount * food.density_g_per_ml };
+        if (!isPositiveNumber(food.g_per_portion)) {
+            return { error: 'Food g_per_portion is required to convert PORTION to grams' };
+        }
+
+        return { weight_g: amount * food.g_per_portion };
     }
 
     if (food.defaultAmount == null || food.defaultUnit == null) {
@@ -42,11 +57,19 @@ const resolveWeightInGrams = ({
         return { weight_g: food.defaultAmount };
     }
 
-    if (!isPositiveNumber(food.density_g_per_ml)) {
-        return { error: 'Food density_g_per_ml is required when defaultUnit is ML' };
+    if (food.defaultUnit === PortionUnit.ML) {
+        if (!isPositiveNumber(food.density_g_per_ml)) {
+            return { error: 'Food density_g_per_ml is required when defaultUnit is ML' };
+        }
+
+        return { weight_g: food.defaultAmount * food.density_g_per_ml };
     }
 
-    return { weight_g: food.defaultAmount * food.density_g_per_ml };
+    if (!isPositiveNumber(food.g_per_portion)) {
+        return { error: 'Food g_per_portion is required when defaultUnit is PORTION' };
+    }
+
+    return { weight_g: food.defaultAmount * food.g_per_portion };
 };
 
 export const getFoodLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
@@ -82,7 +105,7 @@ export const createFoodLog = async (req: AuthenticatedRequest, res: Response, ne
 
         const food = await prisma.food.findUnique({
             where: { id: foodId, userId },
-            select: { id: true, defaultAmount: true, defaultUnit: true, density_g_per_ml: true }
+            select: { id: true, defaultAmount: true, defaultUnit: true, density_g_per_ml: true, g_per_portion: true }
         });
         if (!food) return res.status(404).send("Food not found");
 
@@ -122,7 +145,7 @@ export const updateFoodLog = async (req: AuthenticatedRequest, res: Response, ne
         if (req.body.weight_g != null || req.body.amount != null || req.body.unit != null) {
             const food = await prisma.food.findUnique({
                 where: { id: existing.foodId, userId },
-                select: { id: true, defaultAmount: true, defaultUnit: true, density_g_per_ml: true }
+                select: { id: true, defaultAmount: true, defaultUnit: true, density_g_per_ml: true, g_per_portion: true }
             });
             if (!food) return res.status(404).send('Food not found');
 

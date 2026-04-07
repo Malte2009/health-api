@@ -73,6 +73,10 @@ const buildDaySummary = async (userId: string, date: Date) => {
                     ? fl.food.density_g_per_ml == null
                         ? null
                         : fl.food.defaultAmount * fl.food.density_g_per_ml
+                    : fl.food.defaultUnit === 'PORTION'
+                        ? fl.food.g_per_portion == null
+                            ? null
+                            : fl.food.defaultAmount * fl.food.g_per_portion
                     : fl.food.defaultAmount;
 
             const grams = fl.weight_g ?? fallbackWeight ?? 0;

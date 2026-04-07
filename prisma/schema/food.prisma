@@ -16,6 +16,7 @@ model Food {
   defaultAmount     Float?
   defaultUnit       PortionUnit?
   density_g_per_ml  Float?
+  g_per_portion     Float?
 
   foodLogs        FoodLog[]
   nutrients       NutrientFacts?
