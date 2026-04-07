@@ -25,7 +25,22 @@ export const getTrainingById = async (req: AuthenticatedRequest, res: Response, 
     }
 }
 
-export const getTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const getTrainingLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    try {
+        const trainingLogs = await prisma.trainingLog.findMany({
+            where: { userId: userId },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return res.status(200).json(trainingLogs);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getTrainingLogsWithExercises = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
     try {
@@ -182,7 +197,7 @@ export const createTraining = async (req: AuthenticatedRequest, res: Response, n
     }
 }
 
-export const deleteTraining = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+export const deleteTrainingLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
     const trainingLogId: string = req.params.id;
 

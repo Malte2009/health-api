@@ -133,6 +133,30 @@ export const deleteExerciseLog = async (req: AuthenticatedRequest, res: Response
 
     try {
         await prisma.exerciseLog.delete({where: { id: exerciseLogId }});
+
+        const exercise = await prisma.exercise.findUnique({
+            where: {
+                name_userId: {
+                    name: exerciseLog.name,
+                    userId: userId
+                }
+            },
+            include: {
+                exerciseLogs: true
+            }
+        });
+
+        if (exercise && exercise.exerciseLogs.length === 0) {
+            await prisma.exercise.delete({
+                where: {
+                    name_userId: {
+                        name: exercise.name,
+                        userId: userId
+                    }
+                }
+            });
+        }
+
         return res.status(204).send();
     } catch (error) {
         next(error);
