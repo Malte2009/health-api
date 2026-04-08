@@ -56,7 +56,7 @@ const buildDaySummary = async (userId: string, date: Date) => {
                     }
                 }
             },
-            orderBy: { createdAt: 'asc' }
+            orderBy: { order: "asc" }
         }),
         prisma.userGoals.findUnique({ where: { userId } }),
     ]);
@@ -123,6 +123,7 @@ const buildDaySummary = async (userId: string, date: Date) => {
             id:    m.id,
             type:  m.type,
             foods: m.foodLogs,
+            order: m.order,
         })),
         goals: {
             calories:  goalProgress(userGoals?.calories,  calories),

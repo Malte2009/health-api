@@ -92,11 +92,15 @@ export const getMealLogById = async (req: AuthenticatedRequest, res: Response, n
 
 export const createMealLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
-    const { type, date } = req.body;
+    const { type, date, order } = req.body;
 
     if (!type) return res.status(400).send("type is required");
     if (!VALID_MEAL_TYPES.includes(type)) {
         return res.status(400).send(`type must be one of: ${VALID_MEAL_TYPES.join(', ')}`);
+    }
+
+    if (typeof order != "number" || order < 0) {
+        return res.status(400).send(`order must be a positive integer`);
     }
 
     const parsedDate = date == null ? null : parseDateOnly(date);
@@ -109,6 +113,7 @@ export const createMealLog = async (req: AuthenticatedRequest, res: Response, ne
             data: {
                 userId,
                 type,
+                order,
                 ...(parsedDate ? { createdAt: parsedDate } : {}),
             }
         });
@@ -126,13 +131,27 @@ export const updateMealLog = async (req: AuthenticatedRequest, res: Response, ne
         const existing = await prisma.mealLog.findUnique({ where: { id, userId } });
         if (!existing) return res.status(404).send("Meal log not found");
 
+        let order = req.body.order;
+        let type = req.body.type;
+
+        if (type == null && order == null) {
+            return res.status(400).send("At least one of type or order must be provided for update");
+        }
+
+        if (order == null) order = existing.order;
+        if (type == null) type = existing.type;
+
+        if (typeof order != "number" || order < 0) {
+            return res.status(400).send(`order must be a positive integer`);
+        }
+
         if (req.body.type != null && !VALID_MEAL_TYPES.includes(req.body.type)) {
             return res.status(400).send(`type must be one of: ${VALID_MEAL_TYPES.join(', ')}`);
         }
 
         const updated = await prisma.mealLog.update({
             where: { id },
-            data: { type: req.body.type }
+            data: { type, order }
         });
 
         return res.status(200).json(updated);

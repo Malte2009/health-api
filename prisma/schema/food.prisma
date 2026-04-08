@@ -55,6 +55,8 @@ model MealLog {
   changedAt DateTime? @updatedAt
   type      MealType
 
+  order Int @default(0)
+
   foodLogs FoodLog[]
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
