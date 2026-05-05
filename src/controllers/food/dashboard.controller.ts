@@ -246,4 +246,126 @@ export const getNutritionOverTime = async (req: AuthenticatedRequest, res: Respo
     } catch (error) {
         next(error);
     }
-}
+};
+
+export const getTopFoods = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    try {
+        const userId = req.userId;
+        if (!userId) return res.status(401).send("Unauthorized");
+
+        const daysParam = req.query.days as string;
+        const days = parseInt(daysParam, 10) || 7;
+
+        const startDate = new Date();
+        startDate.setUTCDate(startDate.getUTCDate() - days);
+        startDate.setUTCHours(0, 0, 0, 0);
+
+        const aggregations = await prisma.foodLog.groupBy({
+            by: ['foodId'],
+            where: {
+                userId,
+                date: {
+                    gte: startDate
+                }
+            },
+            _sum: {
+                weight_g: true
+            },
+            _count: {
+                _all: true
+            }
+        });
+
+        const logs = await prisma.foodLog.findMany({
+            where: {
+                userId,
+                date: { gte: startDate }
+            },
+            select: {
+                foodId: true,
+                date: true,
+                createdAt: true
+            }
+        });
+
+        const logStats = new Map<string, { totalMinutes: number, count: number }>();
+        const globalUniqueDays = new Set<string>();
+
+        for (const log of logs) {
+            if (!logStats.has(log.foodId)) {
+                logStats.set(log.foodId, { totalMinutes: 0, count: 0 });
+            }
+            const stat = logStats.get(log.foodId)!;
+            
+            globalUniqueDays.add(log.date.toISOString().split('T')[0]);
+            
+            stat.totalMinutes += log.createdAt.getUTCHours() * 60 + log.createdAt.getUTCMinutes();
+            stat.count++;
+        }
+        
+        const totalDaysTracked = globalUniqueDays.size;
+
+        const foodIds = aggregations.map(a => a.foodId);
+        const foods = await prisma.food.findMany({
+            where: { id: { in: foodIds } },
+            include: { nutrients: true }
+        });
+
+        const foodsMap = new Map(foods.map(f => [f.id, f]));
+
+        const results = aggregations.map(ag => {
+            const food = foodsMap.get(ag.foodId);
+            if (!food) return null;
+
+            const totalWeight = ag._sum.weight_g || 0;
+            const kg = round(totalWeight / 1000, 3);
+            const times = ag._count._all;
+            const scale = totalWeight / 100;
+
+            const stats = logStats.get(food.id);
+            const avgMinutes = stats && stats.count > 0 ? stats.totalMinutes / stats.count : 0;
+            const avgHour = Math.floor(avgMinutes / 60).toString().padStart(2, '0');
+            const avgMin = Math.floor(avgMinutes % 60).toString().padStart(2, '0');
+            const averageIntakeTime = `${avgHour}:${avgMin}`;
+
+            const micronutrients: Record<string, number> = {};
+            if (food.nutrients) {
+                for (const key of NUTRIENT_KEYS) {
+                    const val = (food.nutrients as any)[key];
+                    if (val != null) {
+                        micronutrients[key] = round(Number(val) * scale, 2);
+                    }
+                }
+            }
+
+            return {
+                foodId: food.id,
+                name: food.name,
+                kg,
+                times,
+                averageIntakeTime,
+                macros: {
+                    calories: round((food.calories_per_100g ?? 0) * scale),
+                    protein_g: round((food.protein_g ?? 0) * scale),
+                    carbs_g: round((food.carbs_g ?? 0) * scale),
+                    fat_g: round((food.fat_g ?? 0) * scale),
+                    fiber_g: round((food.fiber_g ?? 0) * scale),
+                    sugar_g: round((food.sugar_g ?? 0) * scale),
+                    saturated_fat_g: round((food.saturated_fat_g ?? 0) * scale),
+                    unsaturated_fat_g: round((food.unsaturated_fat_g ?? 0) * scale),
+                    salt_g: round((food.salt_g ?? 0) * scale),
+                },
+                micronutrients
+            };
+        }).filter(Boolean);
+
+        results.sort((a, b) => b!.kg - a!.kg);
+
+        return res.status(200).json({
+            totalDaysTracked,
+            topFoods: results
+        });
+    } catch (error) {
+        next(error);
+    }
+};
