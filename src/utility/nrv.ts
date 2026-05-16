@@ -39,6 +39,7 @@ export const NRV = {
     // Fatty Acids
     omega_3: 1600,      // mg
     omega_6: 17000,     // mg
+    omega_9: 25000,     // mg
 } as const;
 
 export type NrvKey = keyof typeof NRV;

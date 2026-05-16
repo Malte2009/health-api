@@ -1,0 +1,88 @@
+model HrvRecording {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  startDateTime DateTime
+  endDateTime   DateTime?
+  device        String?
+
+  totalArtifactPercent Float?
+  totalBeats           Int?
+
+  // Rohdaten (Entweder URL zu File oder direktes JSON für Postgres)
+  rrDataUrl  String?
+  rrDataJson Json? // z.B. [812, 815, 801...]
+
+  // Kontext-Verknüpfung (Entweder ODER)
+  sleepLogId String?
+  sleepLog   SleepLog? @relation(fields: [sleepLogId], references: [id])
+
+  trainingLogId String?
+  trainingLog   TrainingLog? @relation(fields: [trainingLogId], references: [id])
+
+  context String? // "NIGHT_SLEEP", "TRAINING", "ORTHOSTATIC_TEST"
+
+  windows HrvWindow[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HrvWindow {
+  id          String    @id @default(uuid())
+  recordingId String
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
+
+  windowStart     DateTime
+  durationSeconds Int      @default(300) // 5 Min Standard
+
+  // Kontext im Fenster (z.B. "SET_EXERCISE", "REST", "TURNING_IN_BED")
+  eventTag String?
+
+  // --- TIME DOMAIN ---
+  mean_rr_ms    Float?
+  mean_hr_bpm   Float?
+  min_hr_bpm    Float?
+  max_hr_bpm    Float?
+  sdnn_ms       Float?
+  rmssd_ms      Float?
+  pnn50_percent Float?
+
+  // --- FREQUENCY DOMAIN ---
+  vlf_power   Float?
+  lf_power    Float?
+  hf_power    Float?
+  lf_hf_ratio Float?
+  hf_peak_hz  Float?
+  rsa_bpm     Float?
+
+  // --- NON-LINEAR / POINCARE ---
+  sd1_ms        Float?
+  sd2_ms        Float?
+  baevsky_si    Float?
+  csi           Float?
+  cvi           Float?
+  sd1_sd2_ratio Float?
+
+  // --- ENTROPY / COMPLEXITY ---
+  sample_entropy Float?
+  approx_entropy Float?
+  dfa_alpha1     Float?
+
+  // --- ARTIFACT / QUALITY ---
+  replaced_range          Int?
+  replaced_moving_average Int?
+  replaced_adaptive       Int?
+  replaced_artifact_split Int?
+  preserved_vagal_burst   Int?
+  preserved_pvc           Int?
+  merged_with_previous    Boolean?
+  artifact_merge_prev     Int?
+  preserved_tachy         Int?
+  artifact_total          Int?
+  artifact_percent        Float?
+
+  recording HrvRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+}

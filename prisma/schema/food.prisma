@@ -136,6 +136,28 @@ model MealIngredient {
   food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
 }
 
+model IntakeLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  timestamp DateTime
+
+  water_ml      Float?
+  otherFluid_ml Float?
+  beverageType  String? // "Wasser", "Elektrolyt", "Tee"
+
+  saltMg     Float? // Supplementiertes Salz
+  saltSource String? // "Tablette", "Elektrolyt", "Salz extra"
+
+  caffeine_mg Float?
+  alcohol_g   Float?
+
+  notes String?
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 enum PortionUnit {
   G
   ML

@@ -1,0 +1,108 @@
+enum BodyPosition {
+  LYING_SUPINE
+  LYING_LATERAL
+  SITTING
+  STANDING
+  BENDING_FORWARD
+  TRANSITION
+}
+
+enum BPContext {
+  MORNING_REST
+  ORTHOSTATIC_TEST
+  POST_EXERCISE
+  POST_POSITION_CHANGE
+  SYMPTOMATIC
+  ROUTINE
+  OTHER
+}
+
+enum HRContext {
+  SLEEP_TURNING
+  ORTHOSTATIC_TEST
+  POST_EXERCISE
+  PRESYNCOPE
+  REST
+  OTHER
+}
+
+model BloodPressureLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  timestamp DateTime
+  systolic  Int
+  diastolic Int
+  pulse     Int?
+  position  BodyPosition?
+  context   BPContext?
+
+  minutesAfterPositionChange Int?
+
+  symptoms String?
+  arm      String?
+
+  trainingId String?
+  training   TrainingLog? @relation(fields: [trainingId], references: [id])
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HeartRateEvent {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  timestamp DateTime
+  heartRate Int
+  context   HRContext
+
+  positionBefore BodyPosition?
+  positionAfter  BodyPosition?
+
+  rrIntervalMs    Float?
+  hrvRMSSD        Float?
+  durationSeconds Int?
+
+  notes String?
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SleepLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  date DateTime
+
+  // Subjektiv
+  bedTime             DateTime?
+  wakeTime            DateTime?
+  sleepLatencyMinutes Int?
+  wakeEpisodes        Int?
+  subjectiveHours     Float?
+  restedScore         Int? // 1-10 (WICHTIGSTES FELD)
+  morningHeadache     Boolean?
+  morningDizziness    Boolean?
+
+  // Smart Watch
+  totalSleepMinutes Int?
+  awakeMinutes      Int?
+  lightSleepMinutes Int?
+  deepSleepMinutes  Int?
+  remSleepMinutes   Int?
+
+  // Puls-Spike Übersicht
+  turningSpikeCount Int?
+  turningSpikeMaxHr Int?
+
+  // 1:1 Relation zur detaillierten Brustgurt-Aufnahme
+  hrvRecording HrvRecording?
+
+  notes String?
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

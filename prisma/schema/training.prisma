@@ -13,6 +13,17 @@ model TrainingLog {
   pauses         Int       @default(0)
   pauseLength    Int       @default(0)
 
+  abortedDueToSymptoms Boolean @default(false)
+  abortSymptom         String?
+
+  postExerciseBpSys Int? // Systolisch sofort nach Training
+  postExerciseBpDia Int? // Diastolisch sofort nach Training
+  postExerciseBpMin Int? // Nach wie vielen Minuten gemessen?
+
+  hrvRecording      HrvRecording?
+  bloodPressureLogs BloodPressureLog[]
+  syncopeLogs       SyncopeLog[]
+
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   exerciseLogs ExerciseLog[]
 }
@@ -34,8 +45,16 @@ model ExerciseLog {
 }
 
 model Exercise {
-  name      String
-  userId    String
+  name   String
+  userId String
+
+  setEnd           DateTime?
+  durationSeconds  Int?
+  rpe              Int?
+  breathHeld       Boolean?  @default(false)
+  symtomsDuringSet String?
+  symtomsAfterSet  String?
+
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
 

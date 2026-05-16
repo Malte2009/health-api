@@ -1,0 +1,169 @@
+enum SymptomType {
+  HEADACHE
+  DIZZINESS
+  VISUAL_DISTURBANCE
+  PULSATILE_TINNITUS
+  CONGESTION_FEELING
+  NAUSEA
+  COGNITIVE_FOG
+  FATIGUE
+  FLUSHING
+  URTICARIA
+  DERMATOGRAPHISM
+  DYSPNEA
+  CHEST_PRESSURE
+  LIGHTHEADEDNESS
+  OTHER
+}
+
+enum SyncopeType {
+  ORTHOSTATIC // Schwarz vor Augen, Schwerkraft-abhängig
+  SITTING // Amnesie, "Zeitsprung", ohne Prodromi
+  SITUATIONAL // Nach Pressen, Husten
+  UNCLASSIFIED
+}
+
+enum SyncopeOutcome {
+  PRESYNCOPE
+  SYNCOPE
+}
+
+enum MCASReactionType {
+  FLUSH
+  URTICARIA
+  DERMATOGRAPHISM
+  GI_SYMPTOMS
+  RESPIRATORY
+  CARDIOVASCULAR
+  NEUROLOGICAL
+  OTHER
+}
+
+model SymptomLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  timestamp DateTime
+  type      SymptomType
+  severity  Int // 1-10
+  position  BodyPosition?
+  location  String?
+
+  trigger          String?
+  triggerFoodLogId String?
+  triggerFoodLog   FoodLog? @relation(fields: [triggerFoodLogId], references: [id])
+
+  onsetDateTime   DateTime?
+  offsetDateTime  DateTime?
+  durationMinutes Int?
+
+  worseOnBendingForward Boolean?
+  worseOnLyingDown      Boolean?
+  betterOnLyingDown     Boolean?
+  pulsatile             Boolean?
+
+  notes String?
+
+  syncopeLogId String?
+  syncopeLog   SyncopeLog? @relation(fields: [syncopeLogId], references: [id])
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SyncopeLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  timestamp DateTime
+  type      SyncopeType
+  outcome   SyncopeOutcome
+
+  positionBefore BodyPosition
+  positionDuring BodyPosition?
+
+  hadProdromi         Boolean
+  prodromeDescription String?
+
+  amnesia                Boolean
+  amnesiaDurationMinutes Int?
+
+  activityBefore String?
+
+  hoursSinceLastMeal  Float?
+  hoursSinceLastDrink Float?
+  saltSupplementation Boolean?
+
+  injuries String?
+
+  symptoms SymptomLog[]
+
+  trainingId String?
+  training   TrainingLog? @relation(fields: [trainingId], references: [id])
+
+  notes String?
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MCASReactionLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  timestamp    DateTime
+  reactionType MCASReactionType
+  severity     Int
+
+  hoursSinceMeal     Float?
+  suspectedTriggerId String?
+  suspectedTrigger   FoodLog? @relation(fields: [suspectedTriggerId], references: [id])
+  suspectedFood      String?
+
+  histamineRichFood Boolean?
+  additiveRich      Boolean?
+  ultraProcessed    Boolean?
+
+  onsetMinutes    Int?
+  durationMinutes Int?
+
+  notes String?
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyLog {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  changedAt DateTime? @updatedAt
+
+  date DateTime @unique
+
+  energyMorning   Int?
+  energyNoon      Int?
+  energyAfternoon Int?
+  energyEvening   Int?
+
+  overallScore       Int?
+  symptomBurdenScore Int?
+
+  workCapacity  String?
+  activityLevel String?
+
+  targetWater_ml      Float?
+  actualWater_ml      Float?
+  saltSupplementedMg  Float?
+  headElevatedSleep   Boolean?
+  neckPositionManaged Boolean?
+
+  syncopeCount    Int     @default(0)
+  presyncopeCount Int     @default(0)
+  worstSymptom    String?
+  emergencyAction Boolean
+
+  notes String?
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
