@@ -60,12 +60,12 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
     
     let body = req.body;
 
-    try {
+/*    try {
         body = JSON.parse(JSON.stringify(body));
         console.log(body);
     } catch (error) {
         return res.status(400).send("Invalid JSON format");
-    }
+    }*/
 
     // Training Name
     if (body?.name != null && !req.path.includes('/register')) {

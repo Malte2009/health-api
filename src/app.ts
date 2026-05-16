@@ -24,6 +24,7 @@ import dashboardRoutes from "./routes/food/dashboard.routes";
 import goalsRoutes from "./routes/food/goals.routes";
 import nrvRoutes from "./routes/food/nrv.routes";
 import mealRecipeRoutes from "./routes/food/meal.routes";
+import hrvRoutes from "./routes/hrv/hrv.routes";
 
 dotenv.config();
 
@@ -44,12 +45,14 @@ const isAuthenticatedLimiter = rateLimit({
 	max: 1000,
 });
 
-if (!fs.existsSync("hrv-data")) {
-    fs.mkdirSync("hrv-data");
+if (!fs.existsSync("rrdata")) {
+    fs.mkdirSync("rrdata");
 }
 
 app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
+app.use(express.raw( { limit: '10mb' }));
+app.use(express.text( { limit: '10mb' }));
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -111,6 +114,8 @@ app.use("/health-api/dashboard", dashboardRoutes);
 app.use("/health-api/goals", goalsRoutes);
 app.use("/health-api/nrv", nrvRoutes);
 app.use("/health-api/meal-recipes", mealRecipeRoutes);
+
+app.use("/health-api/hrv", hrvRoutes);
 
 app.use(notFoundHandler);
 
