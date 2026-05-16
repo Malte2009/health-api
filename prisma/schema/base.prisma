@@ -28,6 +28,16 @@ model User {
   food      Food[]
   meals     Meal[]
   userGoals UserGoals?
+
+  bloodPressureLogs BloodPressureLog[]
+  heartRateEvents   HeartRateEvent[]
+  symptomLogs       SymptomLog[]
+  syncopeLogs       SyncopeLog[]
+  sleepLogs         SleepLog[]
+  intakeLogs        IntakeLog[]
+  dailyLogs         DailyLog[]
+  mcasReactions     MCASReactionLog[]
+  hrvRecordings     HrvRecording[]
 }
 
 model UserGoals {
