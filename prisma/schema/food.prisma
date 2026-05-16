@@ -37,6 +37,10 @@ model FoodLog {
   food    Food    @relation(fields: [foodId], references: [id], onDelete: Restrict)
   mealLog MealLog @relation(fields: [mealLogId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mcasreactionLogs MCASReactionLog[]
+
+  symptomLogs SymptomLog[]
 }
 
 enum MealType {

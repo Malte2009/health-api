@@ -16,10 +16,10 @@ model HrvRecording {
   rrDataJson Json? // z.B. [812, 815, 801...]
 
   // Kontext-Verknüpfung (Entweder ODER)
-  sleepLogId String?
+  sleepLogId String?   @unique
   sleepLog   SleepLog? @relation(fields: [sleepLogId], references: [id])
 
-  trainingLogId String?
+  trainingLogId String?      @unique
   trainingLog   TrainingLog? @relation(fields: [trainingLogId], references: [id])
 
   context String? // "NIGHT_SLEEP", "TRAINING", "ORTHOSTATIC_TEST"

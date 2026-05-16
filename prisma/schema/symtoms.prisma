@@ -52,7 +52,7 @@ model SymptomLog {
   location  String?
 
   trigger          String?
-  triggerFoodLogId String?
+  triggerFoodLogId String?  @unique
   triggerFoodLog   FoodLog? @relation(fields: [triggerFoodLogId], references: [id])
 
   onsetDateTime   DateTime?
@@ -119,7 +119,7 @@ model MCASReactionLog {
   severity     Int
 
   hoursSinceMeal     Float?
-  suspectedTriggerId String?
+  suspectedTriggerId String?  @unique
   suspectedTrigger   FoodLog? @relation(fields: [suspectedTriggerId], references: [id])
   suspectedFood      String?
 
