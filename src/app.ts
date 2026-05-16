@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 import cors from "./middleware/cors.middleware";
+import fs from "fs"
 
 import userRoutes from './routes/user.routes';
 import trainingRoutes from "./routes/training/training.routes";
@@ -42,6 +43,10 @@ const isAuthenticatedLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000,
 	max: 1000,
 });
+
+if (!fs.existsSync("hrv-data")) {
+    fs.mkdirSync("hrv-data");
+}
 
 app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
