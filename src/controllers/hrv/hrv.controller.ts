@@ -79,7 +79,8 @@ export const getHrvRecording = async (req: AuthenticatedRequest, res: Response) 
             include: {
                 metrics: true,
                 windows: includeWindows
-            }
+            },
+            orderBy: { date: 'desc' }
         })
 
         return res.status(200).json(hrvRecording);
