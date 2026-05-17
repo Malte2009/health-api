@@ -4,6 +4,8 @@ model HrvRecording {
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
 
+  name String?
+
   date DateTime
 
   startDateTime DateTime?
@@ -95,6 +97,18 @@ model hrvMetrics {
   rangeFilteringApplied         Boolean?
   artifactFilteringApplied      Boolean?
   movingAverageFilteringApplied Boolean?
+
+  // Jump Histogram
+  jump_count_100ms_200ms  Int?
+  jump_count_200ms_300ms  Int?
+  jump_count_300ms_400ms  Int?
+  jump_count_400ms_500ms  Int?
+  jump_count_500ms_600ms  Int?
+  jump_count_600ms_700ms  Int?
+  jump_count_700ms_800ms  Int?
+  jump_count_800ms_900ms  Int?
+  jump_count_900ms_1000ms Int?
+  jump_count_1000ms       Int?
 
   hrvRecordingId String?
   hrvWindowId    String?

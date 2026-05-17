@@ -16,6 +16,40 @@ function getMean(data: number[]): number {
     return data.reduce((a, b) => a + b, 0) / data.length;
 }
 
+function computeJumpHistogram(data: number[]) {
+    const counts = {
+        jump_count_100ms_200ms: 0,
+        jump_count_200ms_300ms: 0,
+        jump_count_300ms_400ms: 0,
+        jump_count_400ms_500ms: 0,
+        jump_count_500ms_600ms: 0,
+        jump_count_600ms_700ms: 0,
+        jump_count_700ms_800ms: 0,
+        jump_count_800ms_900ms: 0,
+        jump_count_900ms_1000ms: 0,
+        jump_count_1000ms: 0
+    };
+
+    if (data.length < 2) return counts;
+
+    for (let i = 0; i < data.length - 1; i++) {
+        const jump = Math.abs(data[i + 1] - data[i]);
+
+        if (jump >= 100 && jump < 200) counts.jump_count_100ms_200ms++;
+        else if (jump >= 200 && jump < 300) counts.jump_count_200ms_300ms++;
+        else if (jump >= 300 && jump < 400) counts.jump_count_300ms_400ms++;
+        else if (jump >= 400 && jump < 500) counts.jump_count_400ms_500ms++;
+        else if (jump >= 500 && jump < 600) counts.jump_count_500ms_600ms++;
+        else if (jump >= 600 && jump < 700) counts.jump_count_600ms_700ms++;
+        else if (jump >= 700 && jump < 800) counts.jump_count_700ms_800ms++;
+        else if (jump >= 800 && jump < 900) counts.jump_count_800ms_900ms++;
+        else if (jump >= 900 && jump < 1000) counts.jump_count_900ms_1000ms++;
+        else if (jump >= 1000) counts.jump_count_1000ms++;
+    }
+
+    return counts;
+}
+
 export function parseData(id: string): number[] {
     const filePath = path.join(process.cwd(), 'rrdata', `${id}.txt`);
     if (!fs.existsSync(filePath)) {
@@ -468,6 +502,56 @@ export function apply_filters(rr_data: number[]): number[] {
     return interpolate_nans(data3);
 }
 
+export function applyFiltersToData(
+    rr_data: number[],
+    filters: { adaptive: boolean; range: boolean; movingAverage: boolean; artifact: boolean }
+): number[] {
+    let data = [...rr_data];
+
+    if (filters.artifact) {
+        const art = apply_contextual_artifact_filter(data);
+        data = art.result;
+    }
+
+    if (filters.range) {
+        const temp = data.map(v => (v >= 300 && v <= 2000) ? v : null);
+        data = interpolate_nans(temp);
+    }
+
+    if (filters.movingAverage) {
+        const window5 = 5;
+        let data2 = [...data] as (number | null)[];
+        for (let i = 0; i < data.length; i++) {
+            const start = Math.max(0, i - Math.floor(window5 / 2));
+            const end = Math.min(data.length - 1, i + Math.floor(window5 / 2));
+            const slice = (data.slice(start, end + 1)).filter(v => v !== null);
+            const mean = getMean(slice);
+            if (mean > 0 && Math.abs((data[i] as number) - mean) / mean > 0.2) {
+                data2[i] = null;
+            }
+        }
+        data = interpolate_nans(data2);
+    }
+
+    if (filters.adaptive) {
+        const window11 = 11;
+        let data3 = [...data] as (number | null)[];
+        for (let i = 0; i < data.length; i++) {
+            const start = Math.max(0, i - Math.floor(window11 / 2));
+            const end = Math.min(data.length - 1, i + Math.floor(window11 / 2));
+            const slice = (data.slice(start, end + 1)).filter(v => v !== null);
+            const med = getMedian(slice);
+            const mad = getMedian(slice.map(v => Math.abs(v - med)));
+            if (Math.abs((data[i] as number) - med) > 3.0 * mad) {
+                data3[i] = null;
+            }
+        }
+        data = interpolate_nans(data3);
+    }
+
+    return data as number[];
+}
+
 export function compute_time_metrics(data: number[]) {
     const mean_rr_ms = getMean(data);
     const mean_hr_bpm = 60000 / mean_rr_ms;
@@ -629,6 +713,7 @@ export function calculateMetricsForFilterSet(rr_data: number[], filters: { adapt
     const poincare = compute_poincare_metrics(data);
     const freqDomain = compute_frequency_metrics(data);
     const entropy = compute_entropy_metrics(data, timeMetrics.sdnn_ms);
+    const jumpHistogram = computeJumpHistogram(data);
     const artifact_percent = rr_data.length > 0 ? (artifactStats.artifact_total / rr_data.length) * 100 : 0;
 
     return {
@@ -636,6 +721,7 @@ export function calculateMetricsForFilterSet(rr_data: number[], filters: { adapt
         ...freqDomain,
         ...poincare,
         ...entropy,
+        ...jumpHistogram,
         replaced_range,
         replaced_moving_average,
         replaced_adaptive,
