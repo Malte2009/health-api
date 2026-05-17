@@ -288,13 +288,16 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
 
     const date = new Date(req.query.date as string) || Date.now().toLocaleString();
 
-    const trainingLogId = req.query.trainingLogId as string;
-    const sleepLogId = req.query.sleepingLogId as string;
+    let trainingLogId: string | null = req.query.trainingLogId as string;
+    let sleepLogId: string | null = req.query.sleepingLogId as string;
     const context = req.query.context as string;
     const startTime = new Date(req.query.startTime as string);
     const endTime = new Date(req.query.endTime as string);
     const device = req.query.device as string;
     const name = req.query.name as string;
+
+    if (!trainingLogId) trainingLogId = null
+    if (!sleepLogId) sleepLogId = null
 
     try {
         if (trainingLogId) {
