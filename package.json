@@ -8,9 +8,9 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "generate": "npx prisma generate",
     "website": "npx prisma studio",
-    "start": "node dist/server.js",
     "pull": "npx prisma db pull",
-    "push": "npx prisma db push"
+    "push": "npx prisma db push",
+    "start": "npx tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +27,8 @@
     "express-rate-limit": "8.2.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mathjs": "^15.2.0"
+    "mathjs": "^15.2.0",
+    "tsx": "^4.22.1"
   },
   "devDependencies": {
     "@types/bcrypt": "6.0.0",
