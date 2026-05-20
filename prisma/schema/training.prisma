@@ -69,7 +69,7 @@ model SetLog {
   exerciseLogId String
   userId        String
   type          String?
-  setTime       DateTime?
+  setTime       Int?
   createdAt     DateTime  @default(now())
   changedAt     DateTime? @updatedAt
   order         Int       @default(autoincrement())

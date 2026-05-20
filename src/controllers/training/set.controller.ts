@@ -72,13 +72,7 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     let reps = parseInt(req.body.reps);
     let weight = parseFloat(req.body.weight);
-    let setTime = req.body.setTime;
-
-    try {
-        setTime = new Date(setTime);
-    } catch (error) {
-        return next(error);
-    }
+    let setTime = parseFloat(req.body.setTime);
 
     if (!reps && !weight && !type) return res.status(400).send("Bad Request");
 
@@ -117,14 +111,8 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
     const userId = req.userId;
     const reps = parseInt(req.body.reps);
     const weight = parseFloat(req.body.weight);
-    let setTime = req.body.setTime;
+    const setTime = parseFloat(req.body.setTime);
     let { type, exerciseLogId, repUnit} = req.body;
-
-    try {
-        setTime = new Date(setTime);
-    } catch (error) {
-        return next(error);
-    }
 
     const exerciseLog = await prisma.exerciseLog.findFirst({
         where: { id: exerciseLogId, userId }
