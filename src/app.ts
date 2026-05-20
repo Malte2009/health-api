@@ -25,6 +25,8 @@ import goalsRoutes from "./routes/food/goals.routes";
 import nrvRoutes from "./routes/food/nrv.routes";
 import mealRecipeRoutes from "./routes/food/meal.routes";
 import hrvRoutes from "./routes/hrv/hrv.routes";
+import bloodPressureRoutes from "./routes/vitals/bloodPressure.routes";
+import sleepRoutes from "./routes/vitals/sleep.routes";
 
 dotenv.config();
 
@@ -116,6 +118,8 @@ app.use("/health-api/nrv", nrvRoutes);
 app.use("/health-api/meal-recipes", mealRecipeRoutes);
 
 app.use("/health-api/hrv", hrvRoutes);
+app.use("/health-api/blood-pressure", bloodPressureRoutes);
+app.use("/health-api/sleep", sleepRoutes);
 
 app.use(notFoundHandler);
 

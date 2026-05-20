@@ -416,10 +416,10 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
             }
         })
 
+        res.status(200).json(hrvRecording);
+
         if (changeRRData) {
             fs.writeFileSync(`./rrdata/${updatedHrvRecording.id}.txt`, rrdata);
-
-            res.status(200).json(hrvRecording);
 
             const extension = __filename.endsWith('.ts') ? '.ts' : '.js';
             const workerPath = path.join(__dirname, `hrvWorker${extension}`);

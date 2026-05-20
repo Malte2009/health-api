@@ -1,22 +1,3 @@
-enum BodyPosition {
-  LYING_SUPINE
-  LYING_LATERAL
-  SITTING
-  STANDING
-  BENDING_FORWARD
-  TRANSITION
-}
-
-enum BPContext {
-  MORNING_REST
-  ORTHOSTATIC_TEST
-  POST_EXERCISE
-  POST_POSITION_CHANGE
-  SYMPTOMATIC
-  ROUTINE
-  OTHER
-}
-
 enum HRContext {
   SLEEP_TURNING
   ORTHOSTATIC_TEST
@@ -36,8 +17,8 @@ model BloodPressureLog {
   systolic  Int
   diastolic Int
   pulse     Int?
-  position  BodyPosition?
-  context   BPContext?
+  position  String?
+  context   String?
 
   minutesAfterPositionChange Int?
 
@@ -48,27 +29,6 @@ model BloodPressureLog {
   training   TrainingLog? @relation(fields: [trainingId], references: [id])
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model HeartRateEvent {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
-
-  timestamp DateTime
-  heartRate Int
-  context   HRContext
-
-  positionBefore BodyPosition?
-  positionAfter  BodyPosition?
-
-  rrIntervalMs    Float?
-  hrvRMSSD        Float?
-  durationSeconds Int?
-
-  notes String?
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SleepLog {

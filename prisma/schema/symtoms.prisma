@@ -48,7 +48,7 @@ model SymptomLog {
   timestamp DateTime
   type      SymptomType
   severity  Int // 1-10
-  position  BodyPosition?
+  position  String?
   location  String?
 
   trigger          String?
@@ -82,8 +82,8 @@ model SyncopeLog {
   type      SyncopeType
   outcome   SyncopeOutcome
 
-  positionBefore BodyPosition
-  positionDuring BodyPosition?
+  positionBefore String
+  positionDuring String?
 
   hadProdromi         Boolean
   prodromeDescription String?
