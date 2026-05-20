@@ -72,6 +72,13 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     let reps = parseInt(req.body.reps);
     let weight = parseFloat(req.body.weight);
+    let setTime = req.body.setTime;
+
+    try {
+        setTime = new Date(setTime);
+    } catch (error) {
+        return next(error);
+    }
 
     if (!reps && !weight && !type) return res.status(400).send("Bad Request");
 
@@ -79,6 +86,7 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (!weight && set.weight) weight = set.weight;
     if (!type && set.type) type = set.type;
     if (!repUnit && set.repUnit) repUnit = set.repUnit;
+    if (!setTime && set.setTime) setTime = set.setTime;
 
     const exerciseLog = await prisma.exerciseLog.findFirst({
         where: { id: set.exerciseLogId, userId }
@@ -93,7 +101,8 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
                 type,
                 weight,
                 reps,
-                repUnit
+                repUnit,
+                setTime
             }
         });
         return res.status(200).json(updatedSet);
@@ -108,7 +117,14 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
     const userId = req.userId;
     const reps = parseInt(req.body.reps);
     const weight = parseFloat(req.body.weight);
+    let setTime = req.body.setTime;
     let { type, exerciseLogId, repUnit} = req.body;
+
+    try {
+        setTime = new Date(setTime);
+    } catch (error) {
+        return next(error);
+    }
 
     const exerciseLog = await prisma.exerciseLog.findFirst({
         where: { id: exerciseLogId, userId }
@@ -129,7 +145,8 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
                 reps,
                 weight,
                 repUnit,
-                userId
+                userId,
+                setTime
             }
         });
         return res.status(201).json(set);
