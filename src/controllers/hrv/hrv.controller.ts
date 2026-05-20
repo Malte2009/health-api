@@ -301,7 +301,7 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
 
     try {
         if (trainingLogId) {
-            const trainingLog = await prisma.hrvRecording.findUnique({
+            const trainingLog = await prisma.trainingLog.findUnique({
                 where : {
                     id: trainingLogId,
                     userId
@@ -314,7 +314,7 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
         }
 
         if (sleepLogId) {
-            const sleepingLog = await prisma.hrvRecording.findUnique({
+            const sleepingLog = await prisma.sleepLog.findUnique({
                 where: {
                     id: sleepLogId,
                     userId
@@ -391,19 +391,23 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
          if (changeRRData && typeof rrdata === 'string') {
              rrdata = preFilterRRData(rrdata);
          }
-        if (trainingLogId == null) trainingLogId = hrvRecording.trainingLogId || "";
-        if (sleepLogId == null) sleepLogId = hrvRecording.sleepLogId || "";
-        if (context == null) context = hrvRecording.context || "";
-        if (startTime == null) startTime = hrvRecording.startDateTime || new Date(0);
-        if (endTime == null) endTime = hrvRecording.endDateTime || new Date(0);
-        if (device == null) device = hrvRecording.device || "";
-        if (name == null) name = "";
+
+        if (trainingLogId === undefined) trainingLogId = hrvRecording.trainingLogId || "";
+        if (sleepLogId === undefined) sleepLogId = hrvRecording.sleepLogId || "";
+        if (context === undefined) context = hrvRecording.context || "";
+        if (startTime == null || isNaN(startTime.getTime())) startTime = hrvRecording.startDateTime || new Date(0);
+        if (endTime == null || isNaN(endTime.getTime())) endTime = hrvRecording.endDateTime || new Date(0);
+        if (device === undefined) device = hrvRecording.device || "";
+        if (name === undefined) name = hrvRecording.name || "";
+
+        const trainingLogIdVal = trainingLogId === "" ? null : trainingLogId;
+        const sleepLogIdVal = sleepLogId === "" ? null : sleepLogId;
 
         const updatedHrvRecording = await prisma.hrvRecording.update({
             where: { id: req.params.id },
             data: {
-                trainingLogId,
-                sleepLogId,
+                trainingLogId: trainingLogIdVal,
+                sleepLogId: sleepLogIdVal,
                 context,
                 startDateTime: startTime,
                 endDateTime: endTime,
