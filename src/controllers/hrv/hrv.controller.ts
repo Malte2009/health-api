@@ -78,7 +78,8 @@ export const getHrvRecording = async (req: AuthenticatedRequest, res: Response) 
             where: { userId },
             include: {
                 metrics: true,
-                windows: includeWindows
+                windows: includeWindows,
+                sleepLog: true
             },
             orderBy: { date: 'desc' }
         })
@@ -104,7 +105,8 @@ export const getHrvRecordingById = async (req: AuthenticatedRequest, res: Respon
             },
             include: {
                 metrics: true,
-                windows: includeWindows
+                windows: includeWindows,
+                sleepLog: true
             }
         })
 

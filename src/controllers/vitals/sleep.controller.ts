@@ -8,7 +8,10 @@ export const getSleepLogs = async (req: AuthenticatedRequest, res: Response, nex
     try {
         const sleepLogs = await prisma.sleepLog.findMany({
             where: { userId: userId },
-            orderBy: { date: 'desc' }
+            orderBy: { date: 'desc' },
+            include: {
+                hrvRecording: true
+            }
         });
         return res.status(200).json(sleepLogs);
     } catch (error) {
@@ -27,6 +30,9 @@ export const getSleepLogById = async (req: AuthenticatedRequest, res: Response, 
             where: {
                 id: sleepLogId,
                 userId: userId
+            },
+            include: {
+                hrvRecording: true
             }
         });
 
