@@ -376,7 +376,7 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
     let endTime = new Date(req.query.endTime as string);
     let device = req.query.device as string;
     let name = req.query.name as string;
-    let date = req.query.date as unknown as Date;
+    let date = new Date(req.query.date as string);
 
     try {
         const hrvRecording = await prisma.hrvRecording.findUnique({
