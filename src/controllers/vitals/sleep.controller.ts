@@ -51,7 +51,7 @@ export const createSleepLog = async (req: AuthenticatedRequest, res: Response, n
     const {
         date, bedTime, wakeTime, sleepLatencyMinutes, wakeEpisodes, subjectiveHours, restedScore,
         morningHeadache, morningDizziness, totalSleepMinutes, awakeMinutes, lightSleepMinutes,
-        deepSleepMinutes, remSleepMinutes, turningSpikeCount, turningSpikeMaxHr, notes
+        deepSleepMinutes, remSleepMinutes, turningSpikeCount, turningSpikeMaxHr, notes, sleepType
     } = req.body;
 
     if (!date) return res.status(400).send("Date is required");
@@ -61,6 +61,7 @@ export const createSleepLog = async (req: AuthenticatedRequest, res: Response, n
             data: {
                 userId,
                 date: new Date(date),
+                sleepType,
                 bedTime: bedTime ? new Date(bedTime) : undefined,
                 wakeTime: wakeTime ? new Date(wakeTime) : undefined,
                 sleepLatencyMinutes,
@@ -94,7 +95,7 @@ export const updateSleepLog = async (req: AuthenticatedRequest, res: Response, n
     const {
         date, bedTime, wakeTime, sleepLatencyMinutes, wakeEpisodes, subjectiveHours, restedScore,
         morningHeadache, morningDizziness, totalSleepMinutes, awakeMinutes, lightSleepMinutes,
-        deepSleepMinutes, remSleepMinutes, turningSpikeCount, turningSpikeMaxHr, notes
+        deepSleepMinutes, remSleepMinutes, turningSpikeCount, turningSpikeMaxHr, notes, sleepType
     } = req.body;
 
     try {
@@ -108,6 +109,7 @@ export const updateSleepLog = async (req: AuthenticatedRequest, res: Response, n
             where: { id: sleepLogId },
             data: {
                 date: date ? new Date(date) : sleepLog.date,
+                sleepType: sleepType !== undefined ? sleepType : sleepLog.sleepType,
                 bedTime: bedTime !== undefined ? (bedTime ? new Date(bedTime) : null) : sleepLog.bedTime,
                 wakeTime: wakeTime !== undefined ? (wakeTime ? new Date(wakeTime) : null) : sleepLog.wakeTime,
                 sleepLatencyMinutes: sleepLatencyMinutes !== undefined ? sleepLatencyMinutes : sleepLog.sleepLatencyMinutes,
@@ -152,4 +154,3 @@ export const deleteSleepLog = async (req: AuthenticatedRequest, res: Response, n
         next(error);
     }
 }
-

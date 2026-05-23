@@ -39,6 +39,8 @@ model SleepLog {
 
   date DateTime
 
+  sleepType String?
+
   // Subjektiv
   bedTime             DateTime?
   wakeTime            DateTime?
