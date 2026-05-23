@@ -376,6 +376,7 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
     let endTime = new Date(req.query.endTime as string);
     let device = req.query.device as string;
     let name = req.query.name as string;
+    let date = req.query.date as unknown as Date;
 
     try {
         const hrvRecording = await prisma.hrvRecording.findUnique({
@@ -401,6 +402,7 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
         if (endTime == null || isNaN(endTime.getTime())) endTime = hrvRecording.endDateTime || new Date(0);
         if (device === undefined) device = hrvRecording.device || "";
         if (name === undefined) name = hrvRecording.name || "";
+        if (date === undefined) date = hrvRecording.date || "";
 
         const trainingLogIdVal = trainingLogId === "" ? null : trainingLogId;
         const sleepLogIdVal = sleepLogId === "" ? null : sleepLogId;
@@ -414,7 +416,7 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
                 startDateTime: startTime,
                 endDateTime: endTime,
                 device,
-                name
+                name,date
             }
         })
 
