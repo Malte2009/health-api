@@ -27,6 +27,10 @@ import mealRecipeRoutes from "./routes/food/meal.routes";
 import hrvRoutes from "./routes/hrv/hrv.routes";
 import bloodPressureRoutes from "./routes/vitals/bloodPressure.routes";
 import sleepRoutes from "./routes/vitals/sleep.routes";
+import path from "path";
+import symptomRoutes from "./routes/symptoms/symptom.routes";
+import syncopeRoutes from "./routes/symptoms/syncope.routes";
+import dailyLogRoutes from "./routes/symptoms/dailyLog.routes";
 
 dotenv.config();
 
@@ -120,6 +124,12 @@ app.use("/health-api/meal-recipes", mealRecipeRoutes);
 app.use("/health-api/hrv", hrvRoutes);
 app.use("/health-api/blood-pressure", bloodPressureRoutes);
 app.use("/health-api/sleep", sleepRoutes);
+
+app.use("/health-api/symptoms", symptomRoutes);
+app.use("/health-api/syncopes", syncopeRoutes)
+app.use("/health-api/daily-logs", dailyLogRoutes);
+
+app.use("/images", express.static(path.join(__dirname, "../public/images")));
 
 app.use(notFoundHandler);
 

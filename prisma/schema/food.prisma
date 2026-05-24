@@ -38,8 +38,6 @@ model FoodLog {
   mealLog MealLog @relation(fields: [mealLogId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  mcasreactionLogs MCASReactionLog[]
-
   symptomLogs SymptomLog[]
 }
 

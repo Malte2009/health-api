@@ -35,7 +35,6 @@ model User {
   sleepLogs         SleepLog[]
   intakeLogs        IntakeLog[]
   dailyLogs         DailyLog[]
-  mcasReactions     MCASReactionLog[]
   hrvRecordings     HrvRecording[]
 }
 

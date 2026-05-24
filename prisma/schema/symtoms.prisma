@@ -3,6 +3,8 @@ enum SymptomType {
   DIZZINESS
   VISUAL_DISTURBANCE
   PULSATILE_TINNITUS
+  NECK_PULSATION // NEU: Spürbarer Puls/Druck im Hals
+  POSITIONAL_PULSE_SPIKE // NEU: Puls-Spike bei Lagerungswechsel (z.B. Umdrehen)
   CONGESTION_FEELING
   NAUSEA
   COGNITIVE_FOG
@@ -10,6 +12,8 @@ enum SymptomType {
   FLUSHING
   URTICARIA
   DERMATOGRAPHISM
+  GI_SYMPTOMS
+  RESPIRATORY
   DYSPNEA
   CHEST_PRESSURE
   LIGHTHEADEDNESS
@@ -19,24 +23,13 @@ enum SymptomType {
 enum SyncopeType {
   ORTHOSTATIC // Schwarz vor Augen, Schwerkraft-abhängig
   SITTING // Amnesie, "Zeitsprung", ohne Prodromi
-  SITUATIONAL // Nach Pressen, Husten
+  SITUATIONAL // Nach Pressen (z. B. Gym), Husten
   UNCLASSIFIED
 }
 
 enum SyncopeOutcome {
-  PRESYNCOPE
-  SYNCOPE
-}
-
-enum MCASReactionType {
-  FLUSH
-  URTICARIA
-  DERMATOGRAPHISM
-  GI_SYMPTOMS
-  RESPIRATORY
-  CARDIOVASCULAR
-  NEUROLOGICAL
-  OTHER
+  PRESYNCOPE // Beinahe-Ohnmacht
+  SYNCOPE // Vollständiger Bewusstseinsverlust
 }
 
 model SymptomLog {
@@ -46,7 +39,8 @@ model SymptomLog {
   changedAt DateTime? @updatedAt
 
   timestamp DateTime
-  type      SymptomType
+  name      SymptomType
+  type      String      @default("Symptom")
   severity  Int // 1-10
   position  String?
   location  String?
@@ -54,10 +48,6 @@ model SymptomLog {
   trigger          String?
   triggerFoodLogId String?  @unique
   triggerFoodLog   FoodLog? @relation(fields: [triggerFoodLogId], references: [id])
-
-  onsetDateTime   DateTime?
-  offsetDateTime  DateTime?
-  durationMinutes Int?
 
   worseOnBendingForward Boolean?
   worseOnLyingDown      Boolean?
@@ -69,7 +59,23 @@ model SymptomLog {
   syncopeLogId String?
   syncopeLog   SyncopeLog? @relation(fields: [syncopeLogId], references: [id])
 
+  pictures SymptomPicture[]
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SymptomPicture {
+  id        String   @id @default(uuid())
+  userId    String
+  symptomId String
+  createdAt DateTime @default(now())
+
+  filePath String
+  filename String
+  mimetype String
+  size     Int
+
+  symptom SymptomLog @relation(fields: [symptomId], references: [id], onDelete: Cascade)
 }
 
 model SyncopeLog {
@@ -79,14 +85,13 @@ model SyncopeLog {
   changedAt DateTime? @updatedAt
 
   timestamp DateTime
-  type      SyncopeType
+  name      SyncopeType
+  type      String         @default("Syncope")
   outcome   SyncopeOutcome
+  severity  Int // 1-10
+  trigger   String?
 
-  positionBefore String
-  positionDuring String?
-
-  hadProdromi         Boolean
-  prodromeDescription String?
+  position String?
 
   amnesia                Boolean
   amnesiaDurationMinutes Int?
@@ -101,34 +106,8 @@ model SyncopeLog {
 
   symptoms SymptomLog[]
 
-  trainingId String?
-  training   TrainingLog? @relation(fields: [trainingId], references: [id])
-
-  notes String?
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model MCASReactionLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
-
-  timestamp    DateTime
-  reactionType MCASReactionType
-  severity     Int
-
-  hoursSinceMeal     Float?
-  suspectedTriggerId String?  @unique
-  suspectedTrigger   FoodLog? @relation(fields: [suspectedTriggerId], references: [id])
-  suspectedFood      String?
-
-  histamineRichFood Boolean?
-  additiveRich      Boolean?
-  ultraProcessed    Boolean?
-
-  onsetMinutes    Int?
-  durationMinutes Int?
+  trainingLogId String?
+  trainingLog   TrainingLog? @relation(fields: [trainingLogId], references: [id])
 
   notes String?
   user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
