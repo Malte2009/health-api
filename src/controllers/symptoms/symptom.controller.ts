@@ -36,12 +36,20 @@ export const createSymptom = async (req: AuthenticatedRequest, res: Response, ne
         const data = req.body;
         const symptom = await prisma.symptomLog.create({
             data: {
-                ...data,
+                name: data.name,
+                type: "SYMPTOM",
+                position: data.position,
+                location: data.location,
+                trigger: data.trigger,
+                worseOnBendingForward: data.worseOnBendingForward,
+                worseOnLyingDown: data.worseOnLyingDown,
+                betterOnLyingDown: data.betterOnLyingDown,
+                pulsatile: data.pulsatile,
+                syncopeLogId: data.syncopeLogId,
+                severity: parseInt(data.severity),
                 userId: req.userId,
                 // Make sure timestamp is valid
-                timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
-                onsetDateTime: data.onsetDateTime ? new Date(data.onsetDateTime) : undefined,
-                offsetDateTime: data.offsetDateTime ? new Date(data.offsetDateTime) : undefined,
+                timestamp: data.timestamp ? new Date(data.timestamp) : new Date()
             }
         });
         return res.status(201).json(symptom);

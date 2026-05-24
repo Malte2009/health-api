@@ -57,7 +57,19 @@ export const updateSyncope = async (req: AuthenticatedRequest, res: Response, ne
         const syncope = await prisma.syncopeLog.update({
             where: { id },
             data: {
-                ...data,
+                type: "SYNCOPE",
+                name: data.name,
+                userId: req.userId,
+                severity: parseInt(data.severity),
+                notes: data.notes,
+                trigger: data.trigger,
+                position: data.position,
+                outcome: data.outcome,
+                amnesia: data.amnesia,
+                amnesiaDurationMinutes: parseInt(data.amnesiaDurationMinutes),
+                injuries: data.injuries,
+                trainingLogId: data.trainingLogId,
+                activityBefore: data.activityBefore,
                 timestamp: data.timestamp ? new Date(data.timestamp) : undefined,
             }
         });
