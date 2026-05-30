@@ -33,6 +33,9 @@ export const createSyncope = async (req: AuthenticatedRequest, res: Response, ne
     try {
         req.body.type = req.body?.type.toUpperCase();
         const data = req.body;
+
+        if (!data.name) return res.status(400).send("Name is required");
+
         const syncope = await prisma.syncopeLog.create({
             data: {
                 ...data,

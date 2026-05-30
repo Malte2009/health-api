@@ -31,6 +31,7 @@ import path from "path";
 import symptomRoutes from "./routes/symptoms/symptom.routes";
 import syncopeRoutes from "./routes/symptoms/syncope.routes";
 import dailyLogRoutes from "./routes/symptoms/dailyLog.routes";
+import calenderRoutes from "./routes/analysis/calender.routes";
 
 dotenv.config();
 
@@ -128,6 +129,7 @@ app.use("/health-api/sleep", sleepRoutes);
 app.use("/health-api/symptoms", symptomRoutes);
 app.use("/health-api/syncopes", syncopeRoutes)
 app.use("/health-api/daily-logs", dailyLogRoutes);
+app.use("/health-api/analysis/calender", calenderRoutes);
 
 app.use("/images", express.static(path.join(__dirname, "../public/images")));
 
