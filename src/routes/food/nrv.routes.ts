@@ -4,7 +4,7 @@ import { getNRV, getNRVProgress } from '../../controllers/food/nrv.controller';
 
 const router = Router();
 
-router.get('/',         authenticateToken, getNRV         as any);
-router.post('/progress', authenticateToken, getNRVProgress as any);
+router.get('/',         authenticateToken, getNRV        );
+router.post('/progress', authenticateToken, getNRVProgress);
 
 export default router;

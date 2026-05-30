@@ -5,11 +5,11 @@ import { getDailyLogs, getDailyLog, createDailyLog, updateDailyLog, deleteDailyL
 const router = Router();
 router.use(authenticateToken);
 
-router.get('/', getDailyLogs as any);
-router.post('/', createDailyLog as any);
-router.get('/:date', getDailyLog as any);
-router.put('/:id', updateDailyLog as any);
-router.delete('/:id', deleteDailyLog as any);
+router.get('/', getDailyLogs);
+router.post('/', createDailyLog);
+router.get('/:date', getDailyLog);
+router.put('/:id', updateDailyLog);
+router.delete('/:id', deleteDailyLog);
 
 export default router;
 

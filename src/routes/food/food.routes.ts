@@ -19,18 +19,18 @@ import {
 const router = Router();
 
 // Order matters: specific paths before /:id
-router.get('/search',   authenticateToken, searchFoods  as any);
-router.get('/my-foods', authenticateToken, getMyFoods   as any);
-router.get('/',         authenticateToken, getFoods      as any);
-router.get('/:id',      authenticateToken, getFoodById   as any);
-router.post('/',        authenticateToken, createFood    as any);
-router.patch('/:id',    authenticateToken, updateFood    as any);
-router.delete('/:id',   authenticateToken, deleteFood    as any);
+router.get('/search',   authenticateToken, searchFoods);
+router.get('/my-foods', authenticateToken, getMyFoods);
+router.get('/',         authenticateToken, getFoods);
+router.get('/:id',      authenticateToken, getFoodById);
+router.post('/',        authenticateToken, createFood);
+router.patch('/:id',    authenticateToken, updateFood);
+router.delete('/:id',   authenticateToken, deleteFood);
 
 // Nested nutrient routes
-router.get('/:foodId/nutrients',    authenticateToken, getNutrients    as any);
-router.post('/:foodId/nutrients',   authenticateToken, createNutrients as any);
-router.patch('/:foodId/nutrients',  authenticateToken, updateNutrients as any);
-router.delete('/:foodId/nutrients', authenticateToken, deleteNutrients as any);
+router.get('/:foodId/nutrients',    authenticateToken, getNutrients);
+router.post('/:foodId/nutrients',   authenticateToken, createNutrients);
+router.patch('/:foodId/nutrients',  authenticateToken, updateNutrients);
+router.delete('/:foodId/nutrients', authenticateToken, deleteNutrients);
 
 export default router;

@@ -29,6 +29,9 @@ model BloodPressureLog {
   training   TrainingLog? @relation(fields: [trainingId], references: [id])
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([trainingId])
 }
 
 model SleepLog {

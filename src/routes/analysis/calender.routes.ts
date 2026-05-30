@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {authenticateToken} from "../../middleware/auth.middleware";
 import {
+    getFoodOverMonth,
     getMicroConsumptionOverMonth,
     getSymptomsOverMonth,
     getSyncopesOverMonth,
@@ -15,13 +16,14 @@ const router = Router();
 
 router.use(authenticateToken);
 
-router.get('/microOverMonth', getMicroConsumptionOverMonth as any);
-router.get('/symptomsOverMonth', getSymptomsOverMonth as any);
-router.get('/syncopesOverMonth', getSyncopesOverMonth as any);
-router.get('/bloodPressureOverMonth', getBloodPressureOverMonth as any);
-router.get('/sleepOverMonth', getSleepOverMonth as any);
-router.get('/trainingOverMonth', getTrainingOverMonth as any);
-router.get('/dailyLogsOverMonth', getDailyLogsOverMonth as any);
-router.get('/intakeLogsOverMonth', getIntakeLogsOverMonth as any);
+router.get('/foodOverMonth', getFoodOverMonth);
+router.get('/microOverMonth', getMicroConsumptionOverMonth);
+router.get('/symptomsOverMonth', getSymptomsOverMonth);
+router.get('/syncopesOverMonth', getSyncopesOverMonth);
+router.get('/bloodPressureOverMonth', getBloodPressureOverMonth);
+router.get('/sleepOverMonth', getSleepOverMonth);
+router.get('/trainingOverMonth', getTrainingOverMonth);
+router.get('/dailyLogsOverMonth', getDailyLogsOverMonth);
+router.get('/intakeLogsOverMonth', getIntakeLogsOverMonth);
 
 export default router;

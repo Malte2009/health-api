@@ -59,6 +59,51 @@ export const getTrainingOverMonth = (req: AuthenticatedRequest, res: Response, n
 export const getDailyLogsOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.dailyLog, 'date');
 export const getIntakeLogsOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.intakeLog, 'timestamp');
 
+export const getFoodOverMonth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
+    const userId = req.userId;
+
+    try {
+        const startDate = new Date(req.query.start_date as string);
+        const endDate = new Date(req.query.end_date as string);
+
+        // Check if date is valid
+        if (isNaN(startDate.getTime())) return res.status(400).json({ error: 'Invalid start_date format. Expected YYYY-MM-DD' });
+        if (isNaN(endDate.getTime())) return res.status(400).json({ error: 'Invalid end_date format. Expected YYYY-MM-DD' });
+
+        const data = await prisma.foodLog.findMany({
+            where: {
+                userId: userId,
+                date: {
+                    gte: new Date(startDate),
+                    lt: new Date(endDate)
+                }
+            },
+            include: {
+                food: true
+            }
+        });
+
+        const grouped: Record<string, any[]> = {};
+
+        for (const log of data) {
+            // Group by date key (YYYY-MM-DD)
+            const dateKey = log.date.toISOString().split('T')[0];
+            if (!grouped[dateKey]) grouped[dateKey] = [];
+            grouped[dateKey].push(log);
+        }
+
+        const result = Object.entries(grouped).map(([date, items]) => ({
+            date,
+            items
+        }));
+
+        return res.json(result);
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const getMicroConsumptionOverMonth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 

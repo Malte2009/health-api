@@ -39,6 +39,8 @@ model FoodLog {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   symptomLogs SymptomLog[]
+
+  @@index([userId, date])
 }
 
 enum MealType {

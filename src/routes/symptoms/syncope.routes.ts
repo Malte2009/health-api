@@ -5,11 +5,11 @@ import { getSyncopes, getSyncope, createSyncope, updateSyncope, deleteSyncope } 
 const router = Router();
 router.use(authenticateToken);
 
-router.get('/', getSyncopes as any);
-router.post('/', createSyncope as any);
-router.get('/:id', getSyncope as any);
-router.put('/:id', updateSyncope as any);
-router.delete('/:id', deleteSyncope as any);
+router.get('/', getSyncopes);
+router.post('/', createSyncope);
+router.get('/:id', getSyncope);
+router.put('/:id', updateSyncope);
+router.delete('/:id', deleteSyncope);
 
 export default router;
 

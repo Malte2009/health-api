@@ -9,9 +9,9 @@ import {
 
 const router = Router();
 
-router.get('/',    authenticateToken, getGoals    as any);
-router.post('/',   authenticateToken, createGoals as any);
-router.patch('/',  authenticateToken, updateGoals as any);
-router.delete('/', authenticateToken, deleteGoals as any);
+router.get('/',    authenticateToken, getGoals   );
+router.post('/',   authenticateToken, createGoals);
+router.patch('/',  authenticateToken, updateGoals);
+router.delete('/', authenticateToken, deleteGoals);
 
 export default router;

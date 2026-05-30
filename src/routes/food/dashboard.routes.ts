@@ -10,10 +10,10 @@ import {
 
 const router = Router();
 
-router.get('/top-foods', authenticateToken, getTopFoods as any);
-router.get('/daily',   authenticateToken, getDailySummary      as any);
-router.get('/weekly',  authenticateToken, getWeeklySummary     as any);
-router.get('/monthly', authenticateToken, getMonthlySummary    as any);
-router.get('/nutrition-over-time', authenticateToken, getNutritionOverTime as any);
+router.get('/top-foods', authenticateToken, getTopFoods);
+router.get('/daily',   authenticateToken, getDailySummary     );
+router.get('/weekly',  authenticateToken, getWeeklySummary    );
+router.get('/monthly', authenticateToken, getMonthlySummary   );
+router.get('/nutrition-over-time', authenticateToken, getNutritionOverTime);
 
 export default router;

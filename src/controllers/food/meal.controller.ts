@@ -5,7 +5,22 @@ import { NUTRIENT_KEYS, NutrientKey } from '../../utility/nutrientFields';
 
 const MEAL_INCLUDE = {
     ingredients: {
-        include: { food: { include: { nutrients: true } } }
+        include: {
+            food: {
+                select: {
+                    calories_per_100g: true,
+                    protein_g: true,
+                    carbs_g: true,
+                    fat_g: true,
+                    fiber_g: true,
+                    sugar_g: true,
+                    saturated_fat_g: true,
+                    unsaturated_fat_g: true,
+                    salt_g: true,
+                    nutrients: true
+                }
+            }
+        }
     }
 } as const;
 

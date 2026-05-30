@@ -13,10 +13,10 @@ const router = Router();
 // Alle Operationen benötigen eine Authentifizierung
 router.use(authenticateToken);
 
-router.get('/', getSleepLogs as any);
-router.get('/:id', getSleepLogById as any);
-router.post('/', createSleepLog as any);
-router.put('/:id', updateSleepLog as any);
-router.delete('/:id', deleteSleepLog as any);
+router.get('/', getSleepLogs);
+router.get('/:id', getSleepLogById);
+router.post('/', createSleepLog);
+router.put('/:id', updateSleepLog);
+router.delete('/:id', deleteSleepLog);
 
 export default router;

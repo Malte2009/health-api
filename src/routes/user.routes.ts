@@ -4,7 +4,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/getUserAge', authenticateToken, getUserAge as any);
+router.get('/getUserAge', authenticateToken, getUserAge);
 router.post('/login', loginUser);
 router.post('/register', registerUser);
 router.post("/logout", authenticateToken, logoutUser);

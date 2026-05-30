@@ -32,6 +32,7 @@ import symptomRoutes from "./routes/symptoms/symptom.routes";
 import syncopeRoutes from "./routes/symptoms/syncope.routes";
 import dailyLogRoutes from "./routes/symptoms/dailyLog.routes";
 import calenderRoutes from "./routes/analysis/calender.routes";
+import validateCFAccess from './middleware/cfAccess.middleware';
 
 dotenv.config();
 
@@ -101,6 +102,7 @@ if (!process.env.JWT_SECRET) {
 	process.exit(1);
 }
 
+app.use(validateCFAccess);
 app.use(sanitizeInput);
 app.use(validateInput);
 app.use(limiter);

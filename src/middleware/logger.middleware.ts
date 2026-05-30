@@ -6,6 +6,10 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
 	const url = req.url;
 	const ip = req.ip || req.socket.remoteAddress;
 
-	console.log(`[${timestamp}] ${method} request to ${url} from ${ip}`);
+	res.on('finish', () => {
+		const statusCode = res.statusCode;
+		console.log(`[${timestamp}] ${method} request to ${url} from ${ip} - Status: ${statusCode}`);
+	});
+
 	next();
 };

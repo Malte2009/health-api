@@ -18,13 +18,13 @@ const upload = multer({ storage: storage });
 const router = Router();
 router.use(authenticateToken);
 
-router.get('/', getSymptoms as any);
-router.post('/', createSymptom as any);
-router.get('/:id', getSymptom as any);
-router.patch('/:id', updateSymptom as any);
-router.delete('/:id', deleteSymptom as any);
+router.get('/', getSymptoms);
+router.post('/', createSymptom);
+router.get('/:id', getSymptom);
+router.patch('/:id', updateSymptom);
+router.delete('/:id', deleteSymptom);
 
-router.post('/:id/pictures', upload.single('picture'), uploadSymptomPicture as any);
-router.delete('/:id/pictures/:pictureId', deleteSymptomPicture as any);
+router.post('/:id/pictures', upload.single('picture'), uploadSymptomPicture);
+router.delete('/:id/pictures/:pictureId', deleteSymptomPicture);
 
 export default router;
