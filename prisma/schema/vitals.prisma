@@ -20,6 +20,9 @@ model BloodPressureLog {
   position  String?
   context   String?
 
+  hoursSinceLastCaffeine Decimal? @db.Decimal(10, 1)
+  lastCaffeineAmountMg   Decimal? @db.Decimal(10, 1)
+
   minutesAfterPositionChange Int?
 
   symptoms String?
@@ -43,6 +46,9 @@ model SleepLog {
   date DateTime
 
   sleepType String?
+
+  hoursSinceLastCaffeine Decimal? @db.Decimal(10, 1)
+  lastCaffeineAmountMg   Decimal? @db.Decimal(10, 1)
 
   // Subjektiv
   bedTime             DateTime?

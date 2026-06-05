@@ -133,8 +133,6 @@ app.use("/health-api/syncopes", syncopeRoutes)
 app.use("/health-api/daily-logs", dailyLogRoutes);
 app.use("/health-api/analysis/calender", calenderRoutes);
 
-app.use("/images", express.static(path.join(__dirname, "../public/images")));
-
 app.use(notFoundHandler);
 
 app.use(errorHandler);
