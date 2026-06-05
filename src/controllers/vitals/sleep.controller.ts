@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+import {getHoursSinceLastCaffeine} from "../../utility/caffeine";
 
 export const getSleepLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
@@ -57,6 +58,11 @@ export const createSleepLog = async (req: AuthenticatedRequest, res: Response, n
     if (!date) return res.status(400).send("Date is required");
 
     try {
+
+        let caffeine: number[] | null | null[] = await getHoursSinceLastCaffeine(bedTime, userId);
+
+        if (!caffeine) caffeine = [null, null]
+
         const sleepLog = await prisma.sleepLog.create({
             data: {
                 userId,
@@ -77,7 +83,9 @@ export const createSleepLog = async (req: AuthenticatedRequest, res: Response, n
                 remSleepMinutes,
                 turningSpikeCount,
                 turningSpikeMaxHr,
-                notes
+                notes,
+                lastCaffeineAmountMg: caffeine[1],
+                hoursSinceLastCaffeine: caffeine[0]
             }
         });
         return res.status(201).json(sleepLog);

@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
+import {getHoursSinceLastCaffeine} from "../../utility/caffeine";
 
 export const getBloodPressureLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
@@ -47,6 +48,11 @@ export const createBloodPressureLog = async (req: AuthenticatedRequest, res: Res
     if (!timestamp || systolic == null || diastolic == null) return res.status(400).send("Timestamp, systolic, and diastolic are required");
 
     try {
+
+        let caffeine: number[] | null | null[] = await getHoursSinceLastCaffeine(timestamp, userId);
+
+        if (!caffeine) caffeine = [null, null]
+
         const bpLog = await prisma.bloodPressureLog.create({
             data: {
                 userId,
@@ -59,7 +65,9 @@ export const createBloodPressureLog = async (req: AuthenticatedRequest, res: Res
                 minutesAfterPositionChange,
                 symptoms,
                 arm,
-                trainingId
+                trainingId,
+                lastCaffeineAmountMg: caffeine[1],
+                hoursSinceLastCaffeine: caffeine[0]
             }
         });
         return res.status(201).json(bpLog);
