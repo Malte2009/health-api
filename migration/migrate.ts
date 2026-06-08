@@ -8,11 +8,11 @@ async function migrate(): Promise<void> {
         const foodLogs = await prisma.foodLog.findMany({});
 
         for (const food of foodLogs) {
-            if (!food.timestamp) {
+            if (!food.date) {
                 await prisma.foodLog.update({
                     where: {id: food.id},
                     data: {
-                        timestamp: food.createdAt
+                        date: food.createdAt
                     }
                 })
             }

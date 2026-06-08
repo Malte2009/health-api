@@ -4,11 +4,13 @@ import prisma from "../prisma/client";
 export async function getHoursSinceLastCaffeine(date: Date, userId: string): Promise<null | number[]> {
     if (!date || !userId) return null;
 
+    date = new Date(date);
+
     try {
-        const foodLog = await prisma.foodLog.findFirst({
+        let foodLog = await prisma.foodLog.findFirst({
             where: {
                 userId: userId,
-                timestamp: {
+                date: {
                     lte: date
                 },
                 food: {
@@ -20,7 +22,7 @@ export async function getHoursSinceLastCaffeine(date: Date, userId: string): Pro
                 }
             },
             orderBy: {
-                timestamp: "desc",
+                date: "desc",
             },
             include: {
                 food: {
@@ -35,7 +37,7 @@ export async function getHoursSinceLastCaffeine(date: Date, userId: string): Pro
 
         const caffeineAmount = ((foodLog.food.nutrients?.caffeine || 0) as number) * ((foodLog?.weight_g || 1) / ((foodLog.food?.density_g_per_ml || null) || (foodLog.food?.g_per_portion || 1))) / 100;
 
-        return [(date.getTime() - (foodLog?.timestamp?.getTime() || foodLog?.createdAt.getTime())) / (1000 * 60 * 60), caffeineAmount];
+        return [(date.getTime() - (foodLog?.date?.getTime() || foodLog?.createdAt.getTime())) / (1000 * 60 * 60), caffeineAmount];
     } catch (error) {
         console.error(error);
         return null;

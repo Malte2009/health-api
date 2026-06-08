@@ -27,7 +27,6 @@ model Food {
 model FoodLog {
   id        String    @id @default(uuid())
   userId    String
-  timestamp DateTime?
   foodId    String
   mealLogId String
   createdAt DateTime  @default(now())
