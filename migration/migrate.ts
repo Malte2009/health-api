@@ -1,63 +1,50 @@
 import prisma from "../src/prisma/client";
 import {getHoursSinceLastCaffeine} from "../src/utility/caffeine";
+import {randomUUID} from "node:crypto";
 
 async function migrate(): Promise<void> {
     console.log("Starting migration");
+
     try {
+        const data = await prisma.exercise.findMany({
+            include: {
+                exerciseLogs: true
+            }
+        });
 
-        const foodLogs = await prisma.foodLog.findMany({});
+        for (const exercise of data) {
+            const uuid = randomUUID();
 
-        for (const food of foodLogs) {
-            await prisma.foodLog.update({
-                where: {id: food.id},
+            await prisma.exercise.update({
+                where: {
+                    name_userId: {
+                        name: exercise.name,
+                        userId: exercise.userId
+                    }
+                },
                 data: {
-                    date: food.createdAt
+                    id: uuid,
                 }
             })
+
+            for (const log of exercise.exerciseLogs) {
+                await prisma.exerciseLog.update({
+                    where: {
+                        id: log.id
+                    },
+                    data: {
+                        exerciseId: uuid
+                    }
+                })
+            }
         }
 
-        const sleepLogs = await prisma.sleepLog.findMany({});
 
-        for (const log of sleepLogs) {
-            const userId = log.userId;
-            const date = log.bedTime || log.createdAt;
-
-            let lastCaffeine: number[] | null | null[] = await getHoursSinceLastCaffeine(date, userId);
-
-            if (!lastCaffeine) lastCaffeine = [null, null];
-
-            await prisma.sleepLog.update({
-                where: { id: log.id },
-                data: {
-                    hoursSinceLastCaffeine: lastCaffeine[0],
-                    lastCaffeineAmountMg: lastCaffeine[1],
-                }
-            })
-        }
-
-        const bpLogs = await prisma.bloodPressureLog.findMany({})
-
-        for (const log of bpLogs) {
-            const date = log.timestamp;
-            const userId = log.userId;
-
-            let lastCaffeine: number[] | null | null[] = await getHoursSinceLastCaffeine(date, userId);
-
-            if (!lastCaffeine) lastCaffeine = [null, null];
-
-            await prisma.bloodPressureLog.update({
-                where: { id: log.id},
-                data: {
-                    hoursSinceLastCaffeine: lastCaffeine[0],
-                    lastCaffeineAmountMg: lastCaffeine[1],
-                }
-            })
-        }
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error(error);
     }
 
-    console.log("Migrate finished");
+    console.log("Migration finished");
 }
 
 migrate();

@@ -30,6 +30,7 @@ model TrainingLog {
 
 model ExerciseLog {
   id         String    @id @default(uuid())
+  exerciseId String
   name       String
   userId     String
   trainingId String
@@ -41,27 +42,19 @@ model ExerciseLog {
   sets     SetLog[]
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   training TrainingLog @relation(fields: [trainingId], references: [id], onDelete: Cascade)
-  exercise Exercise    @relation(fields: [name, userId], references: [name, userId], onDelete: Restrict)
+  exercise Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
 }
 
 model Exercise {
+  id     String @id @default(uuid())
   name   String
   userId String
-
-  setEnd           DateTime?
-  durationSeconds  Int?
-  rpe              Int?
-  breathHeld       Boolean?  @default(false)
-  symtomsDuringSet String?
-  symtomsAfterSet  String?
 
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   exerciseLogs ExerciseLog[]
-
-  @@id([name, userId])
 }
 
 model SetLog {
