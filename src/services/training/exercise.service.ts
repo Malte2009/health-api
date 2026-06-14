@@ -11,6 +11,22 @@ class ExerciseService {
             }
         });
     }
+    async getExerciseNames(userId: string) {
+        return (await prisma.exercise.findMany({
+            where: {
+                userId
+            },
+            select: {
+                name: true
+            },
+            distinct: "name",
+            orderBy: {
+                name: "asc"
+            }
+        })).map(exercise => {
+            return exercise.name;
+        })
+    }
 }
 
 export default new ExerciseService();
