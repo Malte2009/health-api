@@ -1,16 +1,13 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import {AuthenticatedRequest} from "../../middleware/auth.middleware";
+import ExerciseService from "../../services/training/exercise.service";
 
 export const getExercises = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
 
     try {
-        const exercises = await prisma.exercise.findMany({
-            where: { userId: userId },
-            include: { exerciseLogs: true },
-            orderBy: { name: 'asc' }
-        });
+        const exercises = await ExerciseService.getAllExercises(userId);
 
         return res.status(200).json(exercises);
         } catch (error) {
