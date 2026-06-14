@@ -11,8 +11,8 @@ import {
 const router = Router();
 
 router.get("/", authenticateToken, getTraining);
-router.get("/:id", authenticateToken, getTrainingById);
 router.get("/names", authenticateToken, getTrainingNames);
+router.get("/:id", authenticateToken, getTrainingById);
 router.get("/recalculate-calories", authenticateToken, recalculateTrainingCalories);
 router.patch("/:id", authenticateToken, updateTraining);
 router.post('/', authenticateToken, createTraining);

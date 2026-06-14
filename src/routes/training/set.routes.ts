@@ -4,10 +4,9 @@ import {getSetTypes, changeSet, createSet, deleteSet, getSetById, getSetUnits} f
 
 const router = Router();
 
-
-router.get("/:id", authenticateToken, getSetById);
 router.get("/types", authenticateToken, getSetTypes);
 router.get("/units", authenticateToken, getSetUnits);
+router.get("/:id", authenticateToken, getSetById);
 router.patch("/:id", authenticateToken, changeSet);
 router.post('/', authenticateToken, createSet);
 router.delete("/:id", authenticateToken, deleteSet);
