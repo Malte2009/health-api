@@ -5,9 +5,9 @@ import {getExerciseLogById, changeExerciseLog, createExerciseLog, deleteExercise
 
 const router = Router();
 
-router.get("/getExerciseLog/:id", authenticateToken, getExerciseLogById);
-router.patch("/changeExerciseLog/:id", authenticateToken, changeExerciseLog);
-router.post('/createExerciseLog', authenticateToken, createExerciseLog);
-router.delete("/deleteExerciseLog/:id", authenticateToken, deleteExerciseLog);
+router.get("/:id", authenticateToken, getExerciseLogById);
+router.patch("/:id", authenticateToken, changeExerciseLog);
+router.post('/', authenticateToken, createExerciseLog);
+router.delete("/:id", authenticateToken, deleteExerciseLog);
 
 export default router;

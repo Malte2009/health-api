@@ -15,13 +15,13 @@ const router = Router();
 
 router.use(authenticateToken);
 
-router.get("/getHrvRecording", getHrvRecording)
-router.get("/getHrvRecording/:id", getHrvRecordingById)
-router.get("/getHrvData/:id", getHrvData)
-router.get("/getHrvWindowData/:id", getHrvWindowData)
-router.get("/getHrvMetrics/:id", getHrvMetricsForRecording)
-router.post("/createHrvRecording", postHrvRecording)
-router.patch("/updateHrvRecording/:id", changeHrvRecording)
-router.delete("/deleteHrvRecording/:id", deleteHrvRecording)
+router.get("/", getHrvRecording)
+router.get("/:id", getHrvRecordingById)
+router.get("/data/:id", getHrvData)
+router.get("/window-data/:id", getHrvWindowData)
+router.get("/metrics/:id", getHrvMetricsForRecording)
+router.post("/", postHrvRecording)
+router.patch("/:id", changeHrvRecording)
+router.delete("/:id", deleteHrvRecording)
 
 export default router;

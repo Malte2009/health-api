@@ -10,12 +10,12 @@ import {
 
 const router = Router();
 
-router.get("/getTraining", authenticateToken, getTraining);
-router.get("/getTraining/:id", authenticateToken, getTrainingById);
-router.get("/getTrainingNames", authenticateToken, getTrainingNames);
-router.get("/recalculateTrainingCalories", authenticateToken, recalculateTrainingCalories);
-router.patch("/updateTraining/:id", authenticateToken, updateTraining);
-router.post('/createTraining', authenticateToken, createTraining);
-router.delete('/deleteTraining/:id', authenticateToken, deleteTraining);
+router.get("/", authenticateToken, getTraining);
+router.get("/:id", authenticateToken, getTrainingById);
+router.get("/names", authenticateToken, getTrainingNames);
+router.get("/recalculate-calories", authenticateToken, recalculateTrainingCalories);
+router.patch("/:id", authenticateToken, updateTraining);
+router.post('/', authenticateToken, createTraining);
+router.delete('/:id', authenticateToken, deleteTraining);
 
 export default router;

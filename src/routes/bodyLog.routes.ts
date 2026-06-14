@@ -11,11 +11,11 @@ import {
 
 const router = Router();
 
-router.get("/getBodyLogs", authenticateToken, getBodyLogs);
-router.get("/getBodyLog/:id", authenticateToken, getBodyLogById);
-router.get('/getCaloriesBurnedOnDay', authenticateToken, getCaloriesBurnedOnDay);
-router.patch("/updateBodyLog/:id", authenticateToken, updateBodyLog);
-router.post('/createBodyLog', authenticateToken, createBodyLog);
-router.delete("/deleteBodyLog/:id", authenticateToken, deleteBodyLog);
+router.get("/", authenticateToken, getBodyLogs);
+router.get("/:id", authenticateToken, getBodyLogById);
+router.get('/calories-burned-on-day', authenticateToken, getCaloriesBurnedOnDay);
+router.patch("/:id", authenticateToken, updateBodyLog);
+router.post('/', authenticateToken, createBodyLog);
+router.delete("/:id", authenticateToken, deleteBodyLog);
 
 export default router;
