@@ -22,7 +22,7 @@ router.get('/symptomsOverMonth', getSymptomsOverMonth);
 router.get('/syncopesOverMonth', getSyncopesOverMonth);
 router.get('/bloodPressureOverMonth', getBloodPressureOverMonth);
 router.get('/sleepOverMonth', getSleepOverMonth);
-router.get('/trainingOverMonth', getTrainingOverMonth);
+router.get('/workoutsOverMonth', getTrainingOverMonth);
 router.get('/dailyLogsOverMonth', getDailyLogsOverMonth);
 router.get('/intakeLogsOverMonth', getIntakeLogsOverMonth);
 
