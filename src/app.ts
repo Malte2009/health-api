@@ -133,7 +133,7 @@ app.use("/health-api/sleep", sleepRoutes);
 app.use("/health-api/symptoms", symptomRoutes);
 app.use("/health-api/syncopes", syncopeRoutes)
 app.use("/health-api/daily-logs", dailyLogRoutes);
-app.use("/health-api/training", progressionRoutes);
+app.use("/health-api/workouts", progressionRoutes);
 app.use("/health-api/analysis/calender", calenderRoutes);
 app.use("/health-api/analysis/micro", microRoutes);
 

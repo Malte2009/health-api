@@ -2,14 +2,14 @@ import prisma from "../src/prisma/client";
 import {calculateExerciseScore} from "../src/utility/calculateExerciseScore";
 
 async function main() {
-    const exerciseLogs = await prisma.exerciseLog.findMany();
+    const exerciseLogs = await prisma.workoutExercise.findMany();
 
     console.log("Starting Calculation")
 
     for (const exerciseLog of exerciseLogs) {
         if (exerciseLog.score) continue;
 
-        await prisma.exerciseLog.update({
+        await prisma.workoutExercise.update({
             where: {
                 id: exerciseLog.id,
             },

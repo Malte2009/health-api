@@ -31,10 +31,12 @@ class ExerciseController {
         const userId = req.userId;
         const exerciseId = req.params.id as string;
 
+        const includeWorkoutExercises: boolean = req.query.includeWorkoutExercises === 'true';
+
         if (!exerciseId) return res.status(400).send("Bad Request");
 
         try {
-            const exercise = await ExerciseService.getExerciseById(userId, exerciseId);
+            const exercise = await ExerciseService.getExerciseById(userId, exerciseId, includeWorkoutExercises);
 
             return res.status(200).json(exercise);
         } catch (error) {

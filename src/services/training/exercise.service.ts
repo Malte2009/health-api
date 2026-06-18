@@ -27,11 +27,14 @@ class ExerciseService {
             return exercise.name;
         })
     }
-    async getExerciseById(userId: string, exerciseId: string) {
+    async getExerciseById(userId: string, exerciseId: string, includeWorkoutExercises: boolean = true) {
         return prisma.exercise.findFirst({
             where: {
                 userId,
                 id: exerciseId
+            },
+            include: {
+                workoutExercises: includeWorkoutExercises ? { include: { workoutSets: true }} : false
             }
         });
     }
