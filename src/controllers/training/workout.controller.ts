@@ -7,8 +7,11 @@ class WorkoutController {
     getWorkouts = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         const userId = req.userId;
 
+        const includeSets: boolean = req.query.includeSets === 'true';
+        const includeWorkoutExercises: boolean = req.query.includeWorkoutExercises === 'true';
+
         try {
-            const workouts = await WorkoutService.getWorkouts(userId);
+            const workouts = await WorkoutService.getWorkouts(userId, includeWorkoutExercises, includeSets);
 
             return res.status(200).json(workouts);
         } catch (error) {
@@ -19,10 +22,15 @@ class WorkoutController {
         const userId = req.userId;
         const workoutId: string = (req.params.workoutId ?? req.params.id) as string;
 
+        const includeSets: boolean = req.query.includeSets === 'true';
+        const includeWorkoutExercises: boolean = req.query.includeWorkoutExercises === 'true';
+
         if (!workoutId) return res.status(400).send("Bad Request");
 
         try {
-            const workout = await WorkoutService.getWorkoutById(userId, workoutId);
+            const workout = await WorkoutService.getWorkoutById(userId, workoutId, includeWorkoutExercises, includeSets);
+
+            if (!workout) return res.status(404).send("Workout not found");
 
             return res.status(200).json(workout);
         } catch (error) {

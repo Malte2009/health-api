@@ -18,13 +18,13 @@ class WorkoutService {
             }
         });
     }
-    getWorkoutNames = (userId: string)=> {
-        return prisma.workout.findMany({
+    getWorkoutNames = async (userId: string)=> {
+        return (await prisma.workout.findMany({
             where: { userId },
             select: { name : true },
             distinct: ["name"],
             orderBy: { type: "asc"}
-        });
+        })).map(workout => workout.name);
     }
     async createWorkout(userId: string, name: string, type?: string, notes?: string, avgHeartRate?: number, duration?: number, pauses?: number, pauseLength?: number, caloriesBurned?: number) {
         return prisma.workout.create({
