@@ -111,9 +111,12 @@ model NutrientFacts {
   fluoride   Decimal? @db.Decimal(10, 4) // mcg
 
   // -- Fatty Acids
-  omega_3 Decimal? @db.Decimal(10, 4) // mg
-  omega_6 Decimal? @db.Decimal(10, 4) // mg
-  omega_9 Decimal? @db.Decimal(10, 4) // mg
+  omega_3        Decimal? @db.Decimal(10, 4) // mg
+  omega_3_ala_mg Decimal? @db.Decimal(10, 4) // mg
+  omega_3_epa_mg Decimal? @db.Decimal(10, 4) // mg
+  omega_3_dha_mg Decimal? @db.Decimal(10, 4) // mg
+  omega_6        Decimal? @db.Decimal(10, 4) // mg
+  omega_9        Decimal? @db.Decimal(10, 4) // mg
 
   food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
 }

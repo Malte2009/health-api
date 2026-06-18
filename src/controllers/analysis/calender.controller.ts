@@ -55,7 +55,7 @@ export const getSymptomsOverMonth = (req: AuthenticatedRequest, res: Response, n
 export const getSyncopesOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.syncopeLog, 'timestamp');
 export const getBloodPressureOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.bloodPressureLog, 'timestamp');
 export const getSleepOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.sleepLog, 'date');
-export const getTrainingOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.trainingLog, 'createdAt');
+export const getTrainingOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.workout, 'createdAt');
 export const getDailyLogsOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.dailyLog, 'date');
 export const getIntakeLogsOverMonth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => fetchAndGroup(req, res, next, prisma.intakeLog, 'timestamp');
 

@@ -16,9 +16,9 @@ model User {
   createdAt DateTime  @default(now())
   changedAt DateTime? @updatedAt
 
-  trainings    TrainingLog[]
-  exerciseLogs ExerciseLog[]
-  sets         SetLog[]
+  workouts         Workout[]
+  workoutExercises WorkoutExercise[]
+  workoutSets      WorkoutSet[]
   bodyLogs     BodyLog[]
 
   exercises Exercise[]

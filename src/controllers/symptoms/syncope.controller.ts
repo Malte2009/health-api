@@ -71,7 +71,7 @@ export const updateSyncope = async (req: AuthenticatedRequest, res: Response, ne
                 amnesia: data.amnesia,
                 amnesiaDurationMinutes: parseInt(data.amnesiaDurationMinutes),
                 injuries: data.injuries,
-                trainingLogId: data.trainingLogId,
+                workoutId: data.workoutId ?? data.trainingLogId,
                 activityBefore: data.activityBefore,
                 timestamp: data.timestamp ? new Date(data.timestamp) : undefined,
             }
@@ -94,4 +94,3 @@ export const deleteSyncope = async (req: AuthenticatedRequest, res: Response, ne
         next(error);
     }
 };
-

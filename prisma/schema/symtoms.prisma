@@ -106,8 +106,8 @@ model SyncopeLog {
 
   symptoms SymptomLog[]
 
-  trainingLogId String?
-  trainingLog   TrainingLog? @relation(fields: [trainingLogId], references: [id])
+  workoutId String?
+  workout   Workout? @relation(fields: [workoutId], references: [id])
 
   notes String?
   user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -7,7 +7,6 @@ import cors from "./middleware/cors.middleware";
 import fs from "fs"
 
 import userRoutes from './routes/user.routes';
-import trainingRoutes from "./routes/training/training.routes";
 import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/training/exercise.routes";
 import setRoutes from "./routes/training/set.routes";
@@ -17,7 +16,6 @@ import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middle
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isAuthenticated } from './controllers/user.controller';
 import { authenticateToken } from './middleware/auth.middleware';
-import exerciseLogRoutes from "./routes/training/exerciseLog.routes";
 import foodRoutes from "./routes/food/food.routes";
 import mealLogRoutes from "./routes/food/mealLog.routes";
 import dashboardRoutes from "./routes/food/dashboard.routes";
@@ -27,7 +25,6 @@ import mealRecipeRoutes from "./routes/food/meal.routes";
 import hrvRoutes from "./routes/hrv/hrv.routes";
 import bloodPressureRoutes from "./routes/vitals/bloodPressure.routes";
 import sleepRoutes from "./routes/vitals/sleep.routes";
-import path from "path";
 import symptomRoutes from "./routes/symptoms/symptom.routes";
 import syncopeRoutes from "./routes/symptoms/syncope.routes";
 import dailyLogRoutes from "./routes/symptoms/dailyLog.routes";
@@ -35,6 +32,8 @@ import progressionRoutes from "./routes/training/progression.routes";
 import calenderRoutes from "./routes/analysis/calender.routes";
 import microRoutes from "./routes/analysis/micro.routes";
 import validateCFAccess from './middleware/cfAccess.middleware';
+import workoutRoutes from "./routes/training/workout.routes";
+import workoutExerciseRoutes from "./routes/training/workoutExercise.routes";
 
 dotenv.config();
 
@@ -93,7 +92,7 @@ app.use(helmet({
 }))
 
 if (!process.env.ALLOWED_ORIGINS) {
-	console.error("ALLOWED_ORIGINS is not defined in the environment variables.");
+	console.error("ALLOWED_ORIGINS is not defined in the environment variables");
 	process.exit(1);
 }
 
@@ -112,9 +111,9 @@ app.use(requestLogger);
 
 app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
 app.use('/health-api/users', authLimiter, userRoutes);
-app.use("/health-api/training", trainingRoutes);
+app.use("/health-api/workouts", workoutRoutes);
+app.use("/health-api/workouts/:workoutId/exercises", workoutExerciseRoutes);
 
-app.use("/health-api/exerciseLog", exerciseLogRoutes)
 app.use("/health-api/set", setRoutes)
 app.use("/health-api/bodyLog", bodyRoutes)
 app.use("/health-api/exercise", exerciseRoutes)

@@ -7,7 +7,7 @@ class ProgressionService {
                 userId: userId,
                 id: exerciseId,
             }
-        }).exerciseLogs({
+        }).workoutExercises({
             select: {
                 createdAt: true,
                 score: true

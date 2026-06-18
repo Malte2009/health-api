@@ -5,7 +5,7 @@ export const NUTRIENT_KEYS = [
     'calcium', 'phosphorus', 'magnesium', 'sodium', 'potassium',
     'chloride', 'sulfur', 'iron', 'zinc', 'selenium', 'iodine',
     'copper', 'manganese', 'chromium', 'molybdenum', 'fluoride',
-    'omega_3', 'omega_6', 'omega_9',
+    'omega_3', 'omega_6', 'omega_9', 'omega_3_ala_mg', 'omega_3_epa_mg', 'omega_3_dha_mg'
 ] as const;
 
 export type NutrientKey = typeof NUTRIENT_KEYS[number];

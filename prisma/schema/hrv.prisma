@@ -16,8 +16,8 @@ model HrvRecording {
   sleepLogId String?   @unique
   sleepLog   SleepLog? @relation(fields: [sleepLogId], references: [id])
 
-  trainingLogId String?      @unique
-  trainingLog   TrainingLog? @relation(fields: [trainingLogId], references: [id])
+  workoutId String?  @unique
+  workout   Workout? @relation(fields: [workoutId], references: [id])
 
   context String? // "NIGHT_SLEEP", "TRAINING", "ORTHOSTATIC_TEST"
 

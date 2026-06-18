@@ -290,7 +290,7 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
 
     const date = new Date(req.query.date as string) || Date.now().toLocaleString();
 
-    let trainingLogId: string | null = req.query.trainingLogId as string;
+    let workoutId: string | null = (req.query.workoutId ?? req.query.trainingLogId) as string;
     let sleepLogId: string | null = req.query.sleepingLogId as string;
     const context = req.query.context as string;
     const startTime = new Date(req.query.startTime as string);
@@ -298,19 +298,19 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
     const device = req.query.device as string;
     const name = req.query.name as string;
 
-    if (!trainingLogId) trainingLogId = null
+    if (!workoutId) workoutId = null
     if (!sleepLogId) sleepLogId = null
 
     try {
-        if (trainingLogId) {
-            const trainingLog = await prisma.trainingLog.findUnique({
+        if (workoutId) {
+            const workout = await prisma.workout.findUnique({
                 where : {
-                    id: trainingLogId,
+                    id: workoutId,
                     userId
                 }
             })
 
-            if (!trainingLog) {
+            if (!workout) {
                 return res.status(404).send("Training not found");
             }
         }
@@ -332,7 +332,7 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
             data: {
                 date,
                 userId,
-                trainingLogId,
+                workoutId,
                 sleepLogId,
                 context,
                 device,
@@ -369,7 +369,7 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
     const userId = req.userId;
 
     let rrdata = req.body;
-    let trainingLogId = req.query.trainingLogId as string;
+    let workoutId = (req.query.workoutId ?? req.query.trainingLogId) as string;
     let sleepLogId = req.query.sleepLogId as string;
     let context = req.query.context as string;
     let startTime = new Date(req.query.startTime as string);
@@ -395,7 +395,7 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
              rrdata = preFilterRRData(rrdata);
          }
 
-        if (trainingLogId === undefined) trainingLogId = hrvRecording.trainingLogId || "";
+        if (workoutId === undefined) workoutId = hrvRecording.workoutId || "";
         if (sleepLogId === undefined) sleepLogId = hrvRecording.sleepLogId || "";
         if (context === undefined) context = hrvRecording.context || "";
         if (startTime == null || isNaN(startTime.getTime())) startTime = hrvRecording.startDateTime || new Date(0);
@@ -404,13 +404,13 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
         if (name === undefined) name = hrvRecording.name || "";
         if (date === undefined) date = hrvRecording.date || "";
 
-        const trainingLogIdVal = trainingLogId === "" ? null : trainingLogId;
+        const workoutIdVal = workoutId === "" ? null : workoutId;
         const sleepLogIdVal = sleepLogId === "" ? null : sleepLogId;
 
         const updatedHrvRecording = await prisma.hrvRecording.update({
             where: { id: req.params.id },
             data: {
-                trainingLogId: trainingLogIdVal,
+                workoutId: workoutIdVal,
                 sleepLogId: sleepLogIdVal,
                 context,
                 startDateTime: startTime,

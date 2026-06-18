@@ -1,14 +1,14 @@
 import prisma from "../prisma/client";
 
-export async function calculateExerciseScore(exerciseLogId: string): Promise<number> {
-    const exerciseLog = await prisma.exerciseLog.findUnique({
-        where: { id: exerciseLogId },
-        include: { sets: true },
+export async function calculateExerciseScore(workoutExerciseId: string): Promise<number> {
+    const workoutExercise = await prisma.workoutExercise.findUnique({
+        where: { id: workoutExerciseId },
+        include: { workoutSets: true },
     });
 
-    if (!exerciseLog) return 0;
+    if (!workoutExercise) return 0;
 
-    const workSets = exerciseLog.sets.filter((s) => s.type === "Work");
+    const workSets = workoutExercise.workoutSets.filter((s) => s.type === "Work");
 
     if (workSets.length === 0) return 0;
 

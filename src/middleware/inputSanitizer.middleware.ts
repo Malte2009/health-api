@@ -94,32 +94,34 @@ export const validateInput = (req: Request, res: Response, next: NextFunction): 
     }
 
     // Exercises (recursive)
-    if (body?.exerciseLogs != null) {
-        const exerciseLogs = body.exerciseLogs;
-        if (!isArray(exerciseLogs)) return res.status(400).send("Exercise logs must be an array");
-        for (const exerciseLog of exerciseLogs) {
-            if (exerciseLog.name != null) {
-                if (!isString(exerciseLog.name)) return res.status(400).send("Exercise log name must be a string");
-                if (exerciseLog.name.length < 1 || exerciseLog.name.length > 100) return res.status(400).send("Exercise log name must be between 1 and 100 characters");
+    const workoutExercisesBody = body?.workoutExercises ?? body?.exerciseLogs;
+    if (workoutExercisesBody != null) {
+        const workoutExercises = workoutExercisesBody;
+        if (!isArray(workoutExercises)) return res.status(400).send("Exercise logs must be an array");
+        for (const workoutExercise of workoutExercises) {
+            if (workoutExercise.name != null) {
+                if (!isString(workoutExercise.name)) return res.status(400).send("Exercise log name must be a string");
+                if (workoutExercise.name.length < 1 || workoutExercise.name.length > 100) return res.status(400).send("Exercise log name must be between 1 and 100 characters");
             }
-            if (exerciseLog.type != null) {
-                if (!isString(exerciseLog.type)) return res.status(400).send("Exercise log type must be a string");
-                if (exerciseLog.type.length < 1 || exerciseLog.type.length > 50) return res.status(400).send("Exercise log type must be between 1 and 50 characters");
-            }
-
-            if (exerciseLog.notes != null && exerciseLog.notes !== "") {
-                if (!isString(exerciseLog.notes)) return res.status(400).send("Exercise log notes must be a string");
-                if (exerciseLog.notes.length > 500) return res.status(400).send("Exercise log notes must be less than 500 characters");
-                exerciseLog.notes = exerciseLog.notes.trim();
+            if (workoutExercise.type != null) {
+                if (!isString(workoutExercise.type)) return res.status(400).send("Exercise log type must be a string");
+                if (workoutExercise.type.length < 1 || workoutExercise.type.length > 50) return res.status(400).send("Exercise log type must be between 1 and 50 characters");
             }
 
-            if (exerciseLog.order != null) {
-                if (!isNumber(exerciseLog.order)) return res.status(400).send("Exercise log order must be a number");
-                if (exerciseLog.order < 0) return res.status(400).send("Exercise log order must be a positive number");
+            if (workoutExercise.notes != null && workoutExercise.notes !== "") {
+                if (!isString(workoutExercise.notes)) return res.status(400).send("Exercise log notes must be a string");
+                if (workoutExercise.notes.length > 500) return res.status(400).send("Exercise log notes must be less than 500 characters");
+                workoutExercise.notes = workoutExercise.notes.trim();
             }
 
-            if (exerciseLog.sets != null) {
-                for (const set of exerciseLog.sets || []) {
+            if (workoutExercise.order != null) {
+                if (!isNumber(workoutExercise.order)) return res.status(400).send("Exercise log order must be a number");
+                if (workoutExercise.order < 0) return res.status(400).send("Exercise log order must be a positive number");
+            }
+
+            const workoutSets = workoutExercise.workoutSets ?? workoutExercise.sets;
+            if (workoutSets != null) {
+                for (const set of workoutSets || []) {
                     if (set.reps != null) {
                         if (!isNumber(set.reps)) return res.status(400).send("Set reps must be a number");
                         if (set.reps < 1 || set.reps > 1000) return res.status(400).send("Set reps must be between 1 and 1000");

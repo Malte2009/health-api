@@ -9,7 +9,7 @@ export const getSetById = async (req: AuthenticatedRequest, res: Response, next:
     if (!setId) return res.status(400).send("Bad Request");
 
     try {
-        const set = await prisma.setLog.findUnique({
+        const set = await prisma.workoutSet.findUnique({
             where: { id: setId, userId: userId },
         });
         
@@ -25,7 +25,7 @@ export const getSetTypes = async (req: AuthenticatedRequest, res: Response, next
     const userId = req.userId;
 
     try {
-        const sets = await prisma.setLog.findMany({
+        const sets = await prisma.workoutSet.findMany({
             where: { userId: userId },
             select: { type: true },
             distinct: ['type'],
@@ -41,7 +41,7 @@ export const getSetUnits = async (req: AuthenticatedRequest, res: Response, next
     const userId = req.userId;
 
     try {
-        const sets = await prisma.setLog.findMany({
+        const sets = await prisma.workoutSet.findMany({
             where: { userId: userId },
             select: { repUnit: true },
             distinct: ['repUnit'],
@@ -66,7 +66,7 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     let { type, repUnit } = req.body;
 
-    const set = await prisma.setLog.findUnique({where: { id: setId, userId: userId }});
+    const set = await prisma.workoutSet.findUnique({where: { id: setId, userId: userId }});
 
     if (!set) return res.status(404).send("Set not found");
 
@@ -82,14 +82,14 @@ export const changeSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (!repUnit && set.repUnit) repUnit = set.repUnit;
     if (!setTime && set.setTime) setTime = set.setTime;
 
-    const exerciseLog = await prisma.exerciseLog.findFirst({
-        where: { id: set.exerciseLogId, userId }
+    const workoutExercise = await prisma.workoutExercise.findFirst({
+        where: { id: set.workoutExerciseId, userId }
     });
 
-    if (!exerciseLog) return res.status(403).send("Access Denied");
+    if (!workoutExercise) return res.status(403).send("Access Denied");
 
     try {
-        const updatedSet = await prisma.setLog.update({
+        const updatedSet = await prisma.workoutSet.update({
             where: { id: setId },
             data: {
                 type,
@@ -112,13 +112,14 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
     const reps = parseInt(req.body.reps);
     const weight = parseFloat(req.body.weight);
     const setTime = parseFloat(req.body.setTime);
-    let { type, exerciseLogId, repUnit} = req.body;
+    let { type, workoutExerciseId, exerciseLogId, repUnit} = req.body;
+    if (workoutExerciseId == null) workoutExerciseId = exerciseLogId;
 
-    const exerciseLog = await prisma.exerciseLog.findFirst({
-        where: { id: exerciseLogId, userId }
+    const workoutExercise = await prisma.workoutExercise.findFirst({
+        where: { id: workoutExerciseId, userId }
     });
 
-    if (!exerciseLog) return res.status(403).send("Access Denied");
+    if (!workoutExercise) return res.status(403).send("Access Denied");
 
     if (reps == null || isNaN(reps)) return res.status(400).send("Reps must be a number");
     if (weight == null || isNaN(weight)) return res.status(400).send("Weight must be a number");
@@ -126,10 +127,10 @@ export const createSet = async (req: AuthenticatedRequest, res: Response, next: 
     if (!repUnit || repUnit.length === 0) return res.status(400).send("Rep unit cannot be empty");
 
     try {
-        const set = await prisma.setLog.create({
+        const set = await prisma.workoutSet.create({
             data: {
                 type,
-                exerciseLogId,
+                workoutExerciseId,
                 reps,
                 weight,
                 repUnit,
@@ -150,18 +151,18 @@ export const deleteSet = async (req: AuthenticatedRequest, res: Response, next: 
 
     if (!setId) return res.status(400).send("Bad Request");
 
-    const set = await prisma.setLog.findUnique({where: { id: setId, userId: userId }});
+    const set = await prisma.workoutSet.findUnique({where: { id: setId, userId: userId }});
 
     if (!set) return res.status(404).send("Set not found");
 
-    const exerciseLog = await prisma.exerciseLog.findFirst({
-        where: { id: set.exerciseLogId, userId }
+    const workoutExercise = await prisma.workoutExercise.findFirst({
+        where: { id: set.workoutExerciseId, userId }
     });
 
-    if (!exerciseLog) return res.status(403).send("Access Denied");
+    if (!workoutExercise) return res.status(403).send("Access Denied");
 
     try {
-        await prisma.setLog.delete({
+        await prisma.workoutSet.delete({
             where: { id: setId }
         });
         return res.status(204).send();

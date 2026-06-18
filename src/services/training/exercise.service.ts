@@ -27,6 +27,41 @@ class ExerciseService {
             return exercise.name;
         })
     }
+    async getExerciseById(userId: string, exerciseId: string) {
+        return prisma.exercise.findFirst({
+            where: {
+                userId,
+                id: exerciseId
+            }
+        });
+    }
+    async createExercise(userId: string, name: string) {
+        return prisma.exercise.create({
+            data: {
+                name,
+                userId
+            }
+        });
+    }
+    async changeExercise(userId: string, exerciseId: string, newName: string) {
+        return prisma.exercise.update({
+            where:  {
+                id: exerciseId,
+                userId
+            },
+            data: {
+                name: newName
+            }
+        })
+    }
+    async deleteExercise(userId: string, exerciseId: string) {
+        return prisma.exercise.delete({
+            where: {
+                id: exerciseId,
+                userId
+            }
+        });
+    }
 }
 
 export default new ExerciseService();

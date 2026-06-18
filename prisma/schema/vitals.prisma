@@ -28,13 +28,13 @@ model BloodPressureLog {
   symptoms String?
   arm      String?
 
-  trainingId String?
-  training   TrainingLog? @relation(fields: [trainingId], references: [id])
+  workoutId String?
+  workout   Workout? @relation(fields: [workoutId], references: [id])
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([trainingId])
+  @@index([workoutId])
 }
 
 model SleepLog {

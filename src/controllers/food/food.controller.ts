@@ -237,6 +237,9 @@ export const createFood = async (req: AuthenticatedRequest, res: Response, next:
                         molybdenum:  req.body.nutrients.molybdenum,
                         fluoride:    req.body.nutrients.fluoride,
                         omega_3:     req.body.nutrients.omega_3,
+                        omega_3_ala_mg:  req.body.nutrients.omega_3_ala_mg,
+                        omega_3_epa_mg:  req.body.nutrients.omega_3_epa_mg,
+                        omega_3_dha_mg:  req.body.nutrients.omega_3_dha_mg,
                         omega_6:     req.body.nutrients.omega_6,
                         omega_9:     req.body.nutrients.omega_9,
                     }

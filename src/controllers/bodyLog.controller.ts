@@ -15,7 +15,7 @@ export const getCaloriesBurnedOnDay = async (req: AuthenticatedRequest, res: Res
 
         if (!BMR || !BMR.BMR) return res.status(404).send("No body log found");
 
-        const burnedCalories = await prisma.trainingLog.findMany({
+        const burnedCalories = await prisma.workout.findMany({
             where: {
                 userId
             },

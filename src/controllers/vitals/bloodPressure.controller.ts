@@ -43,7 +43,8 @@ export const createBloodPressureLog = async (req: AuthenticatedRequest, res: Res
     if (!req.body) return res.status(400).send("Bad Request");
 
     const userId = req.userId;
-    const { timestamp, systolic, diastolic, pulse, position, context, minutesAfterPositionChange, symptoms, arm, trainingId } = req.body;
+    const { timestamp, systolic, diastolic, pulse, position, context, minutesAfterPositionChange, symptoms, arm, workoutId, trainingId } = req.body;
+    const relatedWorkoutId = workoutId ?? trainingId;
 
     if (!timestamp || systolic == null || diastolic == null) return res.status(400).send("Timestamp, systolic, and diastolic are required");
 
@@ -65,7 +66,7 @@ export const createBloodPressureLog = async (req: AuthenticatedRequest, res: Res
                 minutesAfterPositionChange,
                 symptoms,
                 arm,
-                trainingId,
+                workoutId: relatedWorkoutId,
                 lastCaffeineAmountMg: caffeine[1],
                 hoursSinceLastCaffeine: caffeine[0]
             }
@@ -82,7 +83,8 @@ export const updateBloodPressureLog = async (req: AuthenticatedRequest, res: Res
 
     if (!req.body) return res.status(400).send("Bad Request");
 
-    const { timestamp, systolic, diastolic, pulse, position, context, minutesAfterPositionChange, symptoms, arm, trainingId } = req.body;
+    const { timestamp, systolic, diastolic, pulse, position, context, minutesAfterPositionChange, symptoms, arm, workoutId, trainingId } = req.body;
+    const relatedWorkoutId = workoutId ?? trainingId;
 
     try {
         const bpLog = await prisma.bloodPressureLog.findUnique({
@@ -103,7 +105,7 @@ export const updateBloodPressureLog = async (req: AuthenticatedRequest, res: Res
                 minutesAfterPositionChange: minutesAfterPositionChange !== undefined ? minutesAfterPositionChange : bpLog.minutesAfterPositionChange,
                 symptoms: symptoms !== undefined ? symptoms : bpLog.symptoms,
                 arm: arm !== undefined ? arm : bpLog.arm,
-                trainingId: trainingId !== undefined ? trainingId : bpLog.trainingId
+                workoutId: relatedWorkoutId !== undefined ? relatedWorkoutId : bpLog.workoutId
             }
         });
 
@@ -132,4 +134,3 @@ export const deleteBloodPressureLog = async (req: AuthenticatedRequest, res: Res
         next(error);
     }
 }
-
