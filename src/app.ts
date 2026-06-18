@@ -9,7 +9,7 @@ import fs from "fs"
 import userRoutes from './routes/user.routes';
 import cookieParser from 'cookie-parser';
 import exerciseRoutes from "./routes/training/exercise.routes";
-import setRoutes from "./routes/training/set.routes";
+import setRoutes from "./routes/training/workoutSet.routes";
 import bodyRoutes from "./routes/bodyLog.routes";
 import { requestLogger } from './middleware/logger.middleware';
 import { sanitizeInput, validateInput } from './middleware/inputSanitizer.middleware';
@@ -112,9 +112,9 @@ app.use(requestLogger);
 app.use("/health-api/users/isAuthenticated", isAuthenticatedLimiter, authenticateToken , isAuthenticated);
 app.use('/health-api/users', authLimiter, userRoutes);
 app.use("/health-api/workouts", workoutRoutes);
+app.use("/health-api/workouts/:workoutId/exercises/:workoutExerciseId/sets", setRoutes);
 app.use("/health-api/workouts/:workoutId/exercises", workoutExerciseRoutes);
 
-app.use("/health-api/set", setRoutes)
 app.use("/health-api/bodyLog", bodyRoutes)
 app.use("/health-api/exercise", exerciseRoutes)
 

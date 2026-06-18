@@ -6,7 +6,7 @@ class WorkoutService {
             where: { userId: userId },
             orderBy: { createdAt: 'desc' },
             include: {
-                workoutExercises: includeExercises ? { include: { workoutSets: includeSets } } : false
+                workoutExercises: includeExercises ? { include: { workoutSets: includeSets, exercise: true } } : false
             }
         })
     }
@@ -14,7 +14,7 @@ class WorkoutService {
         return prisma.workout.findFirst({
             where: { id: workoutId, userId: userId },
             include: {
-                workoutExercises: includeExercises ? { include: { workoutSets: includeSets } } : false
+                workoutExercises: includeExercises ? { include: { workoutSets: includeSets, exercise: true }} : false
             }
         });
     }
