@@ -12,6 +12,7 @@ node_modules
 /dist
 
 # Migration files
+/prisma/migrations
 
 update_restart_health_api.sh
 
