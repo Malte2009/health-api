@@ -71,10 +71,10 @@ class ExerciseController {
         if (!newName) return res.status(400).send("Bad Request");
 
         try {
-            let exercise = await ExerciseService.getExerciseById(userId, exerciseId);
-            if (!exercise) return res.status(404).send("Exercise not found");
+            const existingExercise = await ExerciseService.getExerciseById(userId, exerciseId);
+            if (!existingExercise) return res.status(404).send("Exercise not found");
 
-            exercise = await ExerciseService.changeExercise(userId, exerciseId, newName);
+            const exercise = await ExerciseService.changeExercise(userId, exerciseId, newName);
 
             return res.status(200).json(exercise);
         } catch (error) {

@@ -1,0 +1,75 @@
+model HealthDay {
+  id     String   @id @default(uuid())
+  userId String
+  date   DateTime
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  dailyLog DailyLog?
+  weather  Weather?
+
+  bodyLogs          BodyLog[]
+  workouts          Workout[]
+  mealLogs          MealLog[]
+  intakeLogs        IntakeLog[]
+  sleepLogs         SleepLog[]
+  bloodPressureLogs BloodPressureLog[]
+  symptomLogs       SymptomLog[]
+  syncopeLogs       SyncopeLog[]
+  hrvRecordings     HrvRecording[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model DailyLog {
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?   @unique
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
+
+  date DateTime
+
+  energyMorning   Int?
+  energyNoon      Int?
+  energyAfternoon Int?
+  energyEvening   Int?
+
+  overallScore       Int?
+  symptomBurdenScore Int?
+
+  workCapacity  String?
+  activityLevel String?
+
+  targetWater_ml      Float?
+  actualWater_ml      Float?
+  saltSupplementedMg  Float?
+  headElevatedSleep   Boolean?
+  neckPositionManaged Boolean?
+
+  syncopeCount    Int     @default(0)
+  presyncopeCount Int     @default(0)
+  worstSymptom    String?
+  emergencyAction Boolean
+
+  notes String?
+
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([healthDayId])
+}
+
+model Weather {
+  id          String    @id @default(uuid())
+  healthDayId String    @unique
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
+
+  healthDay HealthDay @relation(fields: [healthDayId], references: [id], onDelete: Cascade)
+}

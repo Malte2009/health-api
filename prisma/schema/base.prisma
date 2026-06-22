@@ -19,7 +19,7 @@ model User {
   workouts         Workout[]
   workoutExercises WorkoutExercise[]
   workoutSets      WorkoutSet[]
-  bodyLogs     BodyLog[]
+  bodyLogs         BodyLog[]
 
   exercises Exercise[]
 
@@ -35,6 +35,7 @@ model User {
   sleepLogs         SleepLog[]
   intakeLogs        IntakeLog[]
   dailyLogs         DailyLog[]
+  healthDays        HealthDay[]
   hrvRecordings     HrvRecording[]
 }
 
@@ -60,6 +61,7 @@ model UserGoals {
 model BodyLog {
   id            String    @id @default(uuid())
   userId        String
+  healthDayId   String?
   createdAt     DateTime  @default(now())
   changedAt     DateTime? @updatedAt
   weight        Float
@@ -71,5 +73,8 @@ model BodyLog {
   BMI           Float?
   BMR           Float?
 
-  user User @relation(fields: [userId], references: [id])
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@index([healthDayId])
 }

@@ -33,10 +33,11 @@ enum SyncopeOutcome {
 }
 
 model SymptomLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
 
   timestamp DateTime
   name      SymptomType
@@ -61,7 +62,10 @@ model SymptomLog {
 
   pictures SymptomPicture[]
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([healthDayId])
 }
 
 model SymptomPicture {
@@ -79,10 +83,11 @@ model SymptomPicture {
 }
 
 model SyncopeLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
 
   timestamp DateTime
   name      SyncopeType
@@ -109,40 +114,9 @@ model SyncopeLog {
   workoutId String?
   workout   Workout? @relation(fields: [workoutId], references: [id])
 
-  notes String?
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
+  notes     String?
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model DailyLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
-
-  date DateTime @unique
-
-  energyMorning   Int?
-  energyNoon      Int?
-  energyAfternoon Int?
-  energyEvening   Int?
-
-  overallScore       Int?
-  symptomBurdenScore Int?
-
-  workCapacity  String?
-  activityLevel String?
-
-  targetWater_ml      Float?
-  actualWater_ml      Float?
-  saltSupplementedMg  Float?
-  headElevatedSleep   Boolean?
-  neckPositionManaged Boolean?
-
-  syncopeCount    Int     @default(0)
-  presyncopeCount Int     @default(0)
-  worstSymptom    String?
-  emergencyAction Boolean
-
-  notes String?
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([healthDayId])
 }

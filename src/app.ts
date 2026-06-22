@@ -28,6 +28,7 @@ import sleepRoutes from "./routes/vitals/sleep.routes";
 import symptomRoutes from "./routes/symptoms/symptom.routes";
 import syncopeRoutes from "./routes/symptoms/syncope.routes";
 import dailyLogRoutes from "./routes/symptoms/dailyLog.routes";
+import healthDayRoutes from "./routes/daily/healthDay.routes";
 import progressionRoutes from "./routes/training/progression.routes";
 import calenderRoutes from "./routes/analysis/calender.routes";
 import microRoutes from "./routes/analysis/micro.routes";
@@ -133,6 +134,7 @@ app.use("/health-api/sleep", sleepRoutes);
 app.use("/health-api/symptoms", symptomRoutes);
 app.use("/health-api/syncopes", syncopeRoutes)
 app.use("/health-api/daily-logs", dailyLogRoutes);
+app.use("/health-api/health-days", healthDayRoutes);
 app.use("/health-api/workouts", progressionRoutes);
 app.use("/health-api/analysis/calender", calenderRoutes);
 app.use("/health-api/analysis/micro", microRoutes);

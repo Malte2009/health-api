@@ -53,16 +53,20 @@ enum MealType {
 }
 
 model MealLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
-  type      MealType
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
+  type        MealType
 
   order Int @default(0)
 
-  foodLogs FoodLog[]
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  foodLogs  FoodLog[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([healthDayId])
 }
 
 model NutrientFacts {
@@ -144,10 +148,11 @@ model MealIngredient {
 }
 
 model IntakeLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
 
   timestamp DateTime
 
@@ -161,8 +166,11 @@ model IntakeLog {
   caffeine_mg Float?
   alcohol_g   Float?
 
-  notes String?
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     String?
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([healthDayId])
 }
 
 enum PortionUnit {

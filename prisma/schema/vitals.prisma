@@ -8,10 +8,11 @@ enum HRContext {
 }
 
 model BloodPressureLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
 
   timestamp DateTime
   systolic  Int
@@ -31,17 +32,20 @@ model BloodPressureLog {
   workoutId String?
   workout   Workout? @relation(fields: [workoutId], references: [id])
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([healthDayId])
   @@index([workoutId])
 }
 
 model SleepLog {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
 
   date DateTime
 
@@ -74,6 +78,9 @@ model SleepLog {
   // 1:1 Relation zur detaillierten Brustgurt-Aufnahme
   hrvRecording HrvRecording?
 
-  notes String?
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     String?
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([healthDayId])
 }

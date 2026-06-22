@@ -1,8 +1,9 @@
 model HrvRecording {
-  id        String    @id @default(uuid())
-  userId    String
-  createdAt DateTime  @default(now())
-  changedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  healthDayId String?
+  createdAt   DateTime  @default(now())
+  changedAt   DateTime? @updatedAt
 
   name String?
 
@@ -25,7 +26,10 @@ model HrvRecording {
 
   metrics hrvMetrics[]
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthDay HealthDay? @relation(fields: [healthDayId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([healthDayId])
 }
 
 model HrvWindow {
