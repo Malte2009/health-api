@@ -8,7 +8,8 @@ import {
     postHrvRecording,
     getHrvData,
     getHrvWindowData,
-    getHrvMetricsForRecording
+    getHrvMetricsForRecording,
+    getHrvWindows
 } from "../../controllers/hrv/hrv.controller";
 
 const router = Router();
@@ -16,6 +17,7 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get("/", getHrvRecording)
+router.get("/:recordingId/windows", getHrvWindows)
 router.get("/:id", getHrvRecordingById)
 router.get("/data/:id", getHrvData)
 router.get("/window-data/:id", getHrvWindowData)

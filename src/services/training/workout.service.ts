@@ -1,4 +1,5 @@
 import prisma from "../../prisma/client";
+import { getOrCreateHealthDayId } from "../../utility/healthDay";
 
 class WorkoutService {
     async getWorkouts(userId: string, includeExercises: boolean = true, includeSets: boolean = true) {
@@ -27,6 +28,9 @@ class WorkoutService {
         })).map(workout => workout.name);
     }
     async createWorkout(userId: string, name: string, type?: string, notes?: string, avgHeartRate?: number, duration?: number, pauses?: number, pauseLength?: number, caloriesBurned?: number) {
+        const createdAt = new Date();
+        const healthDayId = await getOrCreateHealthDayId(userId, createdAt);
+
         return prisma.workout.create({
             data: {
                 name,
@@ -37,11 +41,19 @@ class WorkoutService {
                 pauses,
                 pauseLength,
                 caloriesBurned,
-                userId
+                userId,
+                healthDayId,
+                createdAt,
             }
         });
     }
     async changeWorkout(userId: string, workoutId: string, name: string, type?: string, notes?: string, avgHeartRate?: number, duration?: number, pauses?: number, pauseLength?: number, caloriesBurned?: number) {
+        const workout = await prisma.workout.findUniqueOrThrow({
+            where: { id: workoutId, userId },
+            select: { createdAt: true },
+        });
+        const healthDayId = await getOrCreateHealthDayId(userId, workout.createdAt);
+
         return prisma.workout.update({
             where: { id: workoutId, userId: userId },
             data: {
@@ -53,6 +65,7 @@ class WorkoutService {
                 pauses,
                 pauseLength,
                 caloriesBurned,
+                healthDayId,
             }
         });
     }

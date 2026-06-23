@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import {getHoursSinceLastCaffeine} from "../../utility/caffeine";
+import { getOrCreateHealthDayId } from "../../utility/healthDay";
 
 export const getBloodPressureLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
@@ -49,6 +50,8 @@ export const createBloodPressureLog = async (req: AuthenticatedRequest, res: Res
     if (!timestamp || systolic == null || diastolic == null) return res.status(400).send("Timestamp, systolic, and diastolic are required");
 
     try {
+        const logTimestamp = new Date(timestamp);
+        const healthDayId = await getOrCreateHealthDayId(userId, logTimestamp);
 
         let caffeine: number[] | null | null[] = await getHoursSinceLastCaffeine(timestamp, userId);
 
@@ -57,7 +60,8 @@ export const createBloodPressureLog = async (req: AuthenticatedRequest, res: Res
         const bpLog = await prisma.bloodPressureLog.create({
             data: {
                 userId,
-                timestamp: new Date(timestamp),
+                healthDayId,
+                timestamp: logTimestamp,
                 systolic,
                 diastolic,
                 pulse,
@@ -93,10 +97,14 @@ export const updateBloodPressureLog = async (req: AuthenticatedRequest, res: Res
 
         if (!bpLog) return res.status(404).send("Blood pressure log not found");
 
+        const logTimestamp = timestamp ? new Date(timestamp) : bpLog.timestamp;
+        const healthDayId = await getOrCreateHealthDayId(userId, logTimestamp);
+
         const updatedBpLog = await prisma.bloodPressureLog.update({
             where: { id: bpLogId },
             data: {
-                timestamp: timestamp ? new Date(timestamp) : bpLog.timestamp,
+                timestamp: logTimestamp,
+                healthDayId,
                 systolic: systolic ?? bpLog.systolic,
                 diastolic: diastolic ?? bpLog.diastolic,
                 pulse: pulse !== undefined ? pulse : bpLog.pulse,

@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import prisma from '../../prisma/client';
+import { getOrCreateHealthDayId } from '../../utility/healthDay';
 
 export const getSymptoms = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
@@ -34,6 +35,8 @@ export const createSymptom = async (req: AuthenticatedRequest, res: Response, ne
         req.body.type = req.body?.type.toUpperCase();
 
         const data = req.body;
+        const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+        const healthDayId = await getOrCreateHealthDayId(req.userId, timestamp);
         const symptom = await prisma.symptomLog.create({
             data: {
                 name: data.name,
@@ -45,11 +48,12 @@ export const createSymptom = async (req: AuthenticatedRequest, res: Response, ne
                 worseOnLyingDown: data.worseOnLyingDown,
                 betterOnLyingDown: data.betterOnLyingDown,
                 pulsatile: data.pulsatile,
+                notes: data.notes,
                 syncopeLogId: data.syncopeLogId,
                 severity: parseInt(data.severity),
                 userId: req.userId,
-                // Make sure timestamp is valid
-                timestamp: data.timestamp ? new Date(data.timestamp) : new Date()
+                healthDayId,
+                timestamp,
             }
         });
         return res.status(201).json(symptom);
@@ -66,11 +70,15 @@ export const updateSymptom = async (req: AuthenticatedRequest, res: Response, ne
         const existing = await prisma.symptomLog.findFirst({ where: { id, userId: req.userId }});
         if (!existing) return res.status(404).send('Not Found');
 
+        const timestamp = data.timestamp ? new Date(data.timestamp) : existing.timestamp;
+        const healthDayId = await getOrCreateHealthDayId(req.userId, timestamp);
+
         const symptom = await prisma.symptomLog.update({
             where: { id },
             data: {
                 ...data,
-                timestamp: data.timestamp ? new Date(data.timestamp) : undefined,
+                healthDayId,
+                timestamp: data.timestamp ? timestamp : undefined,
                 onsetDateTime: data.onsetDateTime ? new Date(data.onsetDateTime) : undefined,
                 offsetDateTime: data.offsetDateTime ? new Date(data.offsetDateTime) : undefined,
             }

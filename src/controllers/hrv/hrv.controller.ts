@@ -5,6 +5,88 @@ import { applyFiltersToData, calculateMetricsForFilterSet, parseData } from '../
 import fs from "fs"
 import path from "path";
 import { Worker } from "worker_threads";
+import { randomUUID } from "crypto";
+import { getOrCreateHealthDayId } from '../../utility/healthDay';
+
+type MetricVariant = 'none' | 'standard' | 'all';
+
+type HrvMetricRecordMetadata = {
+    id: string;
+    createdAt: Date;
+    changedAt: Date | null;
+    hrvRecordingId: string | null;
+    hrvWindowId: string | null;
+};
+
+type HrvMetricFilterFlags = {
+    adaptiveFilteringApplied: boolean | null;
+    rangeFilteringApplied: boolean | null;
+    movingAverageFilteringApplied: boolean | null;
+    artifactFilteringApplied: boolean | null;
+};
+
+function getMetricVariant(metric: HrvMetricFilterFlags): MetricVariant | null {
+    const adaptive = metric.adaptiveFilteringApplied === true;
+    const range = metric.rangeFilteringApplied === true;
+    const movingAverage = metric.movingAverageFilteringApplied === true;
+    const artifact = metric.artifactFilteringApplied === true;
+
+    if (!adaptive && !range && !movingAverage && !artifact) return 'none';
+    if (!adaptive && range && movingAverage && artifact) return 'standard';
+    if (adaptive && range && movingAverage && artifact) return 'all';
+    return null;
+}
+
+function toHrvMetricsDto<T extends HrvMetricRecordMetadata>(metric: T): Omit<T, keyof HrvMetricRecordMetadata> {
+    const { id, createdAt, changedAt, hrvRecordingId, hrvWindowId, ...dto } = metric;
+    return dto;
+}
+
+function freshness(record: { createdAt: Date; changedAt: Date | null }): number {
+    return (record.changedAt ?? record.createdAt).getTime();
+}
+
+async function markGenerationFailed(recordingId: string, generationToken: string): Promise<void> {
+    await prisma.hrvRecording.updateMany({
+        where: { id: recordingId, generationToken },
+        data: {
+            generationStatus: 'failed',
+            generatedAt: null,
+            generationToken: null
+        }
+    }).catch(error => console.error('Failed to update HRV generation state:', error));
+}
+
+function startHrvGeneration(recordingId: string, startDateTime: Date | null, generationToken: string): void {
+    const extension = __filename.endsWith('.ts') ? '.ts' : '.js';
+    const workerPath = path.join(__dirname, `hrvWorker${extension}`);
+    let worker: Worker;
+
+    try {
+        worker = new Worker(workerPath, {
+            workerData: { recordingId, startDateTime, generationToken },
+            execArgv: extension === '.ts' ? ['--require', 'ts-node/register'] : undefined
+        });
+    } catch (error) {
+        console.error('Failed to start HRV generation worker:', error);
+        void markGenerationFailed(recordingId, generationToken);
+        return;
+    }
+
+    worker.on('message', (message) => {
+        if (message?.error) console.error('HRV generation worker failed:', message.error);
+    });
+    worker.on('error', (error) => {
+        console.error('HRV generation worker error:', error);
+        void markGenerationFailed(recordingId, generationToken);
+    });
+    worker.on('exit', (code) => {
+        if (code !== 0) {
+            console.error(`HRV generation worker stopped with exit code ${code}`);
+            void markGenerationFailed(recordingId, generationToken);
+        }
+    });
+}
 
 function preFilterRRData(rawData: string): string {
     if (!rawData) return "";
@@ -71,7 +153,7 @@ function runMetricsWorker(recordingId: string, filters: { adaptive: boolean; ran
 export const getHrvRecording = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
 
-    const includeWindows = req.query.includeWindows as unknown as boolean;
+    const includeWindows = req.query.includeWindows === "true";
 
     try {
         const hrvRecording = await prisma.hrvRecording.findMany({
@@ -84,7 +166,7 @@ export const getHrvRecording = async (req: AuthenticatedRequest, res: Response) 
             orderBy: { date: 'desc' }
         })
 
-        return res.status(200).json(hrvRecording);
+        return res.status(200).json(hrvRecording.map(({ generationToken, ...recording }) => recording));
     } catch (error) {
         console.error(error);
     }
@@ -95,7 +177,7 @@ export const getHrvRecordingById = async (req: AuthenticatedRequest, res: Respon
 
     const recordingId = req.params.id;
 
-    const includeWindows = req.query.includeWindows as unknown as boolean;
+    const includeWindows = req.query.includeWindows === "true";
 
     try {
         const hrvRecording = await prisma.hrvRecording.findUnique({
@@ -110,9 +192,100 @@ export const getHrvRecordingById = async (req: AuthenticatedRequest, res: Respon
             }
         })
 
-        return res.status(200).json(hrvRecording);
+        if (!hrvRecording) return res.status(200).json(null);
+        const { generationToken, ...response } = hrvRecording;
+        return res.status(200).json(response);
     } catch (error) {
         console.error(error);
+    }
+}
+
+export const getHrvWindows = async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.userId;
+    const recordingId = req.params.recordingId;
+
+    try {
+        const recording = await prisma.hrvRecording.findUnique({
+            where: { id: recordingId, userId },
+            select: {
+                id: true,
+                name: true,
+                date: true,
+                startDateTime: true,
+                endDateTime: true,
+                context: true,
+                device: true,
+                generationStatus: true,
+                generatedAt: true,
+                windows: {
+                    orderBy: [
+                        { windowStart: 'asc' },
+                        { createdAt: 'desc' }
+                    ],
+                    include: {
+                        metrics: {
+                            orderBy: { createdAt: 'desc' }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!recording) {
+            return res.status(404).send("HRV Recording not found");
+        }
+
+        const newestWindowByStart = new Map<number, typeof recording.windows[number]>();
+        for (const window of recording.windows) {
+            const key = window.windowStart.getTime();
+            const existing = newestWindowByStart.get(key);
+            if (!existing || freshness(window) > freshness(existing)) {
+                newestWindowByStart.set(key, window);
+            }
+        }
+
+        const windows = Array.from(newestWindowByStart.values())
+            .sort((a, b) => a.windowStart.getTime() - b.windowStart.getTime())
+            .map(window => {
+                const metrics: Record<MetricVariant, ReturnType<typeof toHrvMetricsDto> | null> = {
+                    none: null,
+                    standard: null,
+                    all: null
+                };
+
+                for (const metric of [...window.metrics].sort((a, b) => freshness(b) - freshness(a))) {
+                    const variant = getMetricVariant(metric);
+                    if (variant && metrics[variant] === null) {
+                        metrics[variant] = toHrvMetricsDto(metric);
+                    }
+                }
+
+                return {
+                    id: window.id,
+                    windowStart: window.windowStart,
+                    durationSeconds: window.durationSeconds,
+                    eventTag: window.eventTag,
+                    metrics
+                };
+            });
+
+        return res.status(200).json({
+            recording: {
+                id: recording.id,
+                name: recording.name,
+                date: recording.date,
+                startDateTime: recording.startDateTime,
+                endDateTime: recording.endDateTime,
+                context: recording.context,
+                device: recording.device
+            },
+            generationStatus: recording.generationStatus,
+            generatedAt: recording.generatedAt,
+            windows
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send("Internal Server Error");
     }
 }
 
@@ -288,7 +461,7 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
          rrdata = preFilterRRData(rrdata);
      }
 
-    const date = new Date(req.query.date as string) || Date.now().toLocaleString();
+    const date = req.query.date ? new Date(req.query.date as string) : new Date();
 
     let workoutId: string | null = (req.query.workoutId ?? req.query.trainingLogId) as string;
     let sleepLogId: string | null = req.query.sleepingLogId as string;
@@ -302,6 +475,9 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
     if (!sleepLogId) sleepLogId = null
 
     try {
+        const generationToken = randomUUID();
+        const healthDayId = await getOrCreateHealthDayId(userId, date);
+
         if (workoutId) {
             const workout = await prisma.workout.findUnique({
                 where : {
@@ -332,32 +508,30 @@ export const postHrvRecording = async (req: AuthenticatedRequest, res: Response)
             data: {
                 date,
                 userId,
+                healthDayId,
                 workoutId,
                 sleepLogId,
                 context,
                 device,
                 startDateTime: startTime,
                 endDateTime: endTime,
-                name
+                name,
+                generationStatus: 'pending',
+                generatedAt: null,
+                generationToken
             }
         })
 
-        fs.writeFileSync(`./rrdata/${hrvRecording.id}.txt`, rrdata);
+        try {
+            fs.writeFileSync(`./rrdata/${hrvRecording.id}.txt`, rrdata);
+        } catch (error) {
+            await markGenerationFailed(hrvRecording.id, generationToken);
+            throw error;
+        }
 
-        res.status(200).json(hrvRecording);
-
-        const extension = __filename.endsWith('.ts') ? '.ts' : '.js';
-        const workerPath = path.join(__dirname, `hrvWorker${extension}`);
-
-        const worker = new Worker(workerPath, {
-            workerData: { recordingId: hrvRecording.id, startDateTime: hrvRecording.startDateTime },
-            execArgv: extension === '.ts' ? ['--require', 'ts-node/register'] : undefined
-        });
-
-        worker.on('error', (err) => console.error('Worker error:', err));
-        worker.on('exit', (code) => {
-            if (code !== 0) console.error(`Worker stopped with exit code ${code}`);
-        });
+        const { generationToken: _generationToken, ...response } = hrvRecording;
+        res.status(200).json(response);
+        startHrvGeneration(hrvRecording.id, hrvRecording.startDateTime, generationToken);
     } catch (error) {
         console.error(error);
 
@@ -402,10 +576,13 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
         if (endTime == null || isNaN(endTime.getTime())) endTime = hrvRecording.endDateTime || new Date(0);
         if (device === undefined) device = hrvRecording.device || "";
         if (name === undefined) name = hrvRecording.name || "";
-        if (date === undefined) date = hrvRecording.date || "";
+        if (isNaN(date.getTime())) date = hrvRecording.date;
+
+        const healthDayId = await getOrCreateHealthDayId(userId, date);
 
         const workoutIdVal = workoutId === "" ? null : workoutId;
         const sleepLogIdVal = sleepLogId === "" ? null : sleepLogId;
+        const generationToken = changeRRData ? randomUUID() : null;
 
         const updatedHrvRecording = await prisma.hrvRecording.update({
             where: { id: req.params.id },
@@ -416,30 +593,37 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
                 startDateTime: startTime,
                 endDateTime: endTime,
                 device,
-                name,date
+                name,
+                date,
+                healthDayId,
+                ...(changeRRData ? {
+                    generationStatus: 'pending' as const,
+                    generatedAt: null,
+                    generationToken
+                } : {})
             }
         })
 
-        res.status(200).json(hrvRecording);
-
         if (changeRRData) {
-            fs.writeFileSync(`./rrdata/${updatedHrvRecording.id}.txt`, rrdata);
+            try {
+                fs.writeFileSync(`./rrdata/${updatedHrvRecording.id}.txt`, rrdata);
+            } catch (error) {
+                if (generationToken) {
+                    await markGenerationFailed(updatedHrvRecording.id, generationToken);
+                }
+                throw error;
+            }
+        }
 
-            const extension = __filename.endsWith('.ts') ? '.ts' : '.js';
-            const workerPath = path.join(__dirname, `hrvWorker${extension}`);
+        const { generationToken: _generationToken, ...response } = updatedHrvRecording;
+        res.status(200).json(response);
 
-            const worker = new Worker(workerPath, {
-                workerData: { recordingId: hrvRecording.id, startDateTime: hrvRecording.startDateTime },
-                execArgv: extension === '.ts' ? ['--require', 'ts-node/register'] : undefined
-            });
-
-            worker.on('error', (err) => console.error('Worker error:', err));
-            worker.on('exit', (code) => {
-                if (code !== 0) console.error(`Worker stopped with exit code ${code}`);
-            });
+        if (changeRRData && generationToken) {
+            startHrvGeneration(updatedHrvRecording.id, updatedHrvRecording.startDateTime, generationToken);
         }
     } catch (error) {
         console.error(error);
+        return res.status(500).send("Internal Server Error");
     }
 }
 

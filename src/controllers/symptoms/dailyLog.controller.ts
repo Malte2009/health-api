@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import prisma from '../../prisma/client';
+import { getOrCreateHealthDayId, toUtcDay } from '../../utility/healthDay';
 
 export const getDailyLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
@@ -36,13 +37,14 @@ export const getDailyLog = async (req: AuthenticatedRequest, res: Response, next
 export const createDailyLog = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
         const data = req.body;
-        const logDate = data.date ? new Date(data.date) : new Date();
-        logDate.setHours(0, 0, 0, 0); // Normalize to midnight for unique constraints
+        const logDate = toUtcDay(data.date ? new Date(data.date) : new Date());
+        const healthDayId = await getOrCreateHealthDayId(req.userId, logDate);
 
         const log = await prisma.dailyLog.create({
             data: {
                 ...data,
                 userId: req.userId,
+                healthDayId,
                 date: logDate,
             }
         });
@@ -63,14 +65,15 @@ export const updateDailyLog = async (req: AuthenticatedRequest, res: Response, n
         const existing = await prisma.dailyLog.findFirst({ where: { id, userId: req.userId }});
         if (!existing) return res.status(404).send('Not Found');
 
-        const logDate = data.date ? new Date(data.date) : undefined;
-        if (logDate) logDate.setHours(0, 0, 0, 0);
+        const logDate = data.date ? toUtcDay(new Date(data.date)) : existing.date;
+        const healthDayId = await getOrCreateHealthDayId(req.userId, logDate);
 
         const log = await prisma.dailyLog.update({
             where: { id },
             data: {
                 ...data,
-                date: logDate,
+                healthDayId,
+                date: data.date ? logDate : undefined,
             }
         });
         return res.json(log);

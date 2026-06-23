@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { MealType } from '@prisma/client';
+import { getOrCreateHealthDayId } from '../../utility/healthDay';
 
 const VALID_MEAL_TYPES = Object.values(MealType);
 
@@ -109,12 +110,15 @@ export const createMealLog = async (req: AuthenticatedRequest, res: Response, ne
     }
 
     try {
+        const createdAt = parsedDate ?? new Date();
+        const healthDayId = await getOrCreateHealthDayId(userId, createdAt);
         const mealLog = await prisma.mealLog.create({
             data: {
                 userId,
+                healthDayId,
                 type,
                 order,
-                ...(parsedDate ? { createdAt: parsedDate } : {}),
+                createdAt,
             }
         });
         return res.status(201).json(mealLog);
@@ -149,9 +153,11 @@ export const updateMealLog = async (req: AuthenticatedRequest, res: Response, ne
             return res.status(400).send(`type must be one of: ${VALID_MEAL_TYPES.join(', ')}`);
         }
 
+        const healthDayId = await getOrCreateHealthDayId(userId, existing.createdAt);
+
         const updated = await prisma.mealLog.update({
             where: { id },
-            data: { type, order }
+            data: { type, order, healthDayId }
         });
 
         return res.status(200).json(updated);

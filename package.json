@@ -9,7 +9,9 @@
     "generate": "npx prisma generate",
     "website": "npx prisma studio",
     "pull": "npx prisma db pull",
-    "push": "npx prisma db push",
+    "push": "npm run migrate:hrv-windows && npx prisma db push && npm run migrate:hrv-status",
+    "migrate:hrv-windows": "tsx migration/deduplicateHrvWindows.ts",
+    "migrate:hrv-status": "tsx migration/backfillHrvGenerationStatus.ts",
     "start": "npx tsx src/server.ts"
   },
   "keywords": [],

@@ -1,3 +1,10 @@
+enum HrvGenerationStatus {
+  pending
+  processing
+  ready
+  failed
+}
+
 model HrvRecording {
   id          String    @id @default(uuid())
   userId      String
@@ -12,6 +19,10 @@ model HrvRecording {
   startDateTime DateTime?
   endDateTime   DateTime?
   device        String?
+
+  generationStatus HrvGenerationStatus @default(pending)
+  generatedAt      DateTime?
+  generationToken  String?
 
   // Kontext-Verknüpfung (Entweder ODER)
   sleepLogId String?   @unique
@@ -47,6 +58,8 @@ model HrvWindow {
   metrics hrvMetrics[]
 
   recording HrvRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+
+  @@unique([recordingId, windowStart])
 }
 
 model hrvMetrics {

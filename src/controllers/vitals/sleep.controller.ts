@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import prisma from '../../prisma/client';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import {getHoursSinceLastCaffeine} from "../../utility/caffeine";
+import { getOrCreateHealthDayId } from "../../utility/healthDay";
 
 export const getSleepLogs = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
@@ -58,6 +59,8 @@ export const createSleepLog = async (req: AuthenticatedRequest, res: Response, n
     if (!date) return res.status(400).send("Date is required");
 
     try {
+        const logDate = new Date(date);
+        const healthDayId = await getOrCreateHealthDayId(userId, logDate);
 
         let caffeine: number[] | null | null[] = await getHoursSinceLastCaffeine(bedTime, userId);
 
@@ -66,7 +69,8 @@ export const createSleepLog = async (req: AuthenticatedRequest, res: Response, n
         const sleepLog = await prisma.sleepLog.create({
             data: {
                 userId,
-                date: new Date(date),
+                healthDayId,
+                date: logDate,
                 sleepType,
                 bedTime: bedTime ? new Date(bedTime) : undefined,
                 wakeTime: wakeTime ? new Date(wakeTime) : undefined,
@@ -113,10 +117,14 @@ export const updateSleepLog = async (req: AuthenticatedRequest, res: Response, n
 
         if (!sleepLog) return res.status(404).send("Sleep log not found");
 
+        const logDate = date ? new Date(date) : sleepLog.date;
+        const healthDayId = await getOrCreateHealthDayId(userId, logDate);
+
         const updatedSleepLog = await prisma.sleepLog.update({
             where: { id: sleepLogId },
             data: {
-                date: date ? new Date(date) : sleepLog.date,
+                date: logDate,
+                healthDayId,
                 sleepType: sleepType !== undefined ? sleepType : sleepLog.sleepType,
                 bedTime: bedTime !== undefined ? (bedTime ? new Date(bedTime) : null) : sleepLog.bedTime,
                 wakeTime: wakeTime !== undefined ? (wakeTime ? new Date(wakeTime) : null) : sleepLog.wakeTime,

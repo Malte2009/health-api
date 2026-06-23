@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import prisma from '../prisma/client';
 import {getAge, getGender} from "../utility/userData";
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { getOrCreateHealthDayId } from '../utility/healthDay';
 
 export const getCaloriesBurnedOnDay = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     const userId = req.userId;
@@ -105,9 +106,11 @@ export const updateBodyLog = async (req: AuthenticatedRequest, res: Response, ne
     }
 
     try {
+        const healthDayId = await getOrCreateHealthDayId(userId, bodyLog.createdAt);
         const updatedBodyLog = await prisma.bodyLog.update({
             where: { id: bodyLogId },
             data: {
+                healthDayId,
                 weight: weight,
                 height: height,
                 fatMass: fatMass,
@@ -146,9 +149,13 @@ export const createBodyLog = async (req: AuthenticatedRequest, res: Response, ne
     }
 
     try {
+        const createdAt = new Date();
+        const healthDayId = await getOrCreateHealthDayId(userId, createdAt);
         const bodyLog = await prisma.bodyLog.create({
             data: {
                 userId: userId,
+                healthDayId,
+                createdAt,
                 weight: weight,
                 height: height,
                 fatMass: fatMass,

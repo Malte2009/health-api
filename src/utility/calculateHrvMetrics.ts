@@ -750,9 +750,7 @@ export function calculateHrvMetrics(id: string) {
     ];
 }
 
-import prisma from '../prisma/client';
-
-export async function processHrvChunksToDb(recordingId: string, startDateTime: Date) {
+export function calculateHrvWindows(recordingId: string, startDateTime: Date) {
     const rawData = parseData(recordingId);
     const timeMs = [0];
     for (let i = 1; i < rawData.length; i++) {
@@ -762,6 +760,7 @@ export async function processHrvChunksToDb(recordingId: string, startDateTime: D
     // Group into 5 minute windows (300000 ms)
     const WINDOW_MS = 300000;
     let currentWindowStartIdx = 0;
+    const windows = [];
 
     for (let i = 0; i < rawData.length; i++) {
         if (timeMs[i] - timeMs[currentWindowStartIdx] >= WINDOW_MS || i === rawData.length - 1) {
@@ -773,20 +772,16 @@ export async function processHrvChunksToDb(recordingId: string, startDateTime: D
 
                 const windowStart = new Date((startDateTime?.getTime() || 0) + timeMs[currentWindowStartIdx]);
 
-                const hrvWindow = await prisma.hrvWindow.create({
-                    data: {
-                        recordingId,
-                        windowStart,
-                        durationSeconds: 300,
-                        metrics: {
-                            create: [
-                                noFilter, standardFilter, allFilters
-                            ]
-                        }
-                    }
+                windows.push({
+                    recordingId,
+                    windowStart,
+                    durationSeconds: 300,
+                    metrics: [noFilter, standardFilter, allFilters]
                 });
             }
             currentWindowStartIdx = i + 1;
         }
     }
+
+    return windows;
 }

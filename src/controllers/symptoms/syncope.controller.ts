@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import prisma from '../../prisma/client';
+import { getOrCreateHealthDayId } from '../../utility/healthDay';
 
 export const getSyncopes = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
@@ -36,11 +37,15 @@ export const createSyncope = async (req: AuthenticatedRequest, res: Response, ne
 
         if (!data.name) return res.status(400).send("Name is required");
 
+        const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+        const healthDayId = await getOrCreateHealthDayId(req.userId, timestamp);
+
         const syncope = await prisma.syncopeLog.create({
             data: {
                 ...data,
                 userId: req.userId,
-                timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
+                healthDayId,
+                timestamp,
             }
         });
         return res.status(201).json(syncope);
@@ -57,12 +62,16 @@ export const updateSyncope = async (req: AuthenticatedRequest, res: Response, ne
         const existing = await prisma.syncopeLog.findFirst({ where: { id, userId: req.userId }});
         if (!existing) return res.status(404).send('Not Found');
 
+        const timestamp = data.timestamp ? new Date(data.timestamp) : existing.timestamp;
+        const healthDayId = await getOrCreateHealthDayId(req.userId, timestamp);
+
         const syncope = await prisma.syncopeLog.update({
             where: { id },
             data: {
                 type: "SYNCOPE",
                 name: data.name,
                 userId: req.userId,
+                healthDayId,
                 severity: parseInt(data.severity),
                 notes: data.notes,
                 trigger: data.trigger,
@@ -73,7 +82,7 @@ export const updateSyncope = async (req: AuthenticatedRequest, res: Response, ne
                 injuries: data.injuries,
                 workoutId: data.workoutId ?? data.trainingLogId,
                 activityBefore: data.activityBefore,
-                timestamp: data.timestamp ? new Date(data.timestamp) : undefined,
+                timestamp: data.timestamp ? timestamp : undefined,
             }
         });
         return res.json(syncope);
