@@ -35,6 +35,7 @@ import microRoutes from "./routes/analysis/micro.routes";
 import validateCFAccess from './middleware/cfAccess.middleware';
 import workoutRoutes from "./routes/training/workout.routes";
 import workoutExerciseRoutes from "./routes/training/workoutExercise.routes";
+import chartRoutes from "./routes/chart/chart.routes";
 
 dotenv.config();
 
@@ -138,6 +139,7 @@ app.use("/health-api/health-days", healthDayRoutes);
 app.use("/health-api/workouts", progressionRoutes);
 app.use("/health-api/analysis/calender", calenderRoutes);
 app.use("/health-api/analysis/micro", microRoutes);
+app.use("/health-api/chart", chartRoutes);
 
 app.use(notFoundHandler);
 
