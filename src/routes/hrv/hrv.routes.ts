@@ -12,7 +12,7 @@ import {
     getHrvWindows
 } from "../../controllers/hrv/hrv.controller";
 
-const router = Router();
+const router = Router() as any;
 
 router.use(authenticateToken);
 

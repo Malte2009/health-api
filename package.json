@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "migrate": "npx prisma migrate dev --name changed_something",
+    "migrate": "npx prisma migrate deploy",
+    "migrate:dev": "npx prisma migrate dev --name changed_something",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "generate": "npx prisma generate",
     "website": "npx prisma studio",
@@ -12,26 +13,29 @@
     "push": "npm run migrate:hrv-windows && npx prisma db push && npm run migrate:hrv-status",
     "migrate:hrv-windows": "tsx migration/deduplicateHrvWindows.ts",
     "migrate:hrv-status": "tsx migration/backfillHrvGenerationStatus.ts",
-    "start": "npx tsx src/server.ts"
+    "start": "node dist/server.js",
+    "start:ts": "npx tsx src/server.ts",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "check": "npm run build && npm test && npx prisma validate && npm audit --omit=dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "7.2.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "bcrypt": "6.0.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "17.2.3",
     "dsp.js": "^1.0.1",
     "express": "^5.1.0",
-    "express-rate-limit": "^8.2.2",
+    "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^4.0.1",
     "mathjs": "^15.2.0",
-    "multer": "^2.1.1",
+    "multer": "^2.2.0",
     "tsx": "^4.22.1"
   },
   "devDependencies": {
@@ -43,8 +47,11 @@
     "@types/multer": "^2.1.0",
     "@types/node": "25.0.3",
     "@types/pg": "^8.16.0",
-    "prisma": "7.2.0",
+    "prisma": "^7.8.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "@hono/node-server": "^1.19.13"
   }
 }

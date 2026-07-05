@@ -50,6 +50,15 @@ function computeJumpHistogram(data: number[]) {
     return counts;
 }
 
+function sanitizeMetricValues<T extends Record<string, unknown>>(metrics: T): T {
+    return Object.fromEntries(
+        Object.entries(metrics).map(([key, value]) => [
+            key,
+            typeof value === 'number' && !Number.isFinite(value) ? null : value
+        ])
+    ) as T;
+}
+
 export function parseData(id: string): number[] {
     const filePath = path.join(process.cwd(), 'rrdata', `${id}.txt`);
     if (!fs.existsSync(filePath)) {
@@ -716,7 +725,7 @@ export function calculateMetricsForFilterSet(rr_data: number[], filters: { adapt
     const jumpHistogram = computeJumpHistogram(data);
     const artifact_percent = rr_data.length > 0 ? (artifactStats.artifact_total / rr_data.length) * 100 : 0;
 
-    return {
+    return sanitizeMetricValues({
         ...timeMetrics,
         ...freqDomain,
         ...poincare,
@@ -733,7 +742,7 @@ export function calculateMetricsForFilterSet(rr_data: number[], filters: { adapt
         rangeFilteringApplied: filters.range,
         artifactFilteringApplied: filters.artifact,
         movingAverageFilteringApplied: filters.movingAverage
-    };
+    });
 }
 
 export function calculateHrvMetrics(id: string) {

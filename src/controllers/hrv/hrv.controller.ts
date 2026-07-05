@@ -1,14 +1,21 @@
 import { Response } from 'express';
 import type { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import prisma from '../../prisma/client';
-import { applyFiltersToData, calculateMetricsForFilterSet, parseData } from '../../utility/calculateHrvMetrics';
-import fs from "fs"
-import path from "path";
-import { Worker } from "worker_threads";
-import { randomUUID } from "crypto";
+import { applyFiltersToData } from '../../utility/calculateHrvMetrics';
+import fs from 'fs/promises';
+import path from 'path';
+import { Worker } from 'worker_threads';
+import { randomUUID } from 'crypto';
 import { getOrCreateHealthDayId } from '../../utility/healthDay';
 
 type MetricVariant = 'none' | 'standard' | 'all';
+
+type RrFilterFlags = {
+    adaptive: boolean;
+    range: boolean;
+    movingAverage: boolean;
+    artifact: boolean;
+};
 
 type HrvMetricRecordMetadata = {
     id: string;
@@ -24,6 +31,27 @@ type HrvMetricFilterFlags = {
     movingAverageFilteringApplied: boolean | null;
     artifactFilteringApplied: boolean | null;
 };
+
+type ParsedRrPayload = {
+    text: string;
+    count: number;
+};
+
+const MIN_RR_INTERVALS = 30;
+const MAX_QUERY_STRING_LENGTH = 120;
+const TEXT_FIELD_LIMITS = {
+    name: 120,
+    context: 80,
+    device: 80
+} as const;
+
+function getRrDataPath(recordingId: string): string {
+    return path.join(process.cwd(), 'rrdata', `${recordingId}.txt`);
+}
+
+async function ensureRrDataDirectory(): Promise<void> {
+    await fs.mkdir(path.join(process.cwd(), 'rrdata'), { recursive: true });
+}
 
 function getMetricVariant(metric: HrvMetricFilterFlags): MetricVariant | null {
     const adaptive = metric.adaptiveFilteringApplied === true;
@@ -46,6 +74,21 @@ function freshness(record: { createdAt: Date; changedAt: Date | null }): number 
     return (record.changedAt ?? record.createdAt).getTime();
 }
 
+function isPrismaUniqueError(error: unknown): boolean {
+    return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
+}
+
+function sendControllerError(error: unknown, res: Response): Response | undefined {
+    console.error(error);
+    if (res.headersSent) return undefined;
+
+    if (isPrismaUniqueError(error)) {
+        return res.status(409).send('A HRV recording already exists for this workout or sleep log');
+    }
+
+    return res.status(500).send('Internal Server Error');
+}
+
 async function markGenerationFailed(recordingId: string, generationToken: string): Promise<void> {
     await prisma.hrvRecording.updateMany({
         where: { id: recordingId, generationToken },
@@ -57,6 +100,10 @@ async function markGenerationFailed(recordingId: string, generationToken: string
     }).catch(error => console.error('Failed to update HRV generation state:', error));
 }
 
+function getWorkerExecArgv(extension: '.ts' | '.js'): string[] | undefined {
+    return extension === '.ts' ? ['--import', 'tsx'] : undefined;
+}
+
 function startHrvGeneration(recordingId: string, startDateTime: Date | null, generationToken: string): void {
     const extension = __filename.endsWith('.ts') ? '.ts' : '.js';
     const workerPath = path.join(__dirname, `hrvWorker${extension}`);
@@ -65,7 +112,7 @@ function startHrvGeneration(recordingId: string, startDateTime: Date | null, gen
     try {
         worker = new Worker(workerPath, {
             workerData: { recordingId, startDateTime, generationToken },
-            execArgv: extension === '.ts' ? ['--require', 'ts-node/register'] : undefined
+            execArgv: getWorkerExecArgv(extension)
         });
     } catch (error) {
         console.error('Failed to start HRV generation worker:', error);
@@ -88,23 +135,82 @@ function startHrvGeneration(recordingId: string, startDateTime: Date | null, gen
     });
 }
 
-function preFilterRRData(rawData: string): string {
-    if (!rawData) return "";
+function normalizeRrPayloadBody(body: unknown): string | null {
+    if (typeof body === 'string') return body;
+    if (Buffer.isBuffer(body)) return body.toString('utf8');
+
+    if (body && typeof body === 'object') {
+        const data = body as Record<string, unknown>;
+        const candidate = data.rrdata ?? data.rrData ?? data.data;
+        if (typeof candidate === 'string') return candidate;
+    }
+
+    return null;
+}
+
+function preFilterRRData(rawData: string): ParsedRrPayload {
     const lines = rawData.split(/\r?\n/);
-    const filteredLines = [];
+    const filteredLines: string[] = [];
+
     for (const line of lines) {
         if (!line.trim()) continue;
         const normalizedLine = line.replace(',', '.');
         const num = parseFloat(normalizedLine);
-        if (isNaN(num)) continue;
+        if (!Number.isFinite(num)) continue;
         if (num <= 100) continue;
         filteredLines.push(num.toString());
     }
-    return filteredLines.join('\n');
+
+    return {
+        text: filteredLines.join('\n'),
+        count: filteredLines.length
+    };
 }
 
-function parseRrFilterFlags(raw: unknown) {
-    if (!raw || typeof raw !== 'string') return null;
+function parseRrIntervals(rawData: string): number[] {
+    const values: number[] = [];
+
+    for (const line of rawData.split(/\r?\n/)) {
+        if (!line.trim()) continue;
+        const num = parseFloat(line.replace(',', '.'));
+        if (Number.isFinite(num)) {
+            values.push(num);
+        }
+    }
+
+    if (values.length === 0) return values;
+
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+
+    return median > 3000 ? values.map(value => value / 1000) : values;
+}
+
+async function readRrIntervals(recordingId: string): Promise<number[] | null> {
+    try {
+        const content = await fs.readFile(getRrDataPath(recordingId), 'utf8');
+        return parseRrIntervals(content);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+        throw error;
+    }
+}
+
+async function safeDeleteRrDataFile(recordingId: string): Promise<void> {
+    try {
+        await fs.unlink(getRrDataPath(recordingId));
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+            console.error(`Failed to delete RR data file for recording ${recordingId}:`, error);
+        }
+    }
+}
+
+function parseRrFilterFlags(raw: unknown): RrFilterFlags | null | undefined {
+    if (raw === undefined || raw === null) return undefined;
+    if (typeof raw !== 'string') return null;
+
     const value = raw.toLowerCase().trim();
     if (!value || value === 'none') {
         return { adaptive: false, range: false, movingAverage: false, artifact: false };
@@ -116,24 +222,43 @@ function parseRrFilterFlags(raw: unknown) {
         return { adaptive: true, range: true, movingAverage: true, artifact: true };
     }
 
-    const tokens = value.split(',').map(t => t.trim()).filter(Boolean);
-    const has = (name: string) => tokens.includes(name);
-    return {
-        adaptive: has('adaptive'),
-        range: has('range'),
-        movingAverage: has('movingaverage') || has('moving_average') || has('moving-average') || has('movingavg'),
-        artifact: has('artifact')
+    const aliases: Record<string, keyof RrFilterFlags> = {
+        adaptive: 'adaptive',
+        range: 'range',
+        movingaverage: 'movingAverage',
+        moving_average: 'movingAverage',
+        'moving-average': 'movingAverage',
+        movingavg: 'movingAverage',
+        artifact: 'artifact'
     };
+
+    const tokens = value.split(',').map(token => token.trim()).filter(Boolean);
+    if (tokens.length === 0) return null;
+
+    const filters: RrFilterFlags = {
+        adaptive: false,
+        range: false,
+        movingAverage: false,
+        artifact: false
+    };
+
+    for (const token of tokens) {
+        const key = aliases[token];
+        if (!key) return null;
+        filters[key] = true;
+    }
+
+    return filters;
 }
 
-function runMetricsWorker(recordingId: string, filters: { adaptive: boolean; range: boolean; movingAverage: boolean; artifact: boolean }) {
+function runMetricsWorker(recordingId: string, filters: RrFilterFlags) {
     const extension = __filename.endsWith('.ts') ? '.ts' : '.js';
     const workerPath = path.join(__dirname, `hrvMetricsWorker${extension}`);
 
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerPath, {
             workerData: { recordingId, filters },
-            execArgv: extension === '.ts' ? ['--require', 'ts-node/register'] : undefined
+            execArgv: getWorkerExecArgv(extension)
         });
 
         worker.on('message', (message) => {
@@ -150,10 +275,112 @@ function runMetricsWorker(recordingId: string, filters: { adaptive: boolean; ran
     });
 }
 
+function parseRequiredDate(raw: unknown, field: string): { value?: Date; error?: string } {
+    if (typeof raw !== 'string' || raw.trim() === '') {
+        return { error: `${field} is required` };
+    }
+
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {
+        return { error: `${field} must be a valid date` };
+    }
+
+    return { value: date };
+}
+
+function parseOptionalDate(raw: unknown, field: string): { value?: Date; provided: boolean; error?: string } {
+    if (raw === undefined || raw === null) return { provided: false };
+    if (typeof raw !== 'string' || raw.trim() === '') {
+        return { provided: true, error: `${field} must be a valid date` };
+    }
+
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {
+        return { provided: true, error: `${field} must be a valid date` };
+    }
+
+    return { provided: true, value: date };
+}
+
+function parseOptionalText(raw: unknown, field: keyof typeof TEXT_FIELD_LIMITS): { value?: string | null; provided: boolean; error?: string } {
+    if (raw === undefined || raw === null) return { provided: false };
+    if (typeof raw !== 'string') return { provided: true, error: `${field} must be a string` };
+
+    const value = raw.trim();
+    if (!value) return { provided: true, value: null };
+    if (value.length > TEXT_FIELD_LIMITS[field]) {
+        return { provided: true, error: `${field} must be ${TEXT_FIELD_LIMITS[field]} characters or fewer` };
+    }
+
+    return { provided: true, value };
+}
+
+function parseRelationId(raw: unknown, field: string): { value?: string | null; provided: boolean; error?: string } {
+    if (raw === undefined || raw === null) return { provided: false };
+    if (typeof raw !== 'string') return { provided: true, error: `${field} must be a string` };
+
+    const value = raw.trim();
+    if (!value || value.toLowerCase() === 'null') return { provided: true, value: null };
+    if (value.length > MAX_QUERY_STRING_LENGTH) {
+        return { provided: true, error: `${field} is too long` };
+    }
+
+    return { provided: true, value };
+}
+
+type RelationValidationError = {
+    status: 400 | 404 | 409;
+    message: string;
+};
+
+async function validateRelatedRecords(userId: string, workoutId: string | null, sleepLogId: string | null, currentRecordingId?: string): Promise<RelationValidationError | null> {
+    if (workoutId && sleepLogId) {
+        return {
+            status: 400,
+            message: 'Only one of workoutId/trainingLogId or sleepLogId/sleepingLogId can be set'
+        };
+    }
+
+    if (workoutId) {
+        const workout = await prisma.workout.findUnique({ where: { id: workoutId, userId } });
+        if (!workout) return { status: 404, message: 'Training not found' };
+
+        const existing = await prisma.hrvRecording.findFirst({
+            where: {
+                workoutId,
+                ...(currentRecordingId ? { NOT: { id: currentRecordingId } } : {})
+            },
+            select: { id: true }
+        });
+        if (existing) return { status: 409, message: 'A HRV recording already exists for this training' };
+    }
+
+    if (sleepLogId) {
+        const sleepingLog = await prisma.sleepLog.findUnique({ where: { id: sleepLogId, userId } });
+        if (!sleepingLog) return { status: 404, message: 'Sleep not found' };
+
+        const existing = await prisma.hrvRecording.findFirst({
+            where: {
+                sleepLogId,
+                ...(currentRecordingId ? { NOT: { id: currentRecordingId } } : {})
+            },
+            select: { id: true }
+        });
+        if (existing) return { status: 409, message: 'A HRV recording already exists for this sleep log' };
+    }
+
+    return null;
+}
+
+function datesDiffer(a: Date | null, b: Date | null): boolean {
+    if (a === null && b === null) return false;
+    if (a === null || b === null) return true;
+    return a.getTime() !== b.getTime();
+}
+
 export const getHrvRecording = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
-
-    const includeWindows = req.query.includeWindows === "true";
+    const includeWindows = req.query.includeWindows === 'true';
 
     try {
         const hrvRecording = await prisma.hrvRecording.findMany({
@@ -164,20 +391,18 @@ export const getHrvRecording = async (req: AuthenticatedRequest, res: Response) 
                 sleepLog: true
             },
             orderBy: { date: 'desc' }
-        })
+        });
 
         return res.status(200).json(hrvRecording.map(({ generationToken, ...recording }) => recording));
     } catch (error) {
-        console.error(error);
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const getHrvRecordingById = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
-
     const recordingId = req.params.id;
-
-    const includeWindows = req.query.includeWindows === "true";
+    const includeWindows = req.query.includeWindows === 'true';
 
     try {
         const hrvRecording = await prisma.hrvRecording.findUnique({
@@ -190,15 +415,16 @@ export const getHrvRecordingById = async (req: AuthenticatedRequest, res: Respon
                 windows: includeWindows,
                 sleepLog: true
             }
-        })
+        });
 
-        if (!hrvRecording) return res.status(200).json(null);
+        if (!hrvRecording) return res.status(404).send('HRV Recording not found');
+
         const { generationToken, ...response } = hrvRecording;
         return res.status(200).json(response);
     } catch (error) {
-        console.error(error);
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const getHrvWindows = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
@@ -232,7 +458,7 @@ export const getHrvWindows = async (req: AuthenticatedRequest, res: Response) =>
         });
 
         if (!recording) {
-            return res.status(404).send("HRV Recording not found");
+            return res.status(404).send('HRV Recording not found');
         }
 
         const newestWindowByStart = new Map<number, typeof recording.windows[number]>();
@@ -284,10 +510,9 @@ export const getHrvWindows = async (req: AuthenticatedRequest, res: Response) =>
             windows
         });
     } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const getHrvData = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
@@ -302,45 +527,27 @@ export const getHrvData = async (req: AuthenticatedRequest, res: Response) => {
         });
 
         if (!hrvRecording) {
-            return res.status(404).send("HRV Recording not found");
+            return res.status(404).send('HRV Recording not found');
         }
 
-        const filePath = path.join(process.cwd(), 'rrdata', `${recordingId}.txt`);
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).send("RR Data file not found.");
-        }
-
-        const content = fs.readFileSync(filePath, 'utf8');
-        const lines = content.split(/\r?\n/);
-        let rawData: number[] = [];
-        for (const line of lines) {
-            if (!line.trim()) continue;
-            const num = parseFloat(line.replace(',', '.'));
-            if (!isNaN(num)) {
-                rawData.push(num);
-            }
-        }
-
-        if (rawData.length > 0) {
-            const sorted = [...rawData].sort((a, b) => a - b);
-            const mid = Math.floor(sorted.length / 2);
-            const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-            if (median > 3000) {
-                rawData = rawData.map(val => val / 1000);
-            }
+        let rawData = await readRrIntervals(recordingId);
+        if (!rawData) {
+            return res.status(404).send('RR Data file not found');
         }
 
         const filters = parseRrFilterFlags(req.query.filters);
+        if (filters === null) {
+            return res.status(400).send('Invalid filters query');
+        }
         if (filters) {
             rawData = applyFiltersToData(rawData, filters);
         }
 
-        return res.status(200).send(rawData.join('\n'));
+        return res.status(200).type('text/plain').send(rawData.join('\n'));
     } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const getHrvWindowData = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
@@ -353,41 +560,24 @@ export const getHrvWindowData = async (req: AuthenticatedRequest, res: Response)
         });
 
         if (!hrvWindow || hrvWindow.recording.userId !== userId) {
-            return res.status(404).send("HRV Window not found");
+            return res.status(404).send('HRV Window not found');
         }
 
-        const recordingId = hrvWindow.recordingId;
-        const filePath = path.join(process.cwd(), 'rrdata', `${recordingId}.txt`);
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).send("RR Data file not found.");
-        }
-
-        const content = fs.readFileSync(filePath, 'utf8');
-        const lines = content.split(/\r?\n/);
-        let rawData: number[] = [];
-        for (const line of lines) {
-            if (!line.trim()) continue;
-            const num = parseFloat(line.replace(',', '.'));
-            if (!isNaN(num)) {
-                rawData.push(num);
-            }
-        }
-
-        if (rawData.length > 0) {
-            const sorted = [...rawData].sort((a,b)=>a-b);
-            const mid = Math.floor(sorted.length/2);
-            const median = sorted.length % 2 === 0 ? (sorted[mid-1]+sorted[mid])/2 : sorted[mid];
-            if (median > 3000) {
-                rawData = rawData.map(val => val / 1000);
-            }
+        const rawData = await readRrIntervals(hrvWindow.recordingId);
+        if (!rawData) {
+            return res.status(404).send('RR Data file not found');
         }
 
         const timeMs = [0];
         for (let i = 1; i < rawData.length; i++) {
-            timeMs.push(timeMs[i-1] + rawData[i-1]);
+            timeMs.push(timeMs[i - 1] + rawData[i - 1]);
         }
 
-        const recStart = hrvWindow.recording.startDateTime?.getTime() || 0;
+        const recStart = hrvWindow.recording.startDateTime?.getTime();
+        if (recStart === undefined) {
+            return res.status(409).send('HRV recording has no start time');
+        }
+
         const targetStart = hrvWindow.windowStart.getTime();
         const targetEnd = targetStart + (hrvWindow.durationSeconds * 1000);
 
@@ -400,14 +590,16 @@ export const getHrvWindowData = async (req: AuthenticatedRequest, res: Response)
         }
 
         const filters = parseRrFilterFlags(req.query.filters);
-        const filteredData = filters ? applyFiltersToData(resultData, filters) : resultData;
+        if (filters === null) {
+            return res.status(400).send('Invalid filters query');
+        }
 
-        return res.status(200).send(filteredData.join('\n'));
+        const filteredData = filters ? applyFiltersToData(resultData, filters) : resultData;
+        return res.status(200).type('text/plain').send(filteredData.join('\n'));
     } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const getHrvMetricsForRecording = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
@@ -415,7 +607,7 @@ export const getHrvMetricsForRecording = async (req: AuthenticatedRequest, res: 
     const filters = parseRrFilterFlags(req.query.filters);
 
     if (!filters) {
-        return res.status(400).send("Missing or invalid filters query");
+        return res.status(400).send('Missing or invalid filters query');
     }
 
     try {
@@ -427,7 +619,7 @@ export const getHrvMetricsForRecording = async (req: AuthenticatedRequest, res: 
         });
 
         if (!hrvRecording) {
-            return res.status(404).send("HRV Recording not found");
+            return res.status(404).send('HRV Recording not found');
         }
 
         const existing = await prisma.hrvMetrics.findFirst({
@@ -448,165 +640,191 @@ export const getHrvMetricsForRecording = async (req: AuthenticatedRequest, res: 
         const metrics = await runMetricsWorker(recordingId, filters);
         return res.status(200).json(metrics);
     } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const postHrvRecording = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
+    const rawPayload = normalizeRrPayloadBody(req.body);
 
-     let rrdata = req.body;
-     if (typeof rrdata === 'string') {
-         rrdata = preFilterRRData(rrdata);
-     }
+    if (rawPayload === null) {
+        return res.status(400).send('RR data must be sent as text/plain, application/octet-stream, or { rrdata: string }');
+    }
 
-    const date = req.query.date ? new Date(req.query.date as string) : new Date();
+    const rrdata = preFilterRRData(rawPayload);
+    if (rrdata.count < MIN_RR_INTERVALS) {
+        return res.status(400).send(`RR data must contain at least ${MIN_RR_INTERVALS} valid intervals`);
+    }
 
-    let workoutId: string | null = (req.query.workoutId ?? req.query.trainingLogId) as string;
-    let sleepLogId: string | null = req.query.sleepingLogId as string;
-    const context = req.query.context as string;
-    const startTime = new Date(req.query.startTime as string);
-    const endTime = new Date(req.query.endTime as string);
-    const device = req.query.device as string;
-    const name = req.query.name as string;
+    const startTime = parseRequiredDate(req.query.startTime, 'startTime');
+    if (startTime.error || !startTime.value) return res.status(400).send(startTime.error);
 
-    if (!workoutId) workoutId = null
-    if (!sleepLogId) sleepLogId = null
+    const endTime = parseOptionalDate(req.query.endTime, 'endTime');
+    if (endTime.error) return res.status(400).send(endTime.error);
+    if (endTime.value && endTime.value <= startTime.value) {
+        return res.status(400).send('endTime must be after startTime');
+    }
+
+    const date = parseOptionalDate(req.query.date, 'date');
+    if (date.error) return res.status(400).send(date.error);
+
+    const workoutId = parseRelationId(req.query.workoutId ?? req.query.trainingLogId, 'workoutId');
+    if (workoutId.error) return res.status(400).send(workoutId.error);
+
+    const sleepLogId = parseRelationId(req.query.sleepLogId ?? req.query.sleepingLogId, 'sleepLogId');
+    if (sleepLogId.error) return res.status(400).send(sleepLogId.error);
+
+    const context = parseOptionalText(req.query.context, 'context');
+    if (context.error) return res.status(400).send(context.error);
+
+    const device = parseOptionalText(req.query.device, 'device');
+    if (device.error) return res.status(400).send(device.error);
+
+    const name = parseOptionalText(req.query.name, 'name');
+    if (name.error) return res.status(400).send(name.error);
 
     try {
+        const relationError = await validateRelatedRecords(userId, workoutId.value ?? null, sleepLogId.value ?? null);
+        if (relationError) return res.status(relationError.status).send(relationError.message);
+
         const generationToken = randomUUID();
-        const healthDayId = await getOrCreateHealthDayId(userId, date);
-
-        if (workoutId) {
-            const workout = await prisma.workout.findUnique({
-                where : {
-                    id: workoutId,
-                    userId
-                }
-            })
-
-            if (!workout) {
-                return res.status(404).send("Training not found");
-            }
-        }
-
-        if (sleepLogId) {
-            const sleepingLog = await prisma.sleepLog.findUnique({
-                where: {
-                    id: sleepLogId,
-                    userId
-                }
-            })
-
-            if (!sleepingLog) {
-                return res.status(404).send("Sleep not found");
-            }
-        }
+        const recordingDate = date.value ?? new Date();
+        const healthDayId = await getOrCreateHealthDayId(userId, recordingDate);
 
         const hrvRecording = await prisma.hrvRecording.create({
             data: {
-                date,
+                date: recordingDate,
                 userId,
                 healthDayId,
-                workoutId,
-                sleepLogId,
-                context,
-                device,
-                startDateTime: startTime,
-                endDateTime: endTime,
-                name,
+                workoutId: workoutId.value ?? null,
+                sleepLogId: sleepLogId.value ?? null,
+                context: context.value ?? null,
+                device: device.value ?? null,
+                startDateTime: startTime.value,
+                endDateTime: endTime.value ?? null,
+                name: name.value ?? null,
                 generationStatus: 'pending',
                 generatedAt: null,
                 generationToken
             }
-        })
+        });
 
         try {
-            fs.writeFileSync(`./rrdata/${hrvRecording.id}.txt`, rrdata);
+            await ensureRrDataDirectory();
+            await fs.writeFile(getRrDataPath(hrvRecording.id), rrdata.text, 'utf8');
         } catch (error) {
             await markGenerationFailed(hrvRecording.id, generationToken);
             throw error;
         }
 
         const { generationToken: _generationToken, ...response } = hrvRecording;
-        res.status(200).json(response);
+        res.status(201).json(response);
         startHrvGeneration(hrvRecording.id, hrvRecording.startDateTime, generationToken);
+        return undefined;
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).send("Internal Server Error");
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const changeHrvRecording = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
+    const recordingId = req.params.id;
+    const rawPayload = normalizeRrPayloadBody(req.body);
+    const changeRRData = rawPayload !== null && rawPayload.trim() !== '';
 
-    let rrdata = req.body;
-    let workoutId = (req.query.workoutId ?? req.query.trainingLogId) as string;
-    let sleepLogId = req.query.sleepLogId as string;
-    let context = req.query.context as string;
-    let startTime = new Date(req.query.startTime as string);
-    let endTime = new Date(req.query.endTime as string);
-    let device = req.query.device as string;
-    let name = req.query.name as string;
-    let date = new Date(req.query.date as string);
+    let rrdata: ParsedRrPayload | null = null;
+    if (changeRRData) {
+        rrdata = preFilterRRData(rawPayload);
+        if (rrdata.count < MIN_RR_INTERVALS) {
+            return res.status(400).send(`RR data must contain at least ${MIN_RR_INTERVALS} valid intervals`);
+        }
+    }
+
+    const date = parseOptionalDate(req.query.date, 'date');
+    if (date.error) return res.status(400).send(date.error);
+
+    const startTime = parseOptionalDate(req.query.startTime, 'startTime');
+    if (startTime.error) return res.status(400).send(startTime.error);
+
+    const endTime = parseOptionalDate(req.query.endTime, 'endTime');
+    if (endTime.error) return res.status(400).send(endTime.error);
+
+    const workoutId = parseRelationId(req.query.workoutId ?? req.query.trainingLogId, 'workoutId');
+    if (workoutId.error) return res.status(400).send(workoutId.error);
+
+    const sleepLogId = parseRelationId(req.query.sleepLogId ?? req.query.sleepingLogId, 'sleepLogId');
+    if (sleepLogId.error) return res.status(400).send(sleepLogId.error);
+
+    const context = parseOptionalText(req.query.context, 'context');
+    if (context.error) return res.status(400).send(context.error);
+
+    const device = parseOptionalText(req.query.device, 'device');
+    if (device.error) return res.status(400).send(device.error);
+
+    const name = parseOptionalText(req.query.name, 'name');
+    if (name.error) return res.status(400).send(name.error);
 
     try {
         const hrvRecording = await prisma.hrvRecording.findUnique({
             where: {
-                id: req.params.id,
+                id: recordingId,
                 userId
             }
-        })
+        });
 
-        if (!hrvRecording) return res.status(404).send("HRV Recording not found");
+        if (!hrvRecording) return res.status(404).send('HRV Recording not found');
 
-        let changeRRData = true;
+        const nextWorkoutId = workoutId.provided ? workoutId.value ?? null : hrvRecording.workoutId;
+        const nextSleepLogId = sleepLogId.provided ? sleepLogId.value ?? null : hrvRecording.sleepLogId;
+        const relationError = await validateRelatedRecords(userId, nextWorkoutId, nextSleepLogId, recordingId);
+        if (relationError) return res.status(relationError.status).send(relationError.message);
 
-         if (rrdata === null || rrdata === undefined || rrdata === "") changeRRData = false;
-         if (changeRRData && typeof rrdata === 'string') {
-             rrdata = preFilterRRData(rrdata);
-         }
+        const nextDate = date.provided && date.value ? date.value : hrvRecording.date;
+        const nextStartTime = startTime.provided ? startTime.value ?? null : hrvRecording.startDateTime;
+        const nextEndTime = endTime.provided ? endTime.value ?? null : hrvRecording.endDateTime;
 
-        if (workoutId === undefined) workoutId = hrvRecording.workoutId || "";
-        if (sleepLogId === undefined) sleepLogId = hrvRecording.sleepLogId || "";
-        if (context === undefined) context = hrvRecording.context || "";
-        if (startTime == null || isNaN(startTime.getTime())) startTime = hrvRecording.startDateTime || new Date(0);
-        if (endTime == null || isNaN(endTime.getTime())) endTime = hrvRecording.endDateTime || new Date(0);
-        if (device === undefined) device = hrvRecording.device || "";
-        if (name === undefined) name = hrvRecording.name || "";
-        if (isNaN(date.getTime())) date = hrvRecording.date;
+        if (nextStartTime && nextEndTime && nextEndTime <= nextStartTime) {
+            return res.status(400).send('endTime must be after startTime');
+        }
 
-        const healthDayId = await getOrCreateHealthDayId(userId, date);
+        const regenerate = changeRRData || datesDiffer(nextStartTime, hrvRecording.startDateTime);
+        const generationToken = regenerate ? randomUUID() : null;
+        const healthDayId = await getOrCreateHealthDayId(userId, nextDate);
 
-        const workoutIdVal = workoutId === "" ? null : workoutId;
-        const sleepLogIdVal = sleepLogId === "" ? null : sleepLogId;
-        const generationToken = changeRRData ? randomUUID() : null;
+        if (regenerate && !nextStartTime) {
+            return res.status(400).send('startTime is required to generate HRV windows');
+        }
+
+        if (regenerate && !changeRRData) {
+            const existingData = await readRrIntervals(recordingId);
+            if (!existingData) return res.status(409).send('RR data file not found for regeneration');
+        }
 
         const updatedHrvRecording = await prisma.hrvRecording.update({
-            where: { id: req.params.id },
+            where: { id: recordingId },
             data: {
-                workoutId: workoutIdVal,
-                sleepLogId: sleepLogIdVal,
-                context,
-                startDateTime: startTime,
-                endDateTime: endTime,
-                device,
-                name,
-                date,
+                workoutId: nextWorkoutId,
+                sleepLogId: nextSleepLogId,
+                context: context.provided ? context.value : hrvRecording.context,
+                startDateTime: nextStartTime,
+                endDateTime: nextEndTime,
+                device: device.provided ? device.value : hrvRecording.device,
+                name: name.provided ? name.value : hrvRecording.name,
+                date: nextDate,
                 healthDayId,
-                ...(changeRRData ? {
+                ...(regenerate ? {
                     generationStatus: 'pending' as const,
                     generatedAt: null,
                     generationToken
                 } : {})
             }
-        })
+        });
 
-        if (changeRRData) {
+        if (changeRRData && rrdata) {
             try {
-                fs.writeFileSync(`./rrdata/${updatedHrvRecording.id}.txt`, rrdata);
+                await ensureRrDataDirectory();
+                await fs.writeFile(getRrDataPath(updatedHrvRecording.id), rrdata.text, 'utf8');
             } catch (error) {
                 if (generationToken) {
                     await markGenerationFailed(updatedHrvRecording.id, generationToken);
@@ -618,18 +836,17 @@ export const changeHrvRecording = async (req: AuthenticatedRequest, res: Respons
         const { generationToken: _generationToken, ...response } = updatedHrvRecording;
         res.status(200).json(response);
 
-        if (changeRRData && generationToken) {
+        if (regenerate && generationToken) {
             startHrvGeneration(updatedHrvRecording.id, updatedHrvRecording.startDateTime, generationToken);
         }
+        return undefined;
     } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
+        return sendControllerError(error, res);
     }
-}
+};
 
 export const deleteHrvRecording = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
-
     const recordingId = req.params.id;
 
     try {
@@ -638,16 +855,17 @@ export const deleteHrvRecording = async (req: AuthenticatedRequest, res: Respons
                 id: recordingId,
                 userId
             }
-        })
+        });
 
-        if (!hrvRecording) return res.status(404).send("HRV Recording not found");
+        if (!hrvRecording) return res.status(404).send('HRV Recording not found');
 
         await prisma.hrvRecording.delete({
             where: { id: recordingId }
-        })
+        });
+        await safeDeleteRrDataFile(recordingId);
 
-        return res.status(200).send("Successfully deleted HRV Recording");
+        return res.status(200).send('Successfully deleted HRV Recording');
     } catch (error) {
-        console.error(error);
+        return sendControllerError(error, res);
     }
-}
+};

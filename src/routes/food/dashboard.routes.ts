@@ -8,7 +8,7 @@ import {
     getTopFoods,
 } from '../../controllers/food/dashboard.controller';
 
-const router = Router();
+const router = Router() as any;
 
 router.get('/top-foods', authenticateToken, getTopFoods);
 router.get('/daily',   authenticateToken, getDailySummary     );

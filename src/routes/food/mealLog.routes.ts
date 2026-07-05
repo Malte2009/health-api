@@ -14,7 +14,7 @@ import {
     deleteFoodLog,
 } from '../../controllers/food/foodLog.controller';
 
-const router = Router();
+const router = Router() as any;
 
 router.get('/',     authenticateToken, getMealLogs   );
 router.get('/:id',  authenticateToken, getMealLogById);

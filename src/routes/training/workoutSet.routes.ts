@@ -2,7 +2,7 @@ import {Router} from 'express';
 import {authenticateToken} from "../../middleware/auth.middleware";
 import SetController from "../../controllers/training/set.controller";
 
-const router = Router({ mergeParams: true });
+const router = Router({ mergeParams: true }) as any;
 
 router.use(authenticateToken);
 

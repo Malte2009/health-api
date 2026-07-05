@@ -16,7 +16,7 @@ import {
     deleteNutrients,
 } from '../../controllers/food/nutrient.controller';
 
-const router = Router();
+const router = Router() as any;
 
 // Order matters: specific paths before /:id
 router.get('/search',   authenticateToken, searchFoods);

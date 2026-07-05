@@ -6,6 +6,6 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
 
-server.on('error', (error) => {
+server.on('error', (error: Error) => {
     console.error('Server error:', error);
 });

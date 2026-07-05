@@ -12,7 +12,7 @@ import {
     logMeal,
 } from '../../controllers/food/meal.controller';
 
-const router = Router();
+const router = Router() as any;
 
 router.get('/',    authenticateToken, getMeals   );
 router.get('/:id', authenticateToken, getMealById);

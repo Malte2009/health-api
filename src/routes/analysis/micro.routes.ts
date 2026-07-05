@@ -2,7 +2,7 @@ import { Router } from "express";
 import {authenticateToken} from "../../middleware/auth.middleware";
 import {getMicroOverTime} from "../../controllers/analysis/micro.controller";
 
-const router = Router();
+const router = Router() as any;
 
 router.use(authenticateToken);
 

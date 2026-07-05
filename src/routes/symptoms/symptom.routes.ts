@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-const router = Router();
+const router = Router() as any;
 router.use(authenticateToken);
 
 router.get('/', getSymptoms);

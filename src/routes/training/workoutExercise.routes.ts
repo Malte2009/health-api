@@ -2,7 +2,7 @@ import { Router } from "express";
 import WorkoutExerciseController from "../../controllers/training/workoutExercise.controller";
 import {authenticateToken} from "../../middleware/auth.middleware";
 
-const router = Router({ mergeParams: true });
+const router = Router({ mergeParams: true }) as any;
 
 router.use(authenticateToken);
 

@@ -31,6 +31,8 @@ async function run() {
         if (parentPort) {
             parentPort.postMessage({ error: (error as Error).message });
         }
+    } finally {
+        await prisma.$disconnect();
     }
 }
 

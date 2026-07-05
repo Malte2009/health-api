@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../middleware/auth.middleware';
 import { getDailyLogs, getDailyLog, createDailyLog, updateDailyLog, deleteDailyLog } from '../../controllers/symptoms/dailyLog.controller';
 
-const router = Router();
+const router = Router() as any;
 router.use(authenticateToken);
 
 router.get('/', getDailyLogs);

@@ -12,7 +12,7 @@ import {
     getIntakeLogsOverMonth
 } from "../../controllers/analysis/calender.controller";
 
-const router = Router();
+const router = Router() as any;
 
 router.use(authenticateToken);
 

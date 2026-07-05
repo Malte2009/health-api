@@ -8,7 +8,7 @@ import {
 } from '../../controllers/vitals/sleep.controller';
 import { authenticateToken } from '../../middleware/auth.middleware';
 
-const router = Router();
+const router = Router() as any;
 
 // Alle Operationen benötigen eine Authentifizierung
 router.use(authenticateToken);

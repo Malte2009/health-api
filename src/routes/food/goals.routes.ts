@@ -7,7 +7,7 @@ import {
     deleteGoals,
 } from '../../controllers/food/goals.controller';
 
-const router = Router();
+const router = Router() as any;
 
 router.get('/',    authenticateToken, getGoals   );
 router.post('/',   authenticateToken, createGoals);

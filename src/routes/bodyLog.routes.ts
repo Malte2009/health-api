@@ -9,7 +9,7 @@ import {
 } from "../controllers/bodyLog.controller";
 
 
-const router = Router();
+const router = Router() as any;
 
 router.get("/", authenticateToken, getBodyLogs);
 router.get("/:id", authenticateToken, getBodyLogById);
