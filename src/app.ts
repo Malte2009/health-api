@@ -60,6 +60,13 @@ if (!fs.existsSync("rrdata")) {
     fs.mkdirSync("rrdata");
 }
 
+if (!process.env.ALLOWED_ORIGINS) {
+	console.error("ALLOWED_ORIGINS is not defined in the environment variables");
+	process.exit(1);
+}
+
+app.use(cors);
+
 app.use(cookieParser());
 app.use(express.json( { limit: '10mb' }));
 app.use(express.raw( { limit: '10mb' }));
@@ -92,13 +99,6 @@ app.use(helmet({
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     xssFilter: true,
 }))
-
-if (!process.env.ALLOWED_ORIGINS) {
-	console.error("ALLOWED_ORIGINS is not defined in the environment variables");
-	process.exit(1);
-}
-
-app.use(cors);
 
 if (!process.env.JWT_SECRET) {
 	console.error("JWT_SECRET is not defined in the environment variables.");

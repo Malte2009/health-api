@@ -1,4 +1,13 @@
-import { Request, Response, NextFunction} from "express";
+import { Request, Response, NextFunction } from "express";
+
+const DEFAULT_ALLOWED_HEADERS = [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "cf-access-jwt-assertion"
+];
 
 export default function cors(req: Request, res: Response, next: NextFunction) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map(origin => origin.trim()) || [];
@@ -47,10 +56,15 @@ export default function cors(req: Request, res: Response, next: NextFunction) {
 
 function setHeaders(req: Request, res: Response) {
     const origin = req.headers.origin || "";
+    const requestedHeaders = req.headers["access-control-request-headers"];
+    const allowHeaders = Array.isArray(requestedHeaders)
+        ? requestedHeaders.join(", ")
+        : requestedHeaders || DEFAULT_ALLOWED_HEADERS.join(", ");
 
     res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", allowHeaders);
     res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Vary", "Origin");
+    res.header("Access-Control-Max-Age", "86400");
+    res.header("Vary", "Origin, Access-Control-Request-Headers");
 }
