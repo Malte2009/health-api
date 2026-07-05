@@ -13,8 +13,8 @@
     "push": "npm run migrate:hrv-windows && npx prisma db push && npm run migrate:hrv-status",
     "migrate:hrv-windows": "tsx migration/deduplicateHrvWindows.ts",
     "migrate:hrv-status": "tsx migration/backfillHrvGenerationStatus.ts",
-    "start": "node dist/server.js",
-    "start:ts": "npx tsx src/server.ts",
+    "start": "npx tsx src/server.ts",
+    "start:compiled": "node dist/server.js",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "check": "npm run build && npm test && npx prisma validate && npm audit --omit=dev"
   },

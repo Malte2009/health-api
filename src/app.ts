@@ -105,19 +105,6 @@ if (!process.env.JWT_SECRET) {
 	process.exit(1);
 }
 
-if (process.env.NODE_ENV === "production") {
-    if (!process.env.CF_TEAM_DOMAIN) {
-        console.error("CF_TEAM_DOMAIN is not defined in the environment variables.");
-        process.exit(1);
-    }
-
-    const cfAudTags = process.env.CF_AUD_TAGS?.split(",").map(tag => tag.trim()).filter(Boolean) || [];
-    if (cfAudTags.length === 0) {
-        console.error("CF_AUD_TAGS is not defined in the environment variables.");
-        process.exit(1);
-    }
-}
-
 app.use(validateCFAccess);
 app.use(sanitizeInput);
 app.use(validateInput);
